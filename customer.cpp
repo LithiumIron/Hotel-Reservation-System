@@ -8,7 +8,7 @@ using namespace std;
 
 bool passwordValidation(string password,string password2){
     if(password!=password2){
-            cout<<"Error: Both passwords must match\n"<<endl;
+            cout<<"Error: Password does not match\n"<<endl;
             return false;
         }
     if(password.length()<8){
@@ -44,7 +44,7 @@ void login(){
     if(outFile.fail()){
         cout<<"Error opening the file.";
     }
-    
+
     outFile<<username<<"\t"<<password<<endl;
     outFile.close();
 
