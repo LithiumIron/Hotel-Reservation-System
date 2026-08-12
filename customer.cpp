@@ -1,20 +1,30 @@
 #include <iostream>
 #include <string>
 #include <cctype>
+#include <fstream>
 #include "utilities.cpp"
 #include "tempBook.cpp"
 using namespace std;
 
-
+bool passwordValidation(string password,string password2){
+    if(password!=password2){
+            cout<<"Error: Both passwords must match\n"<<endl;
+            return false;
+        }
+    if(password.length()<8){
+            cout<<"Error: Password must be more than 8 characters\n"<<endl;
+            return false;
+        }
+    return true;
+}
 //login
 void login(){
     string username,password,password2;
-    bool wantBack=false, passwordMatched=false;
-    getline(cin,password);
     cout<<"Login"<<endl;
 
-    cout<<"Username [999 to go back]: "<<endl;
+    cout<<"Enter your username [999 to go back]: "<<endl;
     getline(cin,username);
+
     if(username=="999"){
         return;
     }
@@ -26,16 +36,18 @@ void login(){
         cout<<"Confirm Password: ";
         getline(cin,password2);
 
-        if(password!=password2){
-            cout<<"Error: Both passwords must match\n"<<endl;
-            continue;
-        }
-        if(password.length()<8){
-            cout<<"Error: Password must be more than 8 characters\n"<<endl;
-            continue;
-        }
-        break;
+        if(passwordValidation(password,password2))
+            break;
+        
     }
+    ofstream outFile("customerData.txt",ios::app);
+    if(outFile.fail()){
+        cout<<"Error opening the file.";
+    }
+    
+    outFile<<username<<"\t"<<password<<endl;
+    outFile.close();
+
     bookingScreen();
 
 
@@ -56,9 +68,14 @@ void homeScreen(){
         
     }while(numberValidation(userInput,2)!=0);
     
-    if(stoi(userInput)==1)
+    if(stoi(userInput)==1){
+        cin.ignore();
         login();
-        else signup();
+    }
+    else {
+        cin.ignore();
+        signup();
+    }
     
 }
 
