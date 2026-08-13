@@ -47,55 +47,10 @@ bool signup(){
 
 }
 
-bool login(){
-    string username,fileUsername,password,filePassword;
-    bool found=false;
-    cout<<"Login"<<endl;
 
-    while(true){
-        cout<<"Enter your username [999 to go back]: "<<endl;
-        getline(cin,username);
-
-        if(username=="999"){
-            return false;
-        }
-        cout<<"Password: ";
-        getline(cin,password);
-        
-        ifstream inFile("customerData.txt");
-        if(inFile.fail()){
-            cout<<"Error, file does not exist."<<endl;
-            return false;
-        }
-        
-        while(inFile>>fileUsername>>filePassword){
-            if(fileUsername==username){
-                found=true;
-                break;
-            }
-                
-        }
-
-        inFile.close();
-        
-        if (!found){
-            cout<<"Error: Username does not exist.\n"<<endl;
-            return false;
-        }
-        
-        if(password!=filePassword)
-            cout<<"Error: Wrong password\n"<<endl;
-        else
-            return true;
-    }
-        
-
-
-}
-void homeScreen(){
+void custHomeScreen(){
     while(true){
         string userInput;
-        cout<<"Welcome to Hotel Reservation System!"<<endl;
         cout<<"[1] Login"<<endl;
         cout<<"[2] Sign up"<<endl;
 
@@ -107,7 +62,7 @@ void homeScreen(){
 
         if(stoi(userInput)==1){
             cin.ignore();
-            if(login()==true) break;
+            if(login(2)==true) break;
         }
         else {
             cin.ignore();
@@ -119,7 +74,7 @@ void homeScreen(){
 }
 
 int main(){
-    homeScreen();
+    roleSelection();
     cout<<"\nhi test, im back";
     return 0;
 }
