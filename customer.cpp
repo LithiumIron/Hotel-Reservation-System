@@ -49,7 +49,7 @@ bool signup(){
 
 bool login(){
     string username,fileUsername,password,filePassword;
-    bool found=true;
+    bool found=false;
     cout<<"Login"<<endl;
 
     while(true){
@@ -78,12 +78,13 @@ bool login(){
 
         inFile.close();
         
-        if (!found)
-            cout<<"Error: Username does not exist."<<endl;
+        if (!found){
+            cout<<"Error: Username does not exist.\n"<<endl;
             return false;
+        }
         
         if(password!=filePassword)
-            cout<<"Error: Wrong password";
+            cout<<"Error: Wrong password\n"<<endl;
         else
             return true;
     }
