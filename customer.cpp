@@ -6,27 +6,16 @@
 #include "tempBook.cpp"
 using namespace std;
 
-bool passwordValidation(string password,string password2){
-    if(password!=password2){
-            cout<<"Error: Password does not match\n"<<endl;
-            return false;
-        }
-    if(password.length()<8){
-            cout<<"Error: Password must be more than 8 characters\n"<<endl;
-            return false;
-        }
-    return true;
-}
 //login
-void login(){
+bool signup(){
     string username,password,password2;
-    cout<<"Login"<<endl;
+    cout<<"Sign Up"<<endl;
 
-    cout<<"Enter your username [999 to go back]: "<<endl;
+    cout<<"Create your username [999 to go back]: "<<endl;
     getline(cin,username);
 
     if(username=="999"){
-        return;
+        return false;
     }
 
     while(true){
@@ -36,52 +25,101 @@ void login(){
         cout<<"Confirm Password: ";
         getline(cin,password2);
 
-        if(passwordValidation(password,password2))
-            break;
+        if(password!=password2){
+            cout<<"Error: Passwords does not match\n"<<endl;
+        }
+        else if(password.length()<8){
+            cout<<"Error: Password must be more than 8 characters\n"<<endl;
+        }
+        else break;
         
     }
     ofstream outFile("customerData.txt",ios::app);
     if(outFile.fail()){
         cout<<"Error opening the file.";
+        return false;
     }
 
     outFile<<username<<"\t"<<password<<endl;
     outFile.close();
-
-    bookingScreen();
+    return true;
 
 
 }
 
-void signup(){
-    cout<<"sign up";
+bool login(){
+    string username,fileUsername,password,filePassword;
+    bool found=true;
+    cout<<"Login"<<endl;
+
+    while(true){
+        cout<<"Enter your username [999 to go back]: "<<endl;
+        getline(cin,username);
+
+        if(username=="999"){
+            return false;
+        }
+        cout<<"Password: ";
+        getline(cin,password);
+        
+        ifstream inFile("customerData.txt");
+        if(inFile.fail()){
+            cout<<"Error, file does not exist."<<endl;
+            return false;
+        }
+        
+        while(inFile>>fileUsername>>filePassword){
+            if(fileUsername==username){
+                found=true;
+                break;
+            }
+                
+        }
+
+        inFile.close();
+        
+        if (!found)
+            cout<<"Error: Username does not exist."<<endl;
+            return false;
+        
+        if(password!=filePassword)
+            cout<<"Error: Wrong password";
+        else
+            return true;
+    }
+        
+
+
 }
 void homeScreen(){
-    string userInput;
-    cout<<"Welcome to Hotel Reservation System!"<<endl;
-    cout<<"[1] Login"<<endl;
-    cout<<"[2] Sign up"<<endl;
-    
-    do{
-        cout<<"Enter your choice: ";
-        cin>> userInput;
-        
-    }while(numberValidation(userInput,2)!=0);
-    
-    if(stoi(userInput)==1){
-        cin.ignore();
-        login();
+    while(true){
+        string userInput;
+        cout<<"Welcome to Hotel Reservation System!"<<endl;
+        cout<<"[1] Login"<<endl;
+        cout<<"[2] Sign up"<<endl;
+
+        do{
+            cout<<"Enter your choice: ";
+            cin>> userInput;
+            
+        }while(numberValidation(userInput,2)!=0);
+
+        if(stoi(userInput)==1){
+            cin.ignore();
+            if(login()==true) break;
+        }
+        else {
+            cin.ignore();
+            if(signup()==true) break;
+        }
     }
-    else {
-        cin.ignore();
-        signup();
-    }
+    bookingScreen();
     
 }
 
 int main(){
     homeScreen();
-    cout<<"hi test, im back";
+    cout<<"\nhi test, im back";
     return 0;
 }
 
