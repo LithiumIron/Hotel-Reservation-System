@@ -1,4 +1,5 @@
 #include "booking.h"
+#include "customer.h"
 #include "utilities.h"
 
 #include <fstream>

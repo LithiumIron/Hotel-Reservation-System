@@ -1,3 +1,5 @@
+#include "customer.h"
+#include "employee.h"
 #include "utilities.h"
 
 #include <cctype>
@@ -6,11 +8,6 @@
 #include <string>
 
 using namespace std;
-
-// Temporary function declarations.
-// These will be moved into customer.h and employee.h later.
-void custHomeScreen();
-void empHomeScreen();
 
 int numberValidation(const string& userInput, int limit)
 {

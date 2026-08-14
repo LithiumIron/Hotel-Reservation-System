@@ -1,0 +1,73 @@
+SCHEDULER AND APPOINTMENT MANAGEMENT MODULE
+
+Files owned by this module
+--------------------------
+models.h       Shared Date, Room and Booking records.
+scheduler.h    Public Scheduler function declarations.
+scheduler.cpp  Date helpers, six functional requirements and menus.
+
+Implemented customer functions
+------------------------------
+1. View Weekly Heatmap
+2. View Monthly Availability
+3. Multi-floor Room Availability Map (additional function)
+
+Implemented employee functions
+------------------------------
+1. View Daily Room Schedule
+2. View Room Monthly Timeline
+3. View Occupancy Forecast
+4. Auto-Release Expired Bookings
+5. Double-Booking Conflict Audit (additional function)
+
+Additional-function value
+-------------------------
+Multi-floor Room Availability Map checks every room across a selected stay.
+Available rooms show their room number; a room occupied on any selected night
+shows X. Prices are intentionally excluded because pricing belongs to Billing.
+
+Double-Booking Conflict Audit compares active bookings in pairs, detects date
+range overlaps for the same room and identifies the affected booking IDs.
+
+Console UI layout
+-----------------
+The Scheduler uses a fixed-width hotel dashboard layout with centred page
+headers, role-specific menu descriptions, bordered result panels, occupancy
+progress bars, a seven-column monthly calendar, status tags and aligned tables.
+Formatting helpers are kept inside scheduler.cpp so other business modules do
+not depend on Scheduler presentation details.
+
+Demo accounts
+-------------
+Customer username: qq
+Customer password: 123456789
+
+Employee username: admin
+Employee password: employee123
+
+Demo data note
+--------------
+loadSchedulerDemoData() supplies temporary Room and Booking records so this
+module can be demonstrated before the Booking module is complete. During final
+integration, the Booking module should pass its actual vector<Room> and
+vector<Booking> to the Scheduler menu/functions. The Scheduler functions do not
+depend on Customer, Billing or Report implementation details.
+The demo includes one deliberate overlap between B001 and B008 so the conflict
+audit can be demonstrated. Remove B008 after the Booking module supplies real
+records.
+Historical COMPLETED booking B009 is included so staff can test 21/05/2025.
+
+Date convention
+---------------
+A room is occupied from check-in date up to, but not including, check-out date.
+For example, a booking from 14/08/2026 to 17/08/2026 occupies 14, 15 and 16.
+Customer availability accepts dates from the system date (14/08/2026) through
+2028. Employee Daily Schedule and Room Timeline accept 2020 through 2028 so
+staff can inspect historical records. Forecast remains current/future only.
+
+Auto-release rule
+-----------------
+Only an unpaid booking with status PENDING and an expiry date earlier than the
+system date is changed to CANCELLED. The employee cannot manipulate the current
+date, and historical bookings are retained. The report identifies each released
+Booking ID, Customer ID, Room ID, stay dates and expired payment deadline.

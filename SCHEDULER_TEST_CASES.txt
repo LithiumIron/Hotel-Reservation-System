@@ -1,0 +1,42 @@
+SCHEDULER TEST CASES
+
+Run 1 - Normal customer schedule viewing
+Inputs: Customer login; weekly start 14/08/2026; monthly view August 2026.
+Expected: Seven heatmap rows and 31 availability rows; occupied room counts
+match active bookings; no crash.
+
+Run 2 - Normal employee schedule viewing
+Inputs: Employee login; daily schedule 14/08/2026; timeline room 101 for
+August 2026; seven-day forecast from 14/08/2026.
+Expected: Daily room/booking table, room 101 marked booked on days 14-16,
+forecast percentages and peak date displayed.
+
+Run 3 - Invalid and boundary inputs
+Inputs: Menu 9; room 999; date 30/02/2026 followed by 28/02/2026.
+Expected: Each invalid value is rejected and re-prompted; valid boundary date
+is accepted; program does not crash.
+
+Run 4 - Auto-release
+Inputs: Current date 14/08/2026.
+Expected: Unpaid PENDING booking B004 (expiry 13/08/2026) becomes CANCELLED;
+B005 remains PENDING because its expiry date is 16/08/2026. The report identifies
+B004, C004, room 202 and the stay dates; released count is 1.
+
+Run 5 - Check-out boundary
+Inputs: Daily schedule 17/08/2026 for booking B001 (14/08 to 17/08).
+Expected: Room 101 is AVAILABLE because check-out day is not occupied.
+
+Run 6 - Multi-floor room availability map
+Inputs: Stay 14/08/2026 to 17/08/2026.
+Expected: Three floor rows are displayed. Available rooms show their room
+number; rooms occupied on at least one selected night show X. No price is shown.
+
+Run 7 - Double-booking conflict audit
+Inputs: Employee menu option 5 with the supplied demonstration records.
+Expected: The audit detects B001 and B008 overlapping for room 101 and reports
+one conflict. Cancelled or completed bookings are ignored.
+
+Run 8 - Role-based date access
+Inputs: Customer enters 01/08/2026; employee requests 21/05/2025.
+Expected: Customer past date is rejected with earliest date 14/08/2026.
+Employee historical date is accepted and room 203 shows B009 as COMPLETED.
