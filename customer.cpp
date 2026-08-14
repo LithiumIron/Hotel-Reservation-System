@@ -1,76 +1,108 @@
 #include "booking.h"
 #include "utilities.h"
 
+#include <fstream>
 #include <iostream>
 #include <string>
 
 using namespace std;
 
+bool signup()
+{
+    string username;
+    string password;
+    string password2;
 
-//login
-void login(){
-    string username,password,password2;
-    bool wantBack=false, passwordMatched=false;
-    getline(cin,password);
-    cout<<"Login"<<endl;
+    cout << "Sign Up\n";
+    cout << "Create your username [999 to go back]: ";
+    getline(cin, username);
 
-    cout<<"Username [999 to go back]: "<<endl;
-    getline(cin,username);
-    if(username=="999"){
-        return;
+    if (username == "999")
+    {
+        return false;
     }
 
-    while(true){
-        cout<<"Password: ";
-        getline(cin,password);
+    while (true)
+    {
+        cout << "Password: ";
+        getline(cin, password);
 
-        cout<<"Confirm Password: ";
-        getline(cin,password2);
+        cout << "Confirm Password: ";
+        getline(cin, password2);
 
-        if(password!=password2){
-            cout<<"Error: Both passwords must match\n"<<endl;
-            continue;
+        if (password != password2)
+        {
+            cout << "Error: Passwords do not match.\n\n";
         }
-        if(password.length()<8){
-            cout<<"Error: Password must be more than 8 characters\n"<<endl;
-            continue;
+        else if (password.length() < 8)
+        {
+            cout << "Error: Password must contain at least 8 characters.\n\n";
         }
-        break;
+        else
+        {
+            break;
+        }
     }
+
+    ofstream outFile("customerData.txt", ios::app);
+
+    if (outFile.fail())
+    {
+        cout << "Error opening the customer data file.\n";
+        return false;
+    }
+
+    outFile << username << '\t' << password << '\n';
+    outFile.close();
+
+    return true;
+}
+
+void custHomeScreen()
+{
+    while (true)
+    {
+        string userInput;
+
+        cout << "\nCustomer Menu\n";
+        cout << "[1] Login\n";
+        cout << "[2] Sign up\n";
+
+        do
+        {
+            cout << "Enter your choice: ";
+            cin >> userInput;
+        } while (numberValidation(userInput, 2) != 0);
+
+        cin.ignore();
+
+        if (stoi(userInput) == 1)
+        {
+            if (login(2))
+            {
+                break;
+            }
+        }
+        else
+        {
+            if (signup())
+            {
+                break;
+            }
+        }
+    }
+
     bookingScreen();
-
-
 }
 
-void signup(){
-    cout<<"sign up";
-}
-void homeScreen(){
-    string userInput;
-    cout<<"Welcome to Hotel Reservation System!"<<endl;
-    cout<<"[1] Login"<<endl;
-    cout<<"[2] Sign up"<<endl;
-    
-    do{
-        cout<<"Enter your choice: ";
-        cin>> userInput;
-        
-    }while(numberValidation(userInput,2)!=0);
-    
-    if(stoi(userInput)==1)
-        login();
-        else signup();
-    
-}
+int main()
+{
+    roleSelection();
+    cout << "\nThank you for using the Hotel Reservation System.\n";
 
-int main(){
-    homeScreen();
-    cout<<"hi test, im back";
     return 0;
 }
 
-//view profile
-
-//edit profile
-
-//booking history
+// View profile
+// Edit profile
+// Booking history
