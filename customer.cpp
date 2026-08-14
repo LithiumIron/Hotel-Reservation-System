@@ -1,8 +1,9 @@
+#include "booking.h"
+#include "utilities.h"
+
 #include <iostream>
 #include <string>
-#include <cctype>
-#include "utilities.cpp"
-#include "tempBook.cpp"
+
 using namespace std;
 
 

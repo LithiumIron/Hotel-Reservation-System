@@ -1,22 +1,43 @@
+#include "utilities.h"
+
+#include <cctype>
 #include <iostream>
 #include <string>
-#include <cctype>
-#pragma once
+
 using namespace std;
 
-//validation can reuse
-int numberValidation(string userInput, int limit){
-    for(char x:userInput){
-        if(!isdigit(x)){
-            cout<<"Error: Please enter a number from 1 to "<<limit<<endl;
+int numberValidation(const string& userInput, int limit)
+{
+    if (userInput.empty())
+    {
+        cout << "Error: Input cannot be empty.\n";
+        return 1;
+    }
+
+    for (char character : userInput)
+    {
+        if (!isdigit(static_cast<unsigned char>(character)))
+        {
+            cout << "Error: Please enter a number from 1 to "
+                << limit << ".\n";
             return 1;
         }
-        
     }
-    int num=stoi(userInput);
 
-    if(num<1||num>limit){
-        cout<<"Error: Please enter from 1 to "<<limit<<endl;
+    try
+    {
+        int number = stoi(userInput);
+
+        if (number < 1 || number > limit)
+        {
+            cout << "Error: Please enter a number from 1 to "
+                << limit << ".\n";
+            return 1;
+        }
+    }
+    catch (...)
+    {
+        cout << "Error: The number entered is too large.\n";
         return 1;
     }
 
