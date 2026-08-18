@@ -81,19 +81,17 @@ void custHomeScreen()
         {
             if (login(2))
             {
-                break;
+                return;
             }
         }
         else if (choice == 2)
         {
             if (signup())
             {
-                break;
+                return;
             }
         }
     }
-
-    bookingScreen();
 }
 int main()
 {

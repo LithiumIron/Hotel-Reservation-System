@@ -26,7 +26,6 @@ void empHomeScreen()
         if (enteredPasscode == EMPLOYEE_PASSCODE)
         {
             cout << "\nEmployee passcode accepted.\n";
-            mainMenu(1);
             return;
         }
 
