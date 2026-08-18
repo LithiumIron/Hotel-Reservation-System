@@ -2,8 +2,8 @@
 #include <string>
 #include <cctype>
 #include <fstream>
-#include "employee.cpp"
-#include "customer.cpp"
+#include "employee.h"
+#include "customer.h"
 #pragma once
 using namespace std;
 

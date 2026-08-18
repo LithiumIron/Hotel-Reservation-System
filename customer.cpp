@@ -2,8 +2,8 @@
 #include <string>
 #include <cctype>
 #include <fstream>
-#include "utilities.cpp"
-#include "tempBook.cpp"
+#include "utilities.h"
+#include "tempBook.h"
 using namespace std;
 
 //login

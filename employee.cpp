@@ -1,5 +1,5 @@
 #include <iostream>
-#include "utilities.cpp"
+#include "utilities.h"
 using namespace std;
 
 void empHomeScreen(){
@@ -10,6 +10,6 @@ void empHomeScreen(){
             getline(cin,tempPasscode);
             if(!(tempPasscode==passcode))
                 cout<<"Error: Wrong Passcode entered"<<endl;
-            else login();
+            else login(2);
         }
 }
