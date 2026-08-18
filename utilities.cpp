@@ -1,6 +1,7 @@
 #include "customer.h"
 #include "employee.h"
 #include "utilities.h"
+#include "scheduler.h"
 
 #include <cctype>
 #include <fstream>
@@ -8,51 +9,47 @@
 #include <string>
 
 using namespace std;
-
-int numberValidation(const string& userInput, int limit)
+int readInteger(const string& prompt, int minimum, int maximum)
 {
-    if (userInput.empty())
+    while (true)
     {
-        cout << "Error: Input cannot be empty.\n";
-        return 1;
-    }
+        string input;
 
-    for (char character : userInput)
-    {
-        if (!isdigit(static_cast<unsigned char>(character)))
+        cout << prompt;
+        getline(cin, input);
+
+        if (input.empty())
         {
-            cout << "Error: Please enter a number from 1 to "
-                << limit << ".\n";
-            return 1;
+            cout << "Error: Input cannot be empty.\n";
+            continue;
         }
-    }
 
-    try
-    {
-        int number = stoi(userInput);
-
-        if (number < 1 || number > limit)
+        try
         {
-            cout << "Error: Please enter a number from 1 to "
-                << limit << ".\n";
-            return 1;
-        }
-    }
-    catch (...)
-    {
-        cout << "Error: The number entered is too large.\n";
-        return 1;
-    }
+            size_t processedCharacters = 0;
+            int value = stoi(input, &processedCharacters);
 
-    return 0;
+            if (processedCharacters == input.length()
+                && value >= minimum
+                && value <= maximum)
+            {
+                return value;
+            }
+        }
+        catch (...)
+        {
+            cout << "Error: Please enter a valid number.\n";
+            continue;
+        }
+
+        cout << "Invalid input. Enter a number from "
+             << minimum << " to " << maximum << ".\n";
+    }
 }
 
 bool login(int role)
 {
-    string username;
-    string password;
-    string fileUsername;
-    string filePassword;
+    string username,password,fileUsername,filePassword;
 
     cout << "\nLogin\n";
 
@@ -118,25 +115,60 @@ bool login(int role)
 
 void roleSelection()
 {
-    string userInput;
-
     cout << "Welcome to Hotel Reservation System!\n";
     cout << "Are you:\n";
     cout << "[1] An Employee\n";
     cout << "[2] A Customer\n";
+    cout << "[0] Exit\n";
 
-    do
+    int choice = readInteger("Enter your choice: ", 0, 2);
+
+    if (choice==0)
     {
-        cout << "Enter your choice: ";
-        cin >> userInput;
-    } while (numberValidation(userInput, 2) != 0);
-
-    if (stoi(userInput) == 1)
+        exit(0);
+    }
+    
+    else if (choice == 1)
     {
         empHomeScreen();
     }
     else
     {
         custHomeScreen();
+    }
+}
+
+void mainMenu(int role)
+{
+    while (true)
+    {
+        cout << "\n====================================\n";
+        cout << "     HOTEL RESERVATION SYSTEM\n";
+        cout << "====================================\n";
+        cout << "[1] View Profile\n";
+        cout << "[2] View Schedule\n";
+
+        if(role==2)
+            cout<<"[3] Booking\n";
+
+        cout << "[0] Exit\n";
+        cout << "====================================\n";
+
+        int choice = readInteger("Enter your choice: ", 0, 1);
+
+        if (choice == 0)
+        {
+            cout << "\nThank you for using the Hotel Reservation System.\n";
+            return;
+        }
+        else if (choice==1){
+            //view profile
+        }
+        else{
+            vector<Room> rooms;
+            vector<Booking> bookings;
+            loadSchedulerDemoData(rooms, bookings);
+            employeeSchedulerMenu(rooms, bookings);
+        }
     }
 }

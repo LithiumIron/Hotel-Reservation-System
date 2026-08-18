@@ -4,8 +4,8 @@
 
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <string>
-
 using namespace std;
 
 bool signup()
@@ -15,16 +15,17 @@ bool signup()
     string password2;
 
     cout << "Sign Up\n";
-    cout << "Create your username [999 to go back]: ";
-    getline(cin, username);
-
-    if (username == "999")
-    {
-        return false;
-    }
-
     while (true)
     {
+        cout << "Create your username [999 to go back]: ";
+        getline(cin, username);
+
+        if (username == "999")
+        {
+            return false;
+        }
+
+    
         cout << "Password: ";
         getline(cin, password);
 
@@ -33,11 +34,11 @@ bool signup()
 
         if (password != password2)
         {
-            cout << "Error: Passwords do not match.\n\n";
+            cout << "Invalid input. Passwords do not match.\n\n";
         }
         else if (password.length() < 8)
         {
-            cout << "Error: Password must contain at least 8 characters.\n\n";
+            cout << "Invalid Input. Password must contain at least 8 characters.\n\n";
         }
         else
         {
@@ -63,28 +64,26 @@ void custHomeScreen()
 {
     while (true)
     {
-        string userInput;
-
         cout << "\nCustomer Menu\n";
         cout << "[1] Login\n";
         cout << "[2] Sign up\n";
+        cout << "[0] Return\n";
 
-        do
+        int choice = readInteger("Enter your choice: ", 0, 2);
+
+        if (choice == 0)
         {
-            cout << "Enter your choice: ";
-            cin >> userInput;
-        } while (numberValidation(userInput, 2) != 0);
+            return;
+        }
 
-        cin.ignore();
-
-        if (stoi(userInput) == 1)
+        if (choice == 1)
         {
             if (login(2))
             {
                 break;
             }
         }
-        else
+        else if (choice == 2)
         {
             if (signup())
             {
@@ -95,15 +94,12 @@ void custHomeScreen()
 
     bookingScreen();
 }
-
 int main()
 {
-    roleSelection();
-    cout << "\nThank you for using the Hotel Reservation System.\n";
+    while (true){
+        roleSelection();
+    }
+    
 
     return 0;
 }
-
-// View profile
-// Edit profile
-// Booking history

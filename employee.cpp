@@ -7,18 +7,29 @@
 #include <vector>
 
 using namespace std;
-
 void empHomeScreen()
 {
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    const string EMPLOYEE_PASSCODE = "1234";
+    string enteredPasscode;
 
-    if (!login(1))
+    while (true)
     {
-        return;
-    }
+        cout << "\nEmployee Access\n";
+        cout << "Enter employee passcode [999 to go back]: ";
+        getline(cin, enteredPasscode);
 
-    vector<Room> rooms;
-    vector<Booking> bookings;
-    loadSchedulerDemoData(rooms, bookings);
-    employeeSchedulerMenu(rooms, bookings);
+        if (enteredPasscode == "999")
+        {
+            return;
+        }
+
+        if (enteredPasscode == EMPLOYEE_PASSCODE)
+        {
+            cout << "\nEmployee passcode accepted.\n";
+            mainMenu(1);
+            return;
+        }
+
+        cout << "Invalid, Wrong employee passcode. Please try again.\n";
+    }
 }

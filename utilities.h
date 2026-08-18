@@ -1,7 +1,12 @@
-#pragma once
 
 #include <string>
+#pragma once
 
-int numberValidation(const std::string& userInput, int limit);
+//validation can reuse
+int readInteger(const std::string& prompt, int minimum, int maximum);
+
 bool login(int role);
+
 void roleSelection();
+
+void mainMenu(int role);
