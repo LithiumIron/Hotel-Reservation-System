@@ -155,48 +155,44 @@ void mainMenu(int role)
 
         cout << "[0] Return\n";
         cout << "====================================\n";
-        int choice;
+
+        int choice = readInteger("Enter your choice: ", 0, (role == 2) ? 3 : 2);
 
         if (choice == 0)
+        {
             return;
-        
-        switch(role){
-            case 1: {
-                choice = readInteger("Enter your choice: ", 0, 2);
-                if (choice==1){
-                    //view profile
-                }
-                else if (choice==2)
-                {
-                    vector<Room> rooms;
-                    vector<Booking> bookings;
-                    loadSchedulerDemoData(rooms, bookings);
-                    employeeSchedulerMenu(rooms, bookings);
-                }
-                else if (choice==3)
-                {
-                    //booking
-                }
+        }
+
+        if (role == 1)
+        {
+            if (choice == 1)
+            {
+                //view profile
             }
-
-            case 2:{
-                choice = readInteger("Enter your choice: ", 0, 3);
-                if (choice==1){
-                    //view profile
-                }
-                else if (choice==2)
-                {
-                    vector<Room> rooms;
-                    vector<Booking> bookings;
-                    loadSchedulerDemoData(rooms, bookings);
-                    customerSchedulerMenu(rooms, bookings);
-
-                    
-                }
-                else if (choice==3)
-                {
-                    //booking
-                }
+            else if (choice == 2)
+            {
+                vector<Room> rooms;
+                vector<Booking> bookings;
+                loadSchedulerDemoData(rooms, bookings);
+                employeeSchedulerMenu(rooms, bookings);
+            }
+        }
+        else
+        {
+            if (choice == 1)
+            {
+                //view profile
+            }
+            else if (choice == 2)
+            {
+                vector<Room> rooms;
+                vector<Booking> bookings;
+                loadSchedulerDemoData(rooms, bookings);
+                customerSchedulerMenu(rooms, bookings);
+            }
+            else if (choice == 3)
+            {
+                //booking
             }
         }
             
