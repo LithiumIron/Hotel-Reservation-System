@@ -425,6 +425,10 @@ namespace
             }
         }
 
+        // One booking ID for the entire session
+        maxNum++;
+        string bookingId = "B" + to_string(maxNum);
+
         for (const SelectedRoom& sel : selections)
         {
             string type =
@@ -438,10 +442,8 @@ namespace
                     continue;
                 if (assigned >= sel.quantity) break;
 
-                maxNum++;
                 Booking newBooking;
-                newBooking.bookingId = "B"
-                    + to_string(maxNum);
+                newBooking.bookingId = bookingId;
                 newBooking.customerId = customerId;
                 newBooking.roomId = room.roomId;
                 newBooking.bookingDate = SYSTEM_DATE;
@@ -664,7 +666,7 @@ void bookingScreen()
 
                 char choice = readLetterOrBack(
                     'A', 'E',
-                    "jump back to previous step");
+                    "reselect check-out date");
                 if (choice == 'Z')
                 {
                     stage = STAGE_CHECKOUT;
@@ -684,7 +686,7 @@ void bookingScreen()
                 // Room quantity
                 int qty = readQuantityOrBack(
                     avail[typeIndex],
-                    "jump back to previous step");
+                    "reselect room type");
                 if (qty == -1)
                 {
                     if (!selections.empty())
@@ -716,8 +718,7 @@ void bookingScreen()
                      << setprecision(2) << total << "\n";
 
                 cout << "\nBook more rooms? (Y/N) "
-                     << "(Enter Z to jump back to "
-                     << "previous step): ";
+                     << "(Enter Z to reselect room type): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -770,8 +771,8 @@ void bookingScreen()
 
                 // Add-on selection with N to skip
                 cout << "Select (A-D, Enter N to skip "
-                     << "add-ons, Enter Z to jump back "
-                     << "to previous step): ";
+                     << "add-ons, Enter Z to reselect "
+                     << "rooms): ";
                 string input;
                 getline(cin, input);
 
@@ -797,7 +798,7 @@ void bookingScreen()
 
                 // Add-on quantity
                 int qty = readQuantityOrBack(
-                    99, "jump back to previous step");
+                    99, "reselect add-on");
                 if (qty == -1)
                 {
                     if (!addonSelections.empty())
@@ -833,8 +834,7 @@ void bookingScreen()
                      << addonTotal << "\n";
 
                 cout << "\nAdd more services? (Y/N) "
-                     << "(Enter Z to jump back to "
-                     << "previous step): ";
+                     << "(Enter Z to reselect add-on): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -949,9 +949,17 @@ void bookingScreen()
         cout << "  Total rooms: " << totalRooms << "\n";
         cout << "====================================\n";
 
-        // Z to jump back
-        cout << "\n  Enter Z to jump back to previous "
-             << "step, or press Enter to continue: ";
+        // Z to go back
+        if (addonSelections.empty())
+        {
+            cout << "\n  Enter Z to reselect room quantity, "
+                 << "or press Enter to continue: ";
+        }
+        else
+        {
+            cout << "\n  Enter Z to reselect add-on, "
+                 << "or press Enter to continue: ";
+        }
         string zInput;
         getline(cin, zInput);
         if (zInput == "Z" || zInput == "z")
@@ -983,7 +991,7 @@ void bookingScreen()
             cout << "====================================\n";
             cout << "  [A] Online Banking\n";
             cout << "  [B] E-Wallet\n";
-            cout << "  [Z] Jump back to previous step\n";
+            cout << "  [Z] Reselect payment method\n";
 
             cout << "Select payment method (A/B/Z): ";
             string input;
@@ -1077,8 +1085,7 @@ void bookingScreen()
                 cout << "  Status: CONFIRMED\n";
                 cout << "====================================\n";
                 cout << "\n  *** BOOKING SUCCESSFUL ***\n";
-                cout << "  Press any key to return to "
-                     << "main menu: ";
+                cout << "  Press Enter to back to main menu: ";
                 string dummy;
                 getline(cin, dummy);
                 return;
@@ -1213,8 +1220,7 @@ void bookingScreen()
                 cout << "  Status: CONFIRMED\n";
                 cout << "====================================\n";
                 cout << "\n  *** BOOKING SUCCESSFUL ***\n";
-                cout << "  Press any key to return to "
-                     << "main menu: ";
+                cout << "  Press Enter to back to main menu: ";
                 string dummy;
                 getline(cin, dummy);
                 return;
@@ -1239,8 +1245,6 @@ void viewPreviousBookings()
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
     cout << "====================================\n";
-    cout << "  Showing records for: "
-         << customerId << "\n";
 
     vector<Room> rooms;
     vector<Booking> bookings;
@@ -1322,8 +1326,6 @@ void cancelBooking()
     cout << "\n====================================\n";
     cout << "         CANCEL BOOKING\n";
     cout << "====================================\n";
-    cout << "  Showing bookings for: "
-         << customerId << "\n";
 
     vector<Room> rooms;
     vector<Booking> bookings;
