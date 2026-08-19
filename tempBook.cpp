@@ -16,6 +16,10 @@
 
 using namespace std;
 
+// Forward declarations for file I/O functions
+static void saveBookingToFile(const Booking& b);
+static void saveAllBookings(const vector<Booking>& allBookings);
+
 namespace
 {
     const Date SYSTEM_DATE{ 19, 8, 2026 };
