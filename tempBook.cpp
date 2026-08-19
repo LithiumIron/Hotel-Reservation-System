@@ -351,8 +351,6 @@ namespace
         }
     }
 
-    const string CUSTOMER_ID = "CUST";
-
     string generateAccessCode()
     {
         static bool seeded = false;
@@ -373,7 +371,8 @@ namespace
         const vector<SelectedRoom>& selections,
         const Date& checkIn, const Date& checkOut,
         const vector<Room>& rooms,
-        const vector<Booking>& existingBookings)
+        const vector<Booking>& existingBookings,
+        const string& customerId)
     {
         vector<Booking> saved = loadSavedBookings();
 
@@ -443,7 +442,7 @@ namespace
                 Booking newBooking;
                 newBooking.bookingId = "B"
                     + to_string(maxNum);
-                newBooking.customerId = CUSTOMER_ID;
+                newBooking.customerId = customerId;
                 newBooking.roomId = room.roomId;
                 newBooking.bookingDate = SYSTEM_DATE;
                 newBooking.checkInDate = checkIn;
@@ -565,18 +564,31 @@ void bookingScreen()
         bookings.push_back(b);
     }
 
+    // Customer identification
+    cout << "\n====================================\n";
+    cout << "         ROOM BOOKING\n";
+    cout << "====================================\n";
+    cout << "\n  Please enter your details:\n";
+    cout << "  Full Name: ";
+    string customerName;
+    getline(cin, customerName);
+    cout << "  Phone Number: ";
+    string customerPhone;
+    getline(cin, customerPhone);
+
+    // Generate a simple customer ID from name+phone
+    string customerId = customerName + "|" + customerPhone;
+
+    cout << "====================================\n";
+    cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
+    cout << "====================================\n";
+
     Date checkInDate;
     Date checkOutDate;
     vector<SelectedRoom> selections;
     vector<SelectedAddOn> addonSelections;
 
     BookingStage stage = STAGE_CHECKIN;
-
-    cout << "\n====================================\n";
-    cout << "         ROOM BOOKING\n";
-    cout << "====================================\n";
-    cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
-    cout << "====================================\n";
 
     while (stage != STAGE_SUMMARY && stage != STAGE_EXIT)
     {
@@ -1057,13 +1069,28 @@ void bookingScreen()
                 createBookingRecords(
                     selections,
                     checkInDate, checkOutDate,
-                    rooms, bookings);
-                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
-                cout << "  Payment via E-Wallet "
-                     << "completed.\n";
-                cout << "  Return to main menu to view\n";
-                cout << "  your booking details.\n";
+                    rooms, bookings, customerId);
+                cout << "\n====================================\n";
+                cout << "           RECEIPT\n";
                 cout << "====================================\n";
+                cout << "  Guest: " << customerName << "\n";
+                cout << "  Phone: " << customerPhone << "\n";
+                cout << "  Check-in:  "
+                     << formatDate(checkInDate) << "\n";
+                cout << "  Check-out: "
+                     << formatDate(checkOutDate) << "\n";
+                cout << "  Payment: E-Wallet\n";
+                cout << "  Amount: RM" << fixed
+                     << setprecision(2) << grandTotal
+                     << "\n";
+                cout << "  Status: CONFIRMED\n";
+                cout << "====================================\n";
+                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
+                cout << "  Press any key to return to "
+                     << "main menu: ";
+                string dummy;
+                getline(cin, dummy);
+                return;
             }
             else
             {
@@ -1178,14 +1205,29 @@ void bookingScreen()
                 createBookingRecords(
                     selections,
                     checkInDate, checkOutDate,
-                    rooms, bookings);
-                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
-                cout << "  Payment via "
-                     << BANKS[bankIdx]
-                     << " completed.\n";
-                cout << "  Return to main menu to view\n";
-                cout << "  your booking details.\n";
+                    rooms, bookings, customerId);
+                cout << "\n====================================\n";
+                cout << "           RECEIPT\n";
                 cout << "====================================\n";
+                cout << "  Guest: " << customerName << "\n";
+                cout << "  Phone: " << customerPhone << "\n";
+                cout << "  Check-in:  "
+                     << formatDate(checkInDate) << "\n";
+                cout << "  Check-out: "
+                     << formatDate(checkOutDate) << "\n";
+                cout << "  Payment: " << BANKS[bankIdx]
+                     << "\n";
+                cout << "  Amount: RM" << fixed
+                     << setprecision(2) << grandTotal
+                     << "\n";
+                cout << "  Status: CONFIRMED\n";
+                cout << "====================================\n";
+                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
+                cout << "  Press any key to return to "
+                     << "main menu: ";
+                string dummy;
+                getline(cin, dummy);
+                return;
             }
             else
             {
@@ -1202,142 +1244,68 @@ void bookingScreen()
 
 void viewPreviousBookings()
 {
+    // Prompt for customer identification
+    cout << "\n====================================\n";
+    cout << "   PREVIOUS BOOKING RECORDS\n";
+    cout << "====================================\n";
+    cout << "\n  Enter your details to look up\n";
+    cout << "  your booking records:\n";
+    cout << "  Full Name: ";
+    string customerName;
+    getline(cin, customerName);
+    cout << "  Phone Number: ";
+    string customerPhone;
+    getline(cin, customerPhone);
+
+    string customerId = customerName + "|" + customerPhone;
+
     vector<Room> rooms;
     vector<Booking> bookings;
     loadSchedulerDemoData(rooms, bookings);
     vector<Booking> saved = loadSavedBookings();
 
-    vector<Booking> myBookings;
-    for (const Booking& b : bookings)
-    {
-        if (b.customerId == CUSTOMER_ID
-            && !b.accessCode.empty())
-        {
-            myBookings.push_back(b);
-        }
-    }
+    // Collect bookings by ID
+    vector<string> bookingIds;
+    map<string, vector<Booking>> bookingsById;
+
     for (const Booking& b : saved)
     {
-        if (b.customerId == CUSTOMER_ID
+        if (b.customerId == customerId
             && b.status != "CANCELLED")
         {
-            myBookings.push_back(b);
+            if (bookingsById.find(b.bookingId)
+                == bookingsById.end())
+            {
+                bookingIds.push_back(b.bookingId);
+            }
+            bookingsById[b.bookingId].push_back(b);
         }
     }
 
-    cout << "\n====================================\n";
-    cout << "   PREVIOUS BOOKING RECORDS\n";
-    cout << "====================================\n";
-
-    if (myBookings.empty())
+    if (bookingIds.empty())
     {
         cout << "\n  No booking records found.\n";
         cout << "====================================\n";
         return;
     }
 
-    for (size_t i = 0; i < myBookings.size(); i++)
-    {
-        const Booking& b = myBookings[i];
-
-        string roomType = "Unknown";
-        for (const Room& r : rooms)
-        {
-            if (r.roomId == b.roomId)
-            {
-                roomType = r.roomType;
-                break;
-            }
-        }
-
-        cout << "\n  [" << (i + 1) << "] Booking "
-             << b.bookingId << "\n";
-        cout << "      Room: " << b.roomId
-             << " (" << roomType << ")\n";
-        cout << "      Check-in:  "
-             << formatDate(b.checkInDate) << "\n";
-        cout << "      Check-out: "
-             << formatDate(b.checkOutDate) << "\n";
-        cout << "      Status: " << b.status << "\n";
-        cout << "      Room Access Code: "
-             << b.accessCode << "\n";
-        cout << "      (Enter this access code to\n";
-        cout << "       enter the room during your\n";
-        cout << "       stay)\n";
-    }
-
-    cout << "\n====================================\n";
-
-    cout << "\nPress any key to continue: ";
-    string input;
-    getline(cin, input);
-}
-
-void cancelBooking()
-{
-    vector<Room> rooms;
-    vector<Booking> bookings;
-    loadSchedulerDemoData(rooms, bookings);
-    vector<Booking> saved = loadSavedBookings();
-
-    // Group bookings by booking ID
-    vector<string> bookingIds;
-    map<string, vector<Booking>> bookingsById;
-
-    for (const Booking& b : bookings)
-    {
-        if (b.customerId == CUSTOMER_ID
-            && !b.accessCode.empty()
-            && b.status != "CANCELLED"
-            && b.status != "COMPLETED")
-        {
-            if (bookingsById.find(b.bookingId)
-                == bookingsById.end())
-            {
-                bookingIds.push_back(b.bookingId);
-            }
-            bookingsById[b.bookingId].push_back(b);
-        }
-    }
-    for (const Booking& b : saved)
-    {
-        if (b.customerId == CUSTOMER_ID
-            && b.status != "CANCELLED")
-        {
-            if (bookingsById.find(b.bookingId)
-                == bookingsById.end())
-            {
-                bookingIds.push_back(b.bookingId);
-            }
-            bookingsById[b.bookingId].push_back(b);
-        }
-    }
-
-    cout << "\n====================================\n";
-    cout << "     CANCEL BOOKING\n";
-    cout << "====================================\n";
-
-    if (bookingIds.empty())
-    {
-        cout << "\n  No active bookings to cancel.\n";
-        cout << "====================================\n";
-        return;
-    }
-
+    // Display booking boxes
     for (size_t i = 0; i < bookingIds.size(); i++)
     {
         const string& bid = bookingIds[i];
         const vector<Booking>& group = bookingsById[bid];
         const Booking& first = group[0];
 
-        cout << "\n  [" << (i + 1) << "] Booking "
-             << bid << "\n";
-        cout << "      Check-in:  "
+        cout << "\n  +--------------------------------+\n";
+        cout << "  | Booking " << bid
+             << "                        \n";
+        cout << "  +--------------------------------+\n";
+        cout << "  | Check-in:  "
              << formatDate(first.checkInDate) << "\n";
-        cout << "      Check-out: "
+        cout << "  | Check-out: "
              << formatDate(first.checkOutDate) << "\n";
-        cout << "      Status: " << first.status << "\n";
-        cout << "      Rooms:\n";
+        cout << "  | Status: " << first.status << "\n";
+        cout << "  | Rooms:\n";
         for (const Booking& b : group)
         {
             string roomType = "Unknown";
@@ -1349,11 +1317,103 @@ void cancelBooking()
                     break;
                 }
             }
-            cout << "        - " << b.roomId
-                 << " (" << roomType << ")"
-                 << " Access Code: " << b.accessCode
-                 << "\n";
+            cout << "  |   - " << b.roomId
+                 << " (" << roomType << ")\n";
+            cout << "  |     Access Code: "
+                 << b.accessCode << "\n";
         }
+        cout << "  +--------------------------------+\n";
+    }
+
+    cout << "\n====================================\n";
+
+    cout << "\nPress any key to continue: ";
+    string input;
+    getline(cin, input);
+}
+
+void cancelBooking()
+{
+    // Prompt for customer identification
+    cout << "\n====================================\n";
+    cout << "         CANCEL BOOKING\n";
+    cout << "====================================\n";
+    cout << "\n  Enter your details to look up\n";
+    cout << "  your bookings:\n";
+    cout << "  Full Name: ";
+    string customerName;
+    getline(cin, customerName);
+    cout << "  Phone Number: ";
+    string customerPhone;
+    getline(cin, customerPhone);
+
+    string customerId = customerName + "|" + customerPhone;
+
+    vector<Room> rooms;
+    vector<Booking> bookings;
+    loadSchedulerDemoData(rooms, bookings);
+    vector<Booking> saved = loadSavedBookings();
+
+    // Group bookings by booking ID
+    vector<string> bookingIds;
+    map<string, vector<Booking>> bookingsById;
+
+    for (const Booking& b : saved)
+    {
+        if (b.customerId == customerId
+            && b.status != "CANCELLED"
+            && b.status != "COMPLETED")
+        {
+            if (bookingsById.find(b.bookingId)
+                == bookingsById.end())
+            {
+                bookingIds.push_back(b.bookingId);
+            }
+            bookingsById[b.bookingId].push_back(b);
+        }
+    }
+
+    if (bookingIds.empty())
+    {
+        cout << "\n  No active bookings to cancel.\n";
+        cout << "====================================\n";
+        return;
+    }
+
+    // Display booking boxes
+    for (size_t i = 0; i < bookingIds.size(); i++)
+    {
+        const string& bid = bookingIds[i];
+        const vector<Booking>& group = bookingsById[bid];
+        const Booking& first = group[0];
+
+        cout << "\n  [" << (i + 1) << "] ";
+        cout << "+--------------------------------+\n";
+        cout << "      | Booking " << bid << "\n";
+        cout << "      +--------------------------------+\n";
+        cout << "      | Check-in:  "
+             << formatDate(first.checkInDate) << "\n";
+        cout << "      | Check-out: "
+             << formatDate(first.checkOutDate) << "\n";
+        cout << "      | Status: " << first.status << "\n";
+        cout << "      | Rooms:\n";
+        for (const Booking& b : group)
+        {
+            string roomType = "Unknown";
+            for (const Room& r : rooms)
+            {
+                if (r.roomId == b.roomId)
+                {
+                    roomType = r.roomType;
+                    break;
+                }
+            }
+            cout << "      |   - " << b.roomId
+                 << " (" << roomType << ")\n";
+            cout << "      |     Access Code: "
+                 << b.accessCode << "\n";
+        }
+        cout << "      +--------------------------------+\n";
     }
 
     cout << "\n====================================\n";
