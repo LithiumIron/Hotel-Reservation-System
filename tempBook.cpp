@@ -1270,11 +1270,6 @@ static void printBoxBorder()
 
 void viewPreviousBookings()
 {
-    if (loggedInUser.empty())
-    {
-        cout << "\n  Error: No user logged in.\n";
-        return;
-    }
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
@@ -1356,11 +1351,6 @@ void viewPreviousBookings()
 
 void cancelBooking()
 {
-    if (loggedInUser.empty())
-    {
-        cout << "\n  Error: No user logged in.\n";
-        return;
-    }
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
