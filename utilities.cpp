@@ -1,3 +1,4 @@
+#include "booking.h"
 #include "customer.h"
 #include "employee.h"
 #include "utilities.h"
@@ -192,7 +193,7 @@ void mainMenu(int role)
             }
             else if (choice == 3)
             {
-                //booking
+                bookingScreen();
             }
         }
             
