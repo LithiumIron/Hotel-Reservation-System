@@ -26,7 +26,37 @@ bool signup()
             return false;
         }
 
-    
+        if (username.empty())
+        {
+            cout << "Error: Username cannot be empty.\n\n";
+            continue;
+        }
+
+        // Check if username already exists
+        {
+            ifstream inFile("customerData.txt");
+            if (inFile)
+            {
+                string existingUser, existingPass;
+                bool found = false;
+                while (inFile >> existingUser >> existingPass)
+                {
+                    if (existingUser == username)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                inFile.close();
+                if (found)
+                {
+                    cout << "Error: Username already exists. "
+                         << "Please choose another.\n\n";
+                    continue;
+                }
+            }
+        }
+
         cout << "Password: ";
         getline(cin, password);
 
