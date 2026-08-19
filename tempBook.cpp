@@ -178,10 +178,13 @@ namespace
             {
                 return 'Z';
             }
-            if (input.length() == 1 && input[0] >= minCh
-                && input[0] <= maxCh)
+            if (input.length() == 1)
             {
-                return input[0];
+                char ch = toupper(input[0]);
+                if (ch >= minCh && ch <= maxCh)
+                {
+                    return ch;
+                }
             }
             cout << "Invalid. Please enter " << range << ".\n";
         }
@@ -786,15 +789,22 @@ void bookingScreen()
                     stage = STAGE_ROOMS;
                     break;
                 }
-                if (input.length() != 1
-                    || input[0] < 'A' || input[0] > 'D')
+                if (input.length() != 1)
                 {
                     cout << "Invalid. Please enter "
                          << "A-D, N, or Z.\n";
                     continue;
                 }
 
-                int ai = input[0] - 'A';
+                char upperInput = toupper(input[0]);
+                if (upperInput < 'A' || upperInput > 'D')
+                {
+                    cout << "Invalid. Please enter "
+                         << "A-D, N, or Z.\n";
+                    continue;
+                }
+
+                int ai = upperInput - 'A';
 
                 // Add-on quantity
                 int qty = readQuantityOrBack(
