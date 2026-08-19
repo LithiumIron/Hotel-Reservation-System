@@ -14,6 +14,7 @@ struct Room
     std::string roomId;
     std::string roomType;
     double nightlyRate;
+    bool bookingStatus;
 };
 
 struct Booking

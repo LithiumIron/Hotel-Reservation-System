@@ -633,15 +633,42 @@ int auditDoubleBookings(const vector<Booking>& bookings)
     return conflictCount;
 }
 
+void loadHotelRooms(vector<vector<Room>>& hotelRooms)
+{
+    // hotelRooms[floor][room]: 3 floors x 3 rooms
+    // bookingStatus is the occupancy snapshot for system date 14/08/2026
+    hotelRooms = {
+        {
+            { "101", "Standard", 180.0, true },
+            { "102", "Standard", 180.0, false },
+            { "103", "Standard", 180.0, false }
+        },
+        {
+            { "201", "Deluxe", 260.0, true },
+            { "202", "Deluxe", 260.0, false },
+            { "203", "Deluxe", 260.0, false }
+        },
+        {
+            { "301", "Suite", 420.0, false },
+            { "302", "Suite", 420.0, true },
+            { "303", "Suite", 420.0, false }
+        }
+    };
+}
+
 void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
-    rooms = {
-        { "101", "Standard", 180.0 }, { "102", "Standard", 180.0 },
-        { "103", "Standard", 180.0 }, { "201", "Deluxe", 260.0 },
-        { "202", "Deluxe", 260.0 }, { "203", "Deluxe", 260.0 },
-        { "301", "Suite", 420.0 }, { "302", "Suite", 420.0 },
-        { "303", "Suite", 420.0 }
-    };
+    vector<vector<Room>> hotelRooms;
+    loadHotelRooms(hotelRooms);
+
+    rooms.clear();
+    for (const vector<Room>& floor : hotelRooms)
+    {
+        for (const Room& room : floor)
+        {
+            rooms.push_back(room);
+        }
+    }
 
     bookings = {
         { "B001", "C001", "101", {10,8,2026}, {14,8,2026}, {17,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true },
