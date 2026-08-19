@@ -1257,9 +1257,9 @@ void bookingScreen()
 // Helper: print a box line "| content              |"
 static void printBoxLine(const string& content)
 {
-    const int width = 32;
-    cout << "  | ";
-    cout << left << setw(width) << content;
+    const int width = 34;
+    cout << "  |";
+    cout << left << setw(width) << (" " + content);
     cout << "|\n";
 }
 
