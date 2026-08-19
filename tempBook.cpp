@@ -47,12 +47,14 @@ namespace
         return d.day == 0 && d.month == 0 && d.year == 0;
     }
 
-    Date readDate(const string& heading)
+    Date readDate(const string& heading,
+        const string& backLabel)
     {
         while (true)
         {
             cout << '\n' << heading
-                 << "  (Enter Z to go back)\n";
+                 << "  (Enter Z to go back to "
+                 << backLabel << ")\n";
             cout << "Enter date (DD/MM/YYYY): ";
             string input;
             getline(cin, input);
@@ -100,11 +102,12 @@ namespace
         }
     }
 
-    Date readCurrentOrFutureDate(const string& heading)
+    Date readCurrentOrFutureDate(const string& heading,
+        const string& backLabel)
     {
         while (true)
         {
-            Date date = readDate(heading);
+            Date date = readDate(heading, backLabel);
             if (isGoBack(date))
             {
                 return date;
@@ -118,11 +121,13 @@ namespace
         }
     }
 
-    int readQuantityOrBack(int maxVal)
+    int readQuantityOrBack(int maxVal,
+        const string& backLabel)
     {
         while (true)
         {
-            cout << "Quantity (or Z to go back): ";
+            cout << "Quantity (Enter Z to go back to "
+                 << backLabel << "): ";
             string input;
             getline(cin, input);
             if (input == "Z" || input == "z")
@@ -144,7 +149,8 @@ namespace
         }
     }
 
-    char readLetterOrBack(char minCh, char maxCh)
+    char readLetterOrBack(char minCh, char maxCh,
+        const string& backLabel)
     {
         string range;
         range += minCh;
@@ -154,7 +160,8 @@ namespace
         while (true)
         {
             cout << "Select (" << range
-                 << ", or Z to go back): ";
+                 << ", Enter Z to go back to "
+                 << backLabel << "): ";
             string input;
             getline(cin, input);
             if (input == "Z" || input == "z")
@@ -263,7 +270,7 @@ void bookingScreen()
     cout << "         ROOM BOOKING\n";
     cout << "====================================\n";
     cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
-    cout << "Press Z at any prompt to go back.\n";
+    cout << "Enter Z at any prompt to go back.\n";
     cout << "====================================\n";
 
     while (stage != STAGE_SUMMARY && stage != STAGE_EXIT)
@@ -275,7 +282,8 @@ void bookingScreen()
         case STAGE_CHECKIN:
         {
             checkInDate =
-                readCurrentOrFutureDate("Check-in Date");
+                readCurrentOrFutureDate(
+                    "Check-in Date", "main menu");
             if (isGoBack(checkInDate))
             {
                 stage = STAGE_EXIT;  // Z → main menu
@@ -291,7 +299,9 @@ void bookingScreen()
         case STAGE_CHECKOUT:
         {
             checkOutDate =
-                readCurrentOrFutureDate("Check-out Date");
+                readCurrentOrFutureDate(
+                    "Check-out Date",
+                    "re-enter check-in date");
             if (isGoBack(checkOutDate))
             {
                 stage = STAGE_CHECKIN;  // Z → back to check-in
@@ -332,9 +342,10 @@ void bookingScreen()
                     char label = 'A' + i;
                     cout << "  [" << label << "] "
                          << ROOM_TYPES[i].name << "\n";
-                    cout << "      Guests: "
+                    cout << "      Recommended Occupancy: "
                          << ROOM_TYPES[i].capacity
-                         << "  |  Price: RM" << fixed
+                         << " Guest(s)\n";
+                    cout << "      Price: RM" << fixed
                          << setprecision(2)
                          << ROOM_TYPES[i].price
                          << " / night\n";
@@ -342,7 +353,8 @@ void bookingScreen()
                          << " room(s)\n\n";
                 }
 
-                char choice = readLetterOrBack('A', 'E');
+                char choice = readLetterOrBack(
+                    'A', 'E', "reselect check-out date");
                 if (choice == 'Z')
                 {
                     stage = STAGE_CHECKOUT;
@@ -360,7 +372,9 @@ void bookingScreen()
                 }
 
                 // Room quantity
-                int qty = readQuantityOrBack(avail[typeIndex]);
+                int qty = readQuantityOrBack(
+                    avail[typeIndex],
+                    "reselect room type");
                 if (qty == -1)
                 {
                     continue;  // Z → re-select room type
@@ -371,7 +385,7 @@ void bookingScreen()
                 cout << "\n  >> Selected: " << qty << "x "
                      << ROOM_TYPES[typeIndex].name << "\n";
 
-                cout << "\n  ── Your selections ──\n";
+                cout << "\n  -- Your selections --\n";
                 double total = 0;
                 for (const SelectedRoom& sel : selections)
                 {
@@ -383,11 +397,12 @@ void bookingScreen()
                          << cost << "/night)\n";
                     total += cost;
                 }
-                cout << "  ─────────────────────\n";
+                cout << "  ----------------------\n";
                 cout << "  Total per night: RM" << fixed
                      << setprecision(2) << total << "\n";
 
-                cout << "\nBook more rooms? (Y/N/Z=back): ";
+                cout << "\nBook more rooms? (Y/N)\n"
+                     << "  Enter Z to reselect room type: ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -423,9 +438,25 @@ void bookingScreen()
             cout << "  Enhance your stay with extras!\n";
             cout << "  (Prices are per unit per day)\n";
 
+            cout << "\nWould you like to add extra "
+                 << "services? (Y/N)\n"
+                 << "  Enter Z to reselect rooms: ";
+            string addOnChoice;
+            getline(cin, addOnChoice);
+            if (addOnChoice == "Z" || addOnChoice == "z")
+            {
+                stage = STAGE_ROOMS;
+                break;
+            }
+            if (addOnChoice != "Y" && addOnChoice != "y")
+            {
+                stage = STAGE_SUMMARY;
+                break;
+            }
+
             while (true)
             {
-                cout << "\n  ── Available Services ──\n\n";
+                cout << "\n  -- Available Services --\n\n";
                 for (int i = 0; i < NUM_ADDONS; i++)
                 {
                     char label = 'A' + i;
@@ -438,7 +469,8 @@ void bookingScreen()
                          << " / day\n\n";
                 }
 
-                char choice = readLetterOrBack('A', 'D');
+                char choice = readLetterOrBack(
+                    'A', 'D', "reselect rooms");
                 if (choice == 'Z')
                 {
                     stage = STAGE_ROOMS;  // Z → back to rooms
@@ -448,7 +480,8 @@ void bookingScreen()
                 int ai = choice - 'A';
 
                 // Add-on quantity
-                int qty = readQuantityOrBack(99);
+                int qty = readQuantityOrBack(
+                    99, "reselect add-on");
                 if (qty == -1)
                 {
                     continue;  // Z → re-select add-on
@@ -462,7 +495,7 @@ void bookingScreen()
                      << ADDONS[ai].pricePerUnit << "/"
                      << ADDONS[ai].unit << "/day)\n";
 
-                cout << "\n  ── Your add-ons ──\n";
+                cout << "\n  -- Your add-ons --\n";
                 double addonTotal = 0;
                 for (const SelectedAddOn& sel : addonSelections)
                 {
@@ -474,13 +507,13 @@ void bookingScreen()
                          << cost << "/day)\n";
                     addonTotal += cost;
                 }
-                cout << "  ──────────────────────\n";
+                cout << "  -----------------------\n";
                 cout << "  Add-on total per day: RM"
                      << fixed << setprecision(2)
                      << addonTotal << "\n";
 
-                cout << "\nAdd more services? "
-                     << "(Y/N/Z=back): ";
+                cout << "\nAdd more services? (Y/N)\n"
+                     << "  Enter Z to reselect add-on: ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -538,7 +571,6 @@ void bookingScreen()
         double roomTotal = roomPerNight * nights;
         double addonTotal = addonPerDay * nights;
         double grandTotal = roomTotal + addonTotal;
-        double deposit = roomPerNight;
 
         cout << "\n====================================\n";
         cout << "       BOOKING SUMMARY\n";
@@ -548,50 +580,75 @@ void bookingScreen()
         cout << "  Check-out:  " << formatDate(checkOutDate)
              << "\n";
         cout << "  Nights:     " << nights << "\n";
-        cout << "  ─────────────────────────\n";
+        cout << "  --------------------------------\n";
         cout << "  ROOMS:\n";
 
         for (const SelectedRoom& sel : selections)
         {
-            double cost = sel.quantity
+            double perNight = sel.quantity
                 * ROOM_TYPES[sel.typeIndex].price;
+            double lineTotal = perNight * nights;
             cout << "  " << sel.quantity << "x "
                  << ROOM_TYPES[sel.typeIndex].name
-                 << "  RM" << fixed << setprecision(2)
-                 << cost << "/night\n";
+                 << "\n";
+            cout << "     RM" << fixed << setprecision(2)
+                 << perNight << "/night x " << nights
+                 << " nights = RM" << lineTotal << "\n";
         }
-        cout << "  ─────────────────────────\n";
-        cout << "  Room:  RM" << fixed << setprecision(2)
-             << roomPerNight << "/night x " << nights
-             << " = RM" << roomTotal << "\n";
+        cout << "  --------------------------------\n";
+        cout << "  Room total: RM" << fixed
+             << setprecision(2) << roomTotal << "\n";
 
         if (!addonSelections.empty())
         {
-            cout << "  ─────────────────────────\n";
+            cout << "  --------------------------------\n";
             cout << "  ADD-ONS:\n";
             for (const SelectedAddOn& sel : addonSelections)
             {
-                double cost = sel.quantity
+                double perDay = sel.quantity
                     * ADDONS[sel.addonIndex].pricePerUnit;
+                double lineTotal = perDay * nights;
                 cout << "  " << sel.quantity << "x "
                      << ADDONS[sel.addonIndex].name
-                     << "  RM" << fixed << setprecision(2)
-                     << cost << "/day\n";
+                     << "\n";
+                cout << "     RM" << fixed << setprecision(2)
+                     << perDay << "/day x " << nights
+                     << " nights = RM" << lineTotal << "\n";
             }
-            cout << "  ─────────────────────────\n";
-            cout << "  Add-on: RM" << fixed << setprecision(2)
-                 << addonPerDay << "/day x " << nights
-                 << " = RM" << addonTotal << "\n";
+            cout << "  --------------------------------\n";
+            cout << "  Add-on total: RM" << fixed
+                 << setprecision(2) << addonTotal << "\n";
         }
 
-        cout << "  ═════════════════════════\n";
-        cout << "  GRAND TOTAL:  RM" << fixed << setprecision(2)
-             << grandTotal << "\n";
-        cout << "  ─────────────────────────\n";
-        cout << "  DEPOSIT:      RM" << fixed << setprecision(2)
-             << deposit << "\n";
-        cout << "  (Deposit = 1 night room rate)\n";
+        cout << "  ================================\n";
+        cout << "  GRAND TOTAL: RM" << fixed
+             << setprecision(2) << grandTotal << "\n";
         cout << "  Total rooms: " << totalRooms << "\n";
         cout << "====================================\n";
+
+        // Payment method
+        cout << "\n====================================\n";
+        cout << "     PAYMENT METHOD\n";
+        cout << "====================================\n";
+        cout << "  [A] Online Banking\n";
+        cout << "  [B] E-Wallet\n";
+
+        while (true)
+        {
+            cout << "Select payment method (A/B): ";
+            string input;
+            getline(cin, input);
+            if (input == "A" || input == "a")
+            {
+                cout << "\n  Payment method: Online Banking\n";
+                break;
+            }
+            if (input == "B" || input == "b")
+            {
+                cout << "\n  Payment method: E-Wallet\n";
+                break;
+            }
+            cout << "Invalid. Please enter A or B.\n";
+        }
     }
 }
