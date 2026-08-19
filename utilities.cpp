@@ -196,7 +196,11 @@ void mainMenu(int role)
             int choice = readInteger(
                 "Enter your choice: ", 0, 4);
 
-            if (choice == 0) return;
+            if (choice == 0)
+            {
+                loggedInUser.clear();
+                return;
+            }
 
             if (choice == 1)
             {

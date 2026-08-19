@@ -1254,8 +1254,27 @@ void bookingScreen()
     }
 }
 
+// Helper: print a box line "| content              |"
+static void printBoxLine(const string& content)
+{
+    const int width = 32;
+    cout << "  | ";
+    cout << left << setw(width) << content;
+    cout << "|\n";
+}
+
+static void printBoxBorder()
+{
+    cout << "  +----------------------------------+\n";
+}
+
 void viewPreviousBookings()
 {
+    if (loggedInUser.empty())
+    {
+        cout << "\n  Error: No user logged in.\n";
+        return;
+    }
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
@@ -1299,19 +1318,16 @@ void viewPreviousBookings()
         const vector<Booking>& group = bookingsById[bid];
         const Booking& first = group[0];
 
-        cout << "\n  +--------------------------------+\n";
-        cout << "  | Booking " << bid
-             << "                          |\n";
-        cout << "  +--------------------------------+\n";
-        cout << "  | Check-in:  "
-             << formatDate(first.checkInDate)
-             << "          |\n";
-        cout << "  | Check-out: "
-             << formatDate(first.checkOutDate)
-             << "          |\n";
-        cout << "  | Status: " << first.status
-             << "               |\n";
-        cout << "  | Rooms:                         |\n";
+        cout << "\n";
+        printBoxBorder();
+        printBoxLine("Booking " + bid);
+        printBoxBorder();
+        printBoxLine("Check-in:  "
+            + formatDate(first.checkInDate));
+        printBoxLine("Check-out: "
+            + formatDate(first.checkOutDate));
+        printBoxLine("Status: " + first.status);
+        printBoxLine("Rooms:");
         for (const Booking& b : group)
         {
             string roomType = "Unknown";
@@ -1323,13 +1339,12 @@ void viewPreviousBookings()
                     break;
                 }
             }
-            cout << "  |   - " << b.roomId
-                 << " (" << roomType << ")"
-                 << "  |\n";
-            cout << "  |     Access Code: "
-                 << b.accessCode << "         |\n";
+            printBoxLine("  - " + b.roomId
+                + " (" + roomType + ")");
+            printBoxLine("    Access Code: "
+                + b.accessCode);
         }
-        cout << "  +--------------------------------+\n";
+        printBoxBorder();
     }
 
     cout << "\n====================================\n";
@@ -1341,6 +1356,11 @@ void viewPreviousBookings()
 
 void cancelBooking()
 {
+    if (loggedInUser.empty())
+    {
+        cout << "\n  Error: No user logged in.\n";
+        return;
+    }
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
@@ -1385,20 +1405,16 @@ void cancelBooking()
         const vector<Booking>& group = bookingsById[bid];
         const Booking& first = group[0];
 
-        cout << "\n  ";
-        cout << "+--------------------------------+\n";
-        cout << "  | Booking " << bid
-             << "                          |\n";
-        cout << "  +--------------------------------+\n";
-        cout << "  | Check-in:  "
-             << formatDate(first.checkInDate)
-             << "          |\n";
-        cout << "  | Check-out: "
-             << formatDate(first.checkOutDate)
-             << "          |\n";
-        cout << "  | Status: " << first.status
-             << "               |\n";
-        cout << "  | Rooms:                         |\n";
+        cout << "\n";
+        printBoxBorder();
+        printBoxLine("Booking " + bid);
+        printBoxBorder();
+        printBoxLine("Check-in:  "
+            + formatDate(first.checkInDate));
+        printBoxLine("Check-out: "
+            + formatDate(first.checkOutDate));
+        printBoxLine("Status: " + first.status);
+        printBoxLine("Rooms:");
         for (const Booking& b : group)
         {
             string roomType = "Unknown";
@@ -1410,13 +1426,12 @@ void cancelBooking()
                     break;
                 }
             }
-            cout << "  |   - " << b.roomId
-                 << " (" << roomType << ")"
-                 << "  |\n";
-            cout << "  |     Access Code: "
-                 << b.accessCode << "         |\n";
+            printBoxLine("  - " + b.roomId
+                + " (" + roomType + ")");
+            printBoxLine("    Access Code: "
+                + b.accessCode);
         }
-        cout << "  +--------------------------------+\n";
+        printBoxBorder();
     }
 
     cout << "\n====================================\n";
