@@ -982,36 +982,31 @@ void bookingScreen()
         }
 
         // ── Payment Method ──
-        bool paymentSelected = false;
-        char payMethod = ' ';
-        while (!paymentSelected)
+        bool paymentDone = false;
+        while (!paymentDone)
+        {
+        bool reselectPayment = false;
+        char payMethod;
+        while (true)
         {
             cout << "\n====================================\n";
             cout << "     PAYMENT METHOD\n";
             cout << "====================================\n";
             cout << "  [A] Online Banking\n";
             cout << "  [B] E-Wallet\n";
-            cout << "  [Z] Reselect payment method\n";
 
-            cout << "Select payment method (A/B/Z): ";
+            cout << "Select payment method (A/B): ";
             string input;
             getline(cin, input);
-            if (input == "Z" || input == "z")
-            {
-                continue;  // re-show this same summary
-            }
             if (input == "A" || input == "a")
             {
-                payMethod = 'A'; paymentSelected = true;
+                payMethod = 'A'; break;
             }
-            else if (input == "B" || input == "b")
+            if (input == "B" || input == "b")
             {
-                payMethod = 'B'; paymentSelected = true;
+                payMethod = 'B'; break;
             }
-            else
-            {
-                cout << "Invalid. Please enter A, B, or Z.\n";
-            }
+            cout << "Invalid. Please enter A or B.\n";
         }
 
         if (payMethod == 'B')
@@ -1024,14 +1019,18 @@ void bookingScreen()
             // Phone number
             while (true)
             {
-                cout << "\nEnter phone number:\n";
-                cout << "  Format: 01x-xxxxxxx "
-                     << "(e.g. 012-3456789)\n";
-                cout << "  or 011-xxxxxxxx "
-                     << "(e.g. 011-12345678)\n";
-                cout << "Phone: ";
+                cout << "\nEnter phone number "
+                     << "(Enter Z to reselect payment "
+                     << "method)\n";
+                cout << "  (e.g. 012-3456789): ";
                 string phone;
                 getline(cin, phone);
+
+                if (phone == "Z" || phone == "z")
+                {
+                    reselectPayment = true;
+                    break;
+                }
 
                 string result = validatePhone(phone);
                 if (result == "valid")
@@ -1051,6 +1050,8 @@ void bookingScreen()
                     cout << "  Invalid phone number.\n";
                 }
             }
+
+            if (reselectPayment) continue;
 
             // Wallet PIN
             readSixDigitPin(
@@ -1113,18 +1114,26 @@ void bookingScreen()
             };
 
             int bankIdx;
-            while (true)
+            bool bankSelected = false;
+            while (!bankSelected)
             {
-                cout << "  Select your bank:\n\n";
+                cout << "  Select your bank "
+                     << "(Enter Z to reselect payment "
+                     << "method):\n\n";
                 for (int i = 0; i < 4; i++)
                 {
                     cout << "  [" << (char)('A' + i)
                          << "] " << BANKS[i] << "\n";
                 }
 
-                cout << "\nSelect bank (A-D): ";
+                cout << "\nSelect bank (A-D/Z): ";
                 string bankInput;
                 getline(cin, bankInput);
+                if (bankInput == "Z" || bankInput == "z")
+                {
+                    reselectPayment = true;
+                    break;
+                }
                 if (bankInput.length() == 1
                     && bankInput[0] >= 'A'
                     && bankInput[0] <= 'D')
@@ -1132,10 +1141,15 @@ void bookingScreen()
                     bankIdx = bankInput[0] - 'A';
                     cout << "\n  Bank: "
                          << BANKS[bankIdx] << "\n";
-                    break;
+                    bankSelected = true;
                 }
-                cout << "Invalid. Please enter A-D.\n";
+                else
+                {
+                    cout << "Invalid. Please enter A-D.\n";
+                }
             }
+
+            if (reselectPayment) continue;
 
             // Username
             cout << "Enter your banking username: ";
@@ -1233,6 +1247,8 @@ void bookingScreen()
                 cout << "====================================\n";
             }
         }
+        paymentDone = true;
+        }  // end while paymentDone
         stage = STAGE_EXIT;
         }  // end while summary
     }
@@ -1285,14 +1301,17 @@ void viewPreviousBookings()
 
         cout << "\n  +--------------------------------+\n";
         cout << "  | Booking " << bid
-             << "                        \n";
+             << "                          |\n";
         cout << "  +--------------------------------+\n";
         cout << "  | Check-in:  "
-             << formatDate(first.checkInDate) << "\n";
+             << formatDate(first.checkInDate)
+             << "          |\n";
         cout << "  | Check-out: "
-             << formatDate(first.checkOutDate) << "\n";
-        cout << "  | Status: " << first.status << "\n";
-        cout << "  | Rooms:\n";
+             << formatDate(first.checkOutDate)
+             << "          |\n";
+        cout << "  | Status: " << first.status
+             << "               |\n";
+        cout << "  | Rooms:                         |\n";
         for (const Booking& b : group)
         {
             string roomType = "Unknown";
@@ -1305,9 +1324,10 @@ void viewPreviousBookings()
                 }
             }
             cout << "  |   - " << b.roomId
-                 << " (" << roomType << ")\n";
+                 << " (" << roomType << ")"
+                 << "  |\n";
             cout << "  |     Access Code: "
-                 << b.accessCode << "\n";
+                 << b.accessCode << "         |\n";
         }
         cout << "  +--------------------------------+\n";
     }
@@ -1365,16 +1385,20 @@ void cancelBooking()
         const vector<Booking>& group = bookingsById[bid];
         const Booking& first = group[0];
 
-        cout << "\n  [" << (i + 1) << "] ";
+        cout << "\n  ";
         cout << "+--------------------------------+\n";
-        cout << "      | Booking " << bid << "\n";
-        cout << "      +--------------------------------+\n";
-        cout << "      | Check-in:  "
-             << formatDate(first.checkInDate) << "\n";
-        cout << "      | Check-out: "
-             << formatDate(first.checkOutDate) << "\n";
-        cout << "      | Status: " << first.status << "\n";
-        cout << "      | Rooms:\n";
+        cout << "  | Booking " << bid
+             << "                          |\n";
+        cout << "  +--------------------------------+\n";
+        cout << "  | Check-in:  "
+             << formatDate(first.checkInDate)
+             << "          |\n";
+        cout << "  | Check-out: "
+             << formatDate(first.checkOutDate)
+             << "          |\n";
+        cout << "  | Status: " << first.status
+             << "               |\n";
+        cout << "  | Rooms:                         |\n";
         for (const Booking& b : group)
         {
             string roomType = "Unknown";
@@ -1386,17 +1410,19 @@ void cancelBooking()
                     break;
                 }
             }
-            cout << "      |   - " << b.roomId
-                 << " (" << roomType << ")\n";
-            cout << "      |     Access Code: "
-                 << b.accessCode << "\n";
+            cout << "  |   - " << b.roomId
+                 << " (" << roomType << ")"
+                 << "  |\n";
+            cout << "  |     Access Code: "
+                 << b.accessCode << "         |\n";
         }
-        cout << "      +--------------------------------+\n";
+        cout << "  +--------------------------------+\n";
     }
 
     cout << "\n====================================\n";
 
-    cout << "\n  Enter booking number to cancel\n";
+    cout << "\n  Enter booking ID to cancel "
+         << "(e.g. B1)\n";
     cout << "  Enter Z to go back: ";
     string input;
     getline(cin, input);
@@ -1406,17 +1432,22 @@ void cancelBooking()
         return;
     }
 
-    int choice = 0;
-    try { choice = stoi(input); }
-    catch (...) { choice = 0; }
-
-    if (choice < 1 || choice > (int)bookingIds.size())
+    // Find the booking ID in the list
+    string selectedId = "";
+    for (const string& bid : bookingIds)
     {
-        cout << "Invalid selection.\n";
-        return;
+        if (bid == input)
+        {
+            selectedId = bid;
+            break;
+        }
     }
 
-    const string& selectedId = bookingIds[choice - 1];
+    if (selectedId.empty())
+    {
+        cout << "Invalid booking ID.\n";
+        return;
+    }
     const vector<Booking>& group = bookingsById[selectedId];
 
     cout << "\n  Cancel entire booking "
