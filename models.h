@@ -29,4 +29,5 @@ struct Booking
     Date expiryDate;
     string status;
     bool paid;
+    string accessCode;
 };

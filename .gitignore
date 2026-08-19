@@ -5,3 +5,4 @@ Release/
 *.exe
 *.obj
 *.user
+bookingData.txt

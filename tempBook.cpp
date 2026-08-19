@@ -3,8 +3,13 @@
 #include "utilities.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -251,6 +256,298 @@ namespace
         int addonIndex;
         int quantity;
     };
+
+    // Returns: "valid", "format", or "invalid"
+    string validatePhone(const string& input)
+    {
+        if (input.length() < 5 || input[3] != '-')
+        {
+            return "format";
+        }
+
+        string prefix = input.substr(0, 3);
+        string digits = input.substr(4);
+
+        if (prefix == "011")
+        {
+            if (digits.length() != 8) return "format";
+        }
+        else
+        {
+            bool validPrefix =
+                prefix == "010" || prefix == "012"
+                || prefix == "013" || prefix == "014"
+                || prefix == "016" || prefix == "017"
+                || prefix == "018" || prefix == "019";
+
+            if (!validPrefix) return "invalid";
+            if (digits.length() != 7) return "format";
+        }
+
+        for (char c : digits)
+        {
+            if (!isdigit(c)) return "invalid";
+        }
+
+        return "valid";
+    }
+
+    string readSixDigitPin(const string& prompt)
+    {
+        while (true)
+        {
+            cout << prompt;
+            string input;
+            getline(cin, input);
+            if (input.length() != 6)
+            {
+                cout << "PIN must be exactly 6 digits.\n";
+                continue;
+            }
+            bool allDigits = true;
+            for (char c : input)
+            {
+                if (!isdigit(c))
+                {
+                    allDigits = false; break;
+                }
+            }
+            if (allDigits) return input;
+            cout << "PIN must contain digits only.\n";
+        }
+    }
+
+    // Returns 6-digit OTP, or "Z" to reselect bank
+    string readTacOtp(const string& prompt)
+    {
+        while (true)
+        {
+            cout << prompt;
+            string input;
+            getline(cin, input);
+            if (input == "Z" || input == "z") return "Z";
+            if (input.length() != 6)
+            {
+                cout << "TAC/OTP must be exactly "
+                     << "6 digits.\n";
+                continue;
+            }
+            bool allDigits = true;
+            for (char c : input)
+            {
+                if (!isdigit(c))
+                {
+                    allDigits = false; break;
+                }
+            }
+            if (allDigits) return input;
+            cout << "TAC/OTP must contain digits "
+                 << "only.\n";
+        }
+    }
+
+    const string CUSTOMER_ID = "CUST";
+
+    string generateAccessCode()
+    {
+        static bool seeded = false;
+        if (!seeded)
+        {
+            srand((unsigned)time(nullptr));
+            seeded = true;
+        }
+        const string chars =
+            "ABCDEFGHJKLMNPQRSTUVWXYZ"
+            "23456789";
+        string code;
+        for (int i = 0; i < 6; i++)
+        {
+            code += chars[rand() % chars.length()];
+        }
+        return code;
+    }
+
+    void createBookingRecords(
+        const vector<SelectedRoom>& selections,
+        const Date& checkIn, const Date& checkOut,
+        const vector<Room>& rooms,
+        const vector<Booking>& existingBookings)
+    {
+        vector<Booking> saved = loadSavedBookings();
+
+        int maxNum = 0;
+        auto scanId = [&](const vector<Booking>& src)
+        {
+            for (const Booking& b : src)
+            {
+                if (b.bookingId.length() > 1
+                    && b.bookingId[0] == 'B')
+                {
+                    try
+                    {
+                        int n = stoi(
+                            b.bookingId.substr(1));
+                        if (n > maxNum) maxNum = n;
+                    }
+                    catch (...) {}
+                }
+            }
+        };
+        scanId(existingBookings);
+        scanId(saved);
+
+        set<string> usedRooms;
+        for (const Booking& b : existingBookings)
+        {
+            if (b.status == "CONFIRMED"
+                || b.status == "PENDING"
+                || b.status == "CHECKED_IN")
+            {
+                if (datesOverlap(checkIn, checkOut,
+                    b.checkInDate, b.checkOutDate))
+                {
+                    usedRooms.insert(b.roomId);
+                }
+            }
+        }
+        for (const Booking& b : saved)
+        {
+            if (b.status == "CONFIRMED"
+                || b.status == "PENDING"
+                || b.status == "CHECKED_IN")
+            {
+                if (datesOverlap(checkIn, checkOut,
+                    b.checkInDate, b.checkOutDate))
+                {
+                    usedRooms.insert(b.roomId);
+                }
+            }
+        }
+
+        for (const SelectedRoom& sel : selections)
+        {
+            string type =
+                ROOM_TYPES[sel.typeIndex].name;
+            int assigned = 0;
+
+            for (const Room& room : rooms)
+            {
+                if (room.roomType != type) continue;
+                if (usedRooms.count(room.roomId))
+                    continue;
+                if (assigned >= sel.quantity) break;
+
+                maxNum++;
+                Booking newBooking;
+                newBooking.bookingId = "B"
+                    + to_string(maxNum);
+                newBooking.customerId = CUSTOMER_ID;
+                newBooking.roomId = room.roomId;
+                newBooking.bookingDate = SYSTEM_DATE;
+                newBooking.checkInDate = checkIn;
+                newBooking.checkOutDate = checkOut;
+                newBooking.expiryDate = checkOut;
+                newBooking.status = "CONFIRMED";
+                newBooking.paid = true;
+                newBooking.accessCode =
+                    generateAccessCode();
+
+                saveBookingToFile(newBooking);
+                usedRooms.insert(room.roomId);
+                assigned++;
+            }
+        }
+    }
+}
+
+const string BOOKING_FILE = "bookingData.txt";
+
+vector<Booking> loadSavedBookings()
+{
+    vector<Booking> result;
+    ifstream inFile(BOOKING_FILE);
+    if (!inFile) return result;
+
+    string line;
+    while (getline(inFile, line))
+    {
+        istringstream iss(line);
+        Booking b;
+        string token;
+        getline(iss, b.bookingId, '\t');
+        getline(iss, b.customerId, '\t');
+        getline(iss, b.roomId, '\t');
+        getline(iss, token, '\t');
+        b.bookingDate.day = stoi(token);
+        getline(iss, token, '\t');
+        b.bookingDate.month = stoi(token);
+        getline(iss, token, '\t');
+        b.bookingDate.year = stoi(token);
+        getline(iss, token, '\t');
+        b.checkInDate.day = stoi(token);
+        getline(iss, token, '\t');
+        b.checkInDate.month = stoi(token);
+        getline(iss, token, '\t');
+        b.checkInDate.year = stoi(token);
+        getline(iss, token, '\t');
+        b.checkOutDate.day = stoi(token);
+        getline(iss, token, '\t');
+        b.checkOutDate.month = stoi(token);
+        getline(iss, token, '\t');
+        b.checkOutDate.year = stoi(token);
+        getline(iss, b.status, '\t');
+        getline(iss, token, '\t');
+        b.paid = (token == "1");
+        getline(iss, b.accessCode);
+        result.push_back(b);
+    }
+    inFile.close();
+    return result;
+}
+
+static void saveBookingToFile(const Booking& b)
+{
+    ofstream outFile(BOOKING_FILE, ios::app);
+    outFile << b.bookingId << '\t'
+            << b.customerId << '\t'
+            << b.roomId << '\t'
+            << b.bookingDate.day << '\t'
+            << b.bookingDate.month << '\t'
+            << b.bookingDate.year << '\t'
+            << b.checkInDate.day << '\t'
+            << b.checkInDate.month << '\t'
+            << b.checkInDate.year << '\t'
+            << b.checkOutDate.day << '\t'
+            << b.checkOutDate.month << '\t'
+            << b.checkOutDate.year << '\t'
+            << b.status << '\t'
+            << (b.paid ? "1" : "0") << '\t'
+            << b.accessCode << '\n';
+    outFile.close();
+}
+
+static void saveAllBookings(const vector<Booking>& allBookings)
+{
+    ofstream outFile(BOOKING_FILE);
+    for (const Booking& b : allBookings)
+    {
+        outFile << b.bookingId << '\t'
+                << b.customerId << '\t'
+                << b.roomId << '\t'
+                << b.bookingDate.day << '\t'
+                << b.bookingDate.month << '\t'
+                << b.bookingDate.year << '\t'
+                << b.checkInDate.day << '\t'
+                << b.checkInDate.month << '\t'
+                << b.checkInDate.year << '\t'
+                << b.checkOutDate.day << '\t'
+                << b.checkOutDate.month << '\t'
+                << b.checkOutDate.year << '\t'
+                << b.status << '\t'
+                << (b.paid ? "1" : "0") << '\t'
+                << b.accessCode << '\n';
+    }
+    outFile.close();
 }
 
 void bookingScreen()
@@ -258,6 +555,13 @@ void bookingScreen()
     vector<Room> rooms;
     vector<Booking> bookings;
     loadSchedulerDemoData(rooms, bookings);
+
+    // Merge saved bookings for availability
+    vector<Booking> saved = loadSavedBookings();
+    for (const Booking& b : saved)
+    {
+        bookings.push_back(b);
+    }
 
     Date checkInDate;
     Date checkOutDate;
@@ -270,7 +574,6 @@ void bookingScreen()
     cout << "         ROOM BOOKING\n";
     cout << "====================================\n";
     cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
-    cout << "Enter Z at any prompt to go back.\n";
     cout << "====================================\n";
 
     while (stage != STAGE_SUMMARY && stage != STAGE_EXIT)
@@ -626,13 +929,14 @@ void bookingScreen()
         cout << "  Total rooms: " << totalRooms << "\n";
         cout << "====================================\n";
 
-        // Payment method
+        // ── Payment Method ──
         cout << "\n====================================\n";
         cout << "     PAYMENT METHOD\n";
         cout << "====================================\n";
         cout << "  [A] Online Banking\n";
         cout << "  [B] E-Wallet\n";
 
+        char payMethod;
         while (true)
         {
             cout << "Select payment method (A/B): ";
@@ -640,15 +944,397 @@ void bookingScreen()
             getline(cin, input);
             if (input == "A" || input == "a")
             {
-                cout << "\n  Payment method: Online Banking\n";
-                break;
+                payMethod = 'A'; break;
             }
             if (input == "B" || input == "b")
             {
-                cout << "\n  Payment method: E-Wallet\n";
-                break;
+                payMethod = 'B'; break;
             }
             cout << "Invalid. Please enter A or B.\n";
         }
+
+        if (payMethod == 'B')
+        {
+            // ── E-Wallet Flow ──
+            cout << "\n====================================\n";
+            cout << "     E-WALLET PAYMENT\n";
+            cout << "====================================\n";
+
+            // Phone number
+            while (true)
+            {
+                cout << "\nEnter phone number:\n";
+                cout << "  Format: 01x-xxxxxxx "
+                     << "(e.g. 012-3456789)\n";
+                cout << "  or 011-xxxxxxxx "
+                     << "(e.g. 011-12345678)\n";
+                cout << "Phone: ";
+                string phone;
+                getline(cin, phone);
+
+                string result = validatePhone(phone);
+                if (result == "valid")
+                {
+                    cout << "  Phone number accepted: "
+                         << phone << "\n";
+                    break;
+                }
+                if (result == "format")
+                {
+                    cout << "  Invalid format. "
+                         << "Use 01x-xxxxxxx or "
+                         << "011-xxxxxxxx.\n";
+                }
+                else
+                {
+                    cout << "  Invalid phone number.\n";
+                }
+            }
+
+            // Wallet PIN
+            readSixDigitPin(
+                "Enter 6-digit Wallet PIN: ");
+
+            // Confirmation
+            cout << "\n====================================\n";
+            cout << "  Confirm payment of RM"
+                 << fixed << setprecision(2)
+                 << grandTotal << "? (Y/N): ";
+            string confirm;
+            getline(cin, confirm);
+
+            if (confirm == "Y" || confirm == "y")
+            {
+                createBookingRecords(
+                    selections,
+                    checkInDate, checkOutDate,
+                    rooms, bookings);
+                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
+                cout << "  Payment via E-Wallet "
+                     << "completed.\n";
+                cout << "  Return to main menu to view\n";
+                cout << "  your booking details.\n";
+                cout << "====================================\n";
+            }
+            else
+            {
+                cout << "\n  Payment cancelled.\n";
+                cout << "  Your booking was NOT "
+                     << "confirmed.\n";
+                cout << "====================================\n";
+            }
+        }
+        else
+        {
+            // ── Online Banking Flow ──
+            cout << "\n====================================\n";
+            cout << "     ONLINE BANKING\n";
+            cout << "====================================\n";
+
+            const string BANKS[] = {
+                "Maybank",
+                "Hong Leong Bank",
+                "Public Bank",
+                "RHB Bank"
+            };
+
+            int bankIdx;
+            while (true)
+            {
+                cout << "  Select your bank:\n\n";
+                for (int i = 0; i < 4; i++)
+                {
+                    cout << "  [" << (char)('A' + i)
+                         << "] " << BANKS[i] << "\n";
+                }
+
+                cout << "\nSelect bank (A-D): ";
+                string bankInput;
+                getline(cin, bankInput);
+                if (bankInput.length() == 1
+                    && bankInput[0] >= 'A'
+                    && bankInput[0] <= 'D')
+                {
+                    bankIdx = bankInput[0] - 'A';
+                    cout << "\n  Bank: "
+                         << BANKS[bankIdx] << "\n";
+                    break;
+                }
+                cout << "Invalid. Please enter A-D.\n";
+            }
+
+            // Username
+            cout << "Enter your banking username: ";
+            string username;
+            getline(cin, username);
+
+            // TAC/OTP (Z to reselect bank)
+            string otp;
+            while (true)
+            {
+                otp = readTacOtp(
+                    "Enter 6-digit TAC/OTP "
+                    "(Enter Z to reselect bank): ");
+                if (otp == "Z")
+                {
+                    // Restart bank selection
+                    while (true)
+                    {
+                        cout << "\n  Select your bank:\n\n";
+                        for (int i = 0; i < 4; i++)
+                        {
+                            cout << "  ["
+                                 << (char)('A' + i)
+                                 << "] " << BANKS[i]
+                                 << "\n";
+                        }
+                        cout << "\nSelect bank (A-D): ";
+                        string bankInput;
+                        getline(cin, bankInput);
+                        if (bankInput.length() == 1
+                            && bankInput[0] >= 'A'
+                            && bankInput[0] <= 'D')
+                        {
+                            bankIdx = bankInput[0]
+                                - 'A';
+                            cout << "\n  Bank: "
+                                 << BANKS[bankIdx]
+                                 << "\n";
+                            break;
+                        }
+                        cout << "Invalid. "
+                             << "Please enter A-D.\n";
+                    }
+
+                    cout << "Enter your banking "
+                         << "username: ";
+                    getline(cin, username);
+                    continue;
+                }
+                break;
+            }
+
+            // Confirmation
+            cout << "\n====================================\n";
+            cout << "  Confirm payment of RM"
+                 << fixed << setprecision(2)
+                 << grandTotal
+                 << " via " << BANKS[bankIdx]
+                 << "? (Y/N): ";
+            string confirm;
+            getline(cin, confirm);
+
+            if (confirm == "Y" || confirm == "y")
+            {
+                createBookingRecords(
+                    selections,
+                    checkInDate, checkOutDate,
+                    rooms, bookings);
+                cout << "\n  *** BOOKING SUCCESSFUL ***\n";
+                cout << "  Payment via "
+                     << BANKS[bankIdx]
+                     << " completed.\n";
+                cout << "  Return to main menu to view\n";
+                cout << "  your booking details.\n";
+                cout << "====================================\n";
+            }
+            else
+            {
+                cout << "\n  Payment cancelled.\n";
+                cout << "  Your booking was NOT "
+                     << "confirmed.\n";
+                cout << "====================================\n";
+            }
+        }
+    }
+}
+
+void viewPreviousBookings()
+{
+    vector<Room> rooms;
+    vector<Booking> bookings;
+    loadSchedulerDemoData(rooms, bookings);
+    vector<Booking> saved = loadSavedBookings();
+
+    vector<Booking> myBookings;
+    for (const Booking& b : bookings)
+    {
+        if (b.customerId == CUSTOMER_ID
+            && !b.accessCode.empty())
+        {
+            myBookings.push_back(b);
+        }
+    }
+    for (const Booking& b : saved)
+    {
+        if (b.customerId == CUSTOMER_ID
+            && b.status != "CANCELLED")
+        {
+            myBookings.push_back(b);
+        }
+    }
+
+    cout << "\n====================================\n";
+    cout << "   PREVIOUS BOOKING RECORDS\n";
+    cout << "====================================\n";
+    cout << "  (Enter Z to return to main menu)\n";
+
+    if (myBookings.empty())
+    {
+        cout << "\n  No booking records found.\n";
+        cout << "====================================\n";
+        return;
+    }
+
+    for (size_t i = 0; i < myBookings.size(); i++)
+    {
+        const Booking& b = myBookings[i];
+
+        string roomType = "Unknown";
+        for (const Room& r : rooms)
+        {
+            if (r.roomId == b.roomId)
+            {
+                roomType = r.roomType;
+                break;
+            }
+        }
+
+        cout << "\n  [" << (i + 1) << "] Booking "
+             << b.bookingId << "\n";
+        cout << "      Room: " << b.roomId
+             << " (" << roomType << ")\n";
+        cout << "      Check-in:  "
+             << formatDate(b.checkInDate) << "\n";
+        cout << "      Check-out: "
+             << formatDate(b.checkOutDate) << "\n";
+        cout << "      Status: " << b.status << "\n";
+        cout << "      Room Access Code: "
+             << b.accessCode << "\n";
+        cout << "      (Enter this access code to\n";
+        cout << "       enter the room during your\n";
+        cout << "       stay)\n";
+    }
+
+    cout << "\n====================================\n";
+
+    cout << "\nPress any key to continue "
+         << "(Z to return): ";
+    string input;
+    getline(cin, input);
+}
+
+void cancelBooking()
+{
+    vector<Room> rooms;
+    vector<Booking> bookings;
+    loadSchedulerDemoData(rooms, bookings);
+    vector<Booking> saved = loadSavedBookings();
+
+    vector<Booking> myBookings;
+    vector<int> savedIndices;
+
+    for (const Booking& b : bookings)
+    {
+        if (b.customerId == CUSTOMER_ID
+            && !b.accessCode.empty()
+            && b.status != "CANCELLED"
+            && b.status != "COMPLETED")
+        {
+            myBookings.push_back(b);
+            savedIndices.push_back(-1);
+        }
+    }
+    for (size_t i = 0; i < saved.size(); i++)
+    {
+        if (saved[i].customerId == CUSTOMER_ID
+            && saved[i].status != "CANCELLED")
+        {
+            myBookings.push_back(saved[i]);
+            savedIndices.push_back((int)i);
+        }
+    }
+
+    cout << "\n====================================\n";
+    cout << "     CANCEL BOOKING\n";
+    cout << "====================================\n";
+
+    if (myBookings.empty())
+    {
+        cout << "\n  No active bookings to cancel.\n";
+        cout << "====================================\n";
+        return;
+    }
+
+    for (size_t i = 0; i < myBookings.size(); i++)
+    {
+        const Booking& b = myBookings[i];
+
+        string roomType = "Unknown";
+        for (const Room& r : rooms)
+        {
+            if (r.roomId == b.roomId)
+            {
+                roomType = r.roomType;
+                break;
+            }
+        }
+
+        cout << "  [" << (i + 1) << "] Booking "
+             << b.bookingId << "\n";
+        cout << "      Room: " << b.roomId
+             << " (" << roomType << ")\n";
+        cout << "      Check-in:  "
+             << formatDate(b.checkInDate) << "\n";
+        cout << "      Check-out: "
+             << formatDate(b.checkOutDate) << "\n";
+        cout << "      Status: " << b.status << "\n\n";
+    }
+
+    int choice = readInteger(
+        "Select booking to cancel (0 to go back): ",
+        0, (int)myBookings.size());
+
+    if (choice == 0) return;
+
+    const Booking& selected = myBookings[choice - 1];
+
+    cout << "\n  Cancel booking "
+         << selected.bookingId
+         << " (Room " << selected.roomId << ")?\n";
+    cout << "  Confirm (Y/N): ";
+    string confirm;
+    getline(cin, confirm);
+
+    if (confirm == "Y" || confirm == "y")
+    {
+        int savedIdx = savedIndices[choice - 1];
+        if (savedIdx >= 0)
+        {
+            saved[savedIdx].status = "CANCELLED";
+            saveAllBookings(saved);
+        }
+        else
+        {
+            vector<Booking> allSaved =
+                loadSavedBookings();
+            Booking cancelled = selected;
+            cancelled.status = "CANCELLED";
+            allSaved.push_back(cancelled);
+            saveAllBookings(allSaved);
+        }
+
+        cout << "\n  *** CANCELLATION SUCCESSFUL ***\n";
+        cout << "  Booking " << selected.bookingId
+             << " has been cancelled.\n";
+        cout << "  Room " << selected.roomId
+             << " is now available.\n";
+        cout << "====================================\n";
+    }
+    else
+    {
+        cout << "\n  Cancellation not confirmed.\n";
+        cout << "  Returning to main menu.\n";
+        cout << "====================================\n";
     }
 }

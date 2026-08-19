@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 int readInteger(const string& prompt, int minimum, int maximum)
@@ -148,24 +149,20 @@ void mainMenu(int role)
         cout << "\n====================================\n";
         cout << "     HOTEL RESERVATION SYSTEM\n";
         cout << "====================================\n";
-        cout << "[1] View Profile\n";
-        cout << "[2] View Schedule\n";
-
-        if(role==2)
-            cout<<"[3] Booking\n";
-
-        cout << "[0] Return\n";
-        cout << "====================================\n";
-
-        int choice = readInteger("Enter your choice: ", 0, (role == 2) ? 3 : 2);
-
-        if (choice == 0)
-        {
-            return;
-        }
 
         if (role == 1)
         {
+            // Employee menu (numbered)
+            cout << "[1] View Profile\n";
+            cout << "[2] View Schedule\n";
+            cout << "[0] Return\n";
+            cout << "====================================\n";
+
+            int choice = readInteger(
+                "Enter your choice: ", 0, 2);
+
+            if (choice == 0) return;
+
             if (choice == 1)
             {
                 //view profile
@@ -180,22 +177,65 @@ void mainMenu(int role)
         }
         else
         {
-            if (choice == 1)
+            // Customer menu (lettered)
+            cout << "[A] View Profile\n";
+            cout << "[B] View Schedule\n";
+            cout << "[C] Booking\n";
+            cout << "[D] View Previous Booking Record\n";
+            cout << "[E] Cancel Booking\n";
+            cout << "[Z] Return\n";
+            cout << "====================================\n";
+
+            cout << "Select (A-E, Z to return): ";
+            string input;
+            getline(cin, input);
+
+            char choice = ' ';
+            if (input.length() == 1)
             {
-                //view profile
+                choice = toupper(input[0]);
             }
-            else if (choice == 2)
+
+            if (choice == 'Z') return;
+
+            switch (choice)
+            {
+            case 'A':
+                //view profile
+                break;
+
+            case 'B':
             {
                 vector<Room> rooms;
                 vector<Booking> bookings;
                 loadSchedulerDemoData(rooms, bookings);
+                vector<Booking> saved =
+                    loadSavedBookings();
+                for (const Booking& b : saved)
+                {
+                    bookings.push_back(b);
+                }
                 customerSchedulerMenu(rooms, bookings);
+                break;
             }
-            else if (choice == 3)
-            {
+
+            case 'C':
                 bookingScreen();
+                break;
+
+            case 'D':
+                viewPreviousBookings();
+                break;
+
+            case 'E':
+                cancelBooking();
+                break;
+
+            default:
+                cout << "Invalid. "
+                     << "Please enter A-E or Z.\n";
+                break;
             }
         }
-            
     }
 }
