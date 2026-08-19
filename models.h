@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+using namespace std;
 
 struct Date
 {
@@ -11,20 +12,21 @@ struct Date
 
 struct Room
 {
-    std::string roomId;
-    std::string roomType;
+    string roomId;
+    string roomType;
     double nightlyRate;
+    int capacity;
 };
 
 struct Booking
 {
-    std::string bookingId;
-    std::string customerId;
-    std::string roomId;
+    string bookingId;
+    string customerId;
+    string roomId;
     Date bookingDate;
     Date checkInDate;
     Date checkOutDate;
     Date expiryDate;
-    std::string status;
+    string status;
     bool paid;
 };

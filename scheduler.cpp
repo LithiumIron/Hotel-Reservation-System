@@ -1,5 +1,6 @@
 #include "scheduler.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -20,6 +21,12 @@ namespace
     const string STATUS_CHECKED_IN = "CHECKED_IN";
     const string STATUS_CANCELLED = "CANCELLED";
     const string STATUS_COMPLETED = "COMPLETED";
+
+    const string ROOM_SS = "Standard Single";
+    const string ROOM_SD = "Standard Double";
+    const string ROOM_DQ = "Deluxe Queen";
+    const string ROOM_FS = "Family Suite";
+    const string ROOM_PS = "Presidential Suite";
 
     string centeredText(const string& text, int width)
     {
@@ -399,14 +406,14 @@ void viewDailyRoomSchedule(const vector<Booking>& bookings,
     printBanner("DAILY ROOM SCHEDULE");
     cout << "  Schedule date: " << dayName(selectedDate) << ' '
          << formatDate(selectedDate) << "\n\n";
-    cout << "  " << left << setw(8) << "ROOM" << setw(13) << "TYPE"
+    cout << "  " << left << setw(8) << "ROOM" << setw(22) << "TYPE"
          << setw(13) << "BOOKING" << setw(13) << "CUSTOMER" << "STATUS\n";
-    cout << "  " << string(66, '-') << '\n';
+    cout << "  " << string(75, '-') << '\n';
 
     for (const Room& room : rooms)
     {
         const Booking* booking = findBookingForRoom(bookings, room.roomId, selectedDate);
-        cout << "  " << left << setw(8) << room.roomId << setw(13) << room.roomType;
+        cout << "  " << left << setw(8) << room.roomId << setw(22) << room.roomType;
         if (booking)
         {
             cout << setw(13) << booking->bookingId << setw(13)
@@ -633,24 +640,423 @@ int auditDoubleBookings(const vector<Booking>& bookings)
     return conflictCount;
 }
 
+namespace
+{
+    const int MAP_W = 45;
+    const int MAP_INNER = MAP_W - 2;
+
+    void padToWidth(string& line, int width)
+    {
+        if (static_cast<int>(line.length()) < width)
+        {
+            line += string(width - static_cast<int>(line.length()), ' ');
+        }
+    }
+
+    string makeBorderedBox(const string& id, int outerWidth)
+    {
+        int inner = outerWidth - 2;
+        string box = "|" + centeredText(id, inner) + "|";
+        return box.substr(0, outerWidth);
+    }
+
+    void drawRoomAt(string& line, int startCol, int width,
+        const string& id, bool topBorder)
+    {
+        string box;
+        if (topBorder)
+        {
+            box = "+" + string(width - 2, '-') + "+";
+        }
+        else
+        {
+            box = "|" + centeredText(id, width - 2) + "|";
+        }
+        line.replace(startCol, width, box.substr(0, width));
+    }
+
+    void drawEmptyWall(string& line, int startCol, int width)
+    {
+        string wall = "|" + string(width - 2, ' ') + "|";
+        line.replace(startCol, width, wall.substr(0, width));
+    }
+
+    void drawLiftLine(string& line, int liftStart, int liftWidth,
+        int liftLineType)
+    {
+        string liftPart;
+        switch (liftLineType)
+        {
+        case 0:
+            liftPart = "+" + string(liftWidth - 2, '-') + "+";
+            break;
+        case 1:
+        case 2:
+            liftPart = "|" + centeredText("LIFT", liftWidth - 2) + "|";
+            break;
+        case 3:
+            liftPart = "+" + string(liftWidth - 2, '=') + "+";
+            break;
+        default:
+            liftPart = string(liftWidth, ' ');
+            break;
+        }
+        line.replace(liftStart, liftWidth,
+            liftPart.substr(0, liftWidth));
+    }
+
+    void renderEdgeRow(const string& leftCornerId,
+        const vector<string>& edgeIds, const string& rightCornerId,
+        int cornerW, int edgeW)
+    {
+        string line(MAP_INNER, ' ');
+        int pos = 0;
+
+        drawRoomAt(line, pos, cornerW, leftCornerId, true);
+        pos += cornerW;
+
+        for (size_t i = 0; i < edgeIds.size(); i++)
+        {
+            int gap = (i == 0) ? 0 : 1;
+            if (pos + gap + edgeW > MAP_INNER) break;
+            pos += gap;
+            drawRoomAt(line, pos, edgeW, edgeIds[i], true);
+            pos += edgeW;
+        }
+
+        if (pos + cornerW <= MAP_INNER)
+        {
+            drawRoomAt(line, pos, cornerW, rightCornerId, true);
+        }
+
+        padToWidth(line, MAP_INNER);
+        cout << "  |" << line << "|\n";
+
+        line = string(MAP_INNER, ' ');
+        pos = 0;
+
+        drawRoomAt(line, pos, cornerW, leftCornerId, false);
+        pos += cornerW;
+
+        for (size_t i = 0; i < edgeIds.size(); i++)
+        {
+            int gap = (i == 0) ? 0 : 1;
+            if (pos + gap + edgeW > MAP_INNER) break;
+            pos += gap;
+            drawRoomAt(line, pos, edgeW, edgeIds[i], false);
+            pos += edgeW;
+        }
+
+        if (pos + cornerW <= MAP_INNER)
+        {
+            drawRoomAt(line, pos, cornerW, rightCornerId, false);
+        }
+
+        padToWidth(line, MAP_INNER);
+        cout << "  |" << line << "|\n";
+    }
+
+    void renderEdgeRowDual(const string& leftCornerId,
+        const vector<string>& leftEdge, const vector<string>& rightEdge,
+        const string& rightCornerId, int cornerW, int edgeW)
+    {
+        for (int border = 1; border >= 0; border--)
+        {
+            string line(MAP_INNER, ' ');
+            int pos = 0;
+
+            drawRoomAt(line, pos, cornerW, leftCornerId, border == 1);
+            pos += cornerW;
+
+            for (size_t i = 0; i < leftEdge.size(); i++)
+            {
+                pos += 1;
+                if (pos + edgeW > MAP_INNER) break;
+                drawRoomAt(line, pos, edgeW, leftEdge[i], border == 1);
+                pos += edgeW;
+            }
+
+            int rightStart = MAP_INNER - cornerW;
+            for (int i = static_cast<int>(rightEdge.size()) - 1;
+                i >= 0; i--)
+            {
+                rightStart -= edgeW;
+                if (i < static_cast<int>(rightEdge.size()) - 1)
+                {
+                    rightStart -= 1;
+                }
+                if (rightStart >= 0)
+                {
+                    drawRoomAt(line, rightStart, edgeW,
+                        rightEdge[i], border == 1);
+                }
+            }
+
+            drawRoomAt(line, MAP_INNER - cornerW, cornerW,
+                rightCornerId, border == 1);
+
+            padToWidth(line, MAP_INNER);
+            cout << "  |" << line << "|\n";
+        }
+    }
+
+    void renderMiddleSection(const vector<string>& leftRooms,
+        const vector<string>& rightRooms, int sideW)
+    {
+        bool hasSideRooms = !leftRooms.empty() || !rightRooms.empty();
+        int gap, liftW;
+
+        if (!hasSideRooms)
+        {
+            gap = 0;
+            liftW = MAP_INNER;
+        }
+        else
+        {
+            gap = max(1, (MAP_INNER - 2 * sideW - 17) / 2);
+            liftW = MAP_INNER - 2 * sideW - 2 * gap;
+        }
+
+        int topCount = min(2, static_cast<int>(leftRooms.size()));
+        int bottomCount = min(2, static_cast<int>(rightRooms.size()));
+
+        for (int row = 0; row < 6; row++)
+        {
+            string line(MAP_INNER, ' ');
+            int liftLineType = -1;
+
+            if (row >= 1 && row <= 4)
+            {
+                liftLineType = row - 1;
+            }
+
+            if (hasSideRooms)
+            {
+                bool showLeftRoom = false;
+                int leftRoomIdx = -1;
+                if (topCount == 2 && row == 1)
+                {
+                    showLeftRoom = true;
+                    leftRoomIdx = 0;
+                }
+                else if (topCount == 2 && row == 4)
+                {
+                    showLeftRoom = true;
+                    leftRoomIdx = 1;
+                }
+                else if (topCount == 1 && row == 2)
+                {
+                    showLeftRoom = true;
+                    leftRoomIdx = 0;
+                }
+
+                bool showRightRoom = false;
+                int rightRoomIdx = -1;
+                if (bottomCount == 2 && row == 1)
+                {
+                    showRightRoom = true;
+                    rightRoomIdx = 0;
+                }
+                else if (bottomCount == 2 && row == 4)
+                {
+                    showRightRoom = true;
+                    rightRoomIdx = 1;
+                }
+                else if (bottomCount == 1 && row == 2)
+                {
+                    showRightRoom = true;
+                    rightRoomIdx = 0;
+                }
+
+                if (showLeftRoom)
+                {
+                    drawRoomAt(line, 0, sideW,
+                        leftRooms[leftRoomIdx], false);
+                }
+                else
+                {
+                    drawEmptyWall(line, 0, sideW);
+                }
+
+                if (liftLineType >= 0)
+                {
+                    drawLiftLine(line, sideW + gap,
+                        liftW, liftLineType);
+                }
+
+                if (showRightRoom)
+                {
+                    drawRoomAt(line, MAP_INNER - sideW, sideW,
+                        rightRooms[rightRoomIdx], false);
+                }
+                else
+                {
+                    drawEmptyWall(line, MAP_INNER - sideW, sideW);
+                }
+            }
+            else
+            {
+                if (liftLineType >= 0)
+                {
+                    drawLiftLine(line, 0, liftW, liftLineType);
+                }
+            }
+
+            padToWidth(line, MAP_INNER);
+            cout << "  |" << line << "|\n";
+        }
+    }
+}
+
+void viewFloorLayout(const vector<Room>& rooms,
+    const vector<Booking>& bookings, int floorNumber)
+{
+    vector<vector<Room>> hotelRooms;
+    loadHotelRooms(hotelRooms);
+
+    int floorIdx = floorNumber - 1;
+    if (floorIdx < 0 || floorIdx >= static_cast<int>(hotelRooms.size()))
+    {
+        return;
+    }
+
+    const vector<Room>& floor = hotelRooms[floorIdx];
+    int roomCount = static_cast<int>(floor.size());
+
+    int totalCapacity = 0;
+    for (const Room& r : floor)
+    {
+        totalCapacity += r.capacity;
+    }
+
+    printBanner("FLOOR " + to_string(floorNumber) + " LAYOUT",
+        to_string(roomCount) + " rooms | capacity: "
+        + to_string(totalCapacity) + " guests");
+
+    cout << "  +" << string(MAP_INNER, '-') << "+\n";
+
+    if (floorNumber == 1)
+    {
+        vector<string> topEdge = {
+            floor[1].roomId, floor[2].roomId,
+            floor[3].roomId, floor[4].roomId };
+        vector<string> bottomEdge = {
+            floor[14].roomId, floor[13].roomId,
+            floor[12].roomId, floor[11].roomId };
+        vector<string> rightEdge = {
+            floor[6].roomId, floor[7].roomId,
+            floor[8].roomId, floor[9].roomId };
+        vector<string> leftEdge = {
+            floor[19].roomId, floor[18].roomId,
+            floor[17].roomId, floor[16].roomId };
+
+        renderEdgeRow(floor[0].roomId, topEdge, floor[5].roomId, 7, 5);
+        renderMiddleSection(
+            { leftEdge[0], leftEdge[1] },
+            { rightEdge[0], rightEdge[1] }, 5);
+        renderEdgeRow(floor[15].roomId, bottomEdge, floor[10].roomId, 7, 5);
+    }
+    else if (floorNumber == 2)
+    {
+        renderEdgeRow(floor[0].roomId,
+            { floor[1].roomId }, floor[2].roomId, 7, 13);
+        renderMiddleSection(
+            { floor[7].roomId }, { floor[3].roomId }, 13);
+        renderEdgeRow(floor[6].roomId,
+            { floor[5].roomId }, floor[4].roomId, 7, 13);
+    }
+    else if (floorNumber == 3)
+    {
+        vector<string> topLeft = { floor[1].roomId, floor[2].roomId };
+        vector<string> topRight = { floor[4].roomId, floor[5].roomId };
+        vector<string> botRight = { floor[8].roomId, floor[7].roomId };
+        vector<string> botLeft = { floor[10].roomId, floor[11].roomId };
+
+        renderEdgeRowDual(floor[0].roomId,
+            topLeft, topRight, floor[3].roomId, 7, 7);
+        renderMiddleSection({}, {}, 14);
+        renderEdgeRowDual(floor[9].roomId,
+            botLeft, botRight, floor[6].roomId, 7, 7);
+    }
+
+    cout << "  +" << string(MAP_INNER, '-') << "+\n";
+    cout << "  Legend: [ Room No. ]  |  "
+         << "==== = Lift door\n\n";
+}
+
+void viewAllFloorLayouts(const vector<Room>& rooms,
+    const vector<Booking>& bookings)
+{
+    for (int floorNum = 1; floorNum <= 3; floorNum++)
+    {
+        viewFloorLayout(rooms, bookings, floorNum);
+    }
+
+    printBanner("HOTEL SUMMARY");
+    cout << "  Total: 40 rooms | Max capacity: 72 guests\n";
+    cout << "  Standard Single:  16 rooms  (Floor 1)\n";
+    cout << "  Standard Double:   8 rooms  "
+         << "(F1: 4, F2: 4)\n";
+    cout << "  Deluxe Queen:      8 rooms  (Floor 3)\n";
+    cout << "  Family Suite:      4 rooms  (Floor 2)\n";
+    cout << "  Presidential:      4 rooms  (Floor 3)\n\n";
+}
+
 void loadHotelRooms(vector<vector<Room>>& hotelRooms)
 {
-    // hotelRooms[floor][room]: 3 floors x 3 rooms
+    // hotelRooms[floorIndex][room]: 3 floors, 40 rooms total
+    // Floor 1: 20 rooms (4 SD corners + 16 SS edges), capacity 24
+    // Floor 2: 8 rooms (4 SD corners + 4 FS edges), capacity 24
+    // Floor 3: 12 rooms (4 PS corners + 8 DQ edges), capacity 24
     hotelRooms = {
         {
-            { "101", "Standard", 180.0 },
-            { "102", "Standard", 180.0 },
-            { "103", "Standard", 180.0 }
+            // Floor 1 — clockwise from top-left corner
+            { "101", ROOM_SD, 80.0, 2 },   // top-left corner
+            { "102", ROOM_SS, 50.0, 1 },   // top edge
+            { "103", ROOM_SS, 50.0, 1 },
+            { "104", ROOM_SS, 50.0, 1 },
+            { "105", ROOM_SS, 50.0, 1 },
+            { "106", ROOM_SD, 80.0, 2 },   // top-right corner
+            { "107", ROOM_SS, 50.0, 1 },   // right edge
+            { "108", ROOM_SS, 50.0, 1 },
+            { "109", ROOM_SS, 50.0, 1 },
+            { "110", ROOM_SS, 50.0, 1 },
+            { "111", ROOM_SD, 80.0, 2 },   // bottom-right corner
+            { "112", ROOM_SS, 50.0, 1 },   // bottom edge
+            { "113", ROOM_SS, 50.0, 1 },
+            { "114", ROOM_SS, 50.0, 1 },
+            { "115", ROOM_SS, 50.0, 1 },
+            { "116", ROOM_SD, 80.0, 2 },   // bottom-left corner
+            { "117", ROOM_SS, 50.0, 1 },   // left edge
+            { "118", ROOM_SS, 50.0, 1 },
+            { "119", ROOM_SS, 50.0, 1 },
+            { "120", ROOM_SS, 50.0, 1 }
         },
         {
-            { "201", "Deluxe", 260.0 },
-            { "202", "Deluxe", 260.0 },
-            { "203", "Deluxe", 260.0 }
+            // Floor 2 — clockwise from top-left corner
+            { "201", ROOM_SD, 80.0, 2 },   // top-left corner
+            { "202", ROOM_FS, 200.0, 4 },  // top edge
+            { "203", ROOM_SD, 80.0, 2 },   // top-right corner
+            { "204", ROOM_FS, 200.0, 4 },  // right edge
+            { "205", ROOM_SD, 80.0, 2 },   // bottom-right corner
+            { "206", ROOM_FS, 200.0, 4 },  // bottom edge
+            { "207", ROOM_SD, 80.0, 2 },   // bottom-left corner
+            { "208", ROOM_FS, 200.0, 4 }   // left edge
         },
         {
-            { "301", "Suite", 420.0 },
-            { "302", "Suite", 420.0 },
-            { "303", "Suite", 420.0 }
+            // Floor 3 — clockwise from top-left corner
+            { "301", ROOM_PS, 500.0, 2 },  // top-left corner
+            { "302", ROOM_DQ, 120.0, 2 },  // top edge
+            { "303", ROOM_DQ, 120.0, 2 },
+            { "304", ROOM_PS, 500.0, 2 },  // top-right corner
+            { "305", ROOM_DQ, 120.0, 2 },  // right edge
+            { "306", ROOM_DQ, 120.0, 2 },
+            { "307", ROOM_PS, 500.0, 2 },  // bottom-right corner
+            { "308", ROOM_DQ, 120.0, 2 },  // bottom edge
+            { "309", ROOM_DQ, 120.0, 2 },
+            { "310", ROOM_PS, 500.0, 2 },  // bottom-left corner
+            { "311", ROOM_DQ, 120.0, 2 },  // left edge
+            { "312", ROOM_DQ, 120.0, 2 }
         }
     };
 }
@@ -676,9 +1082,12 @@ void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
         { "B004", "C004", "202", {12,8,2026}, {16,8,2026}, {18,8,2026}, {13,8,2026}, STATUS_PENDING, false },
         { "B005", "C005", "301", {13,8,2026}, {18,8,2026}, {22,8,2026}, {16,8,2026}, STATUS_PENDING, false },
         { "B006", "C006", "302", {10,8,2026}, {14,8,2026}, {20,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true },
-        { "B007", "C007", "103", {10,8,2026}, {20,8,2026}, {24,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true },
-        { "B008", "C008", "101", {13,8,2026}, {15,8,2026}, {16,8,2026}, {14,8,2026}, STATUS_CONFIRMED, true },
-        { "B009", "C009", "203", {10,5,2025}, {20,5,2025}, {23,5,2025}, {11,5,2025}, STATUS_COMPLETED, true }
+        { "B007", "C007", "107", {10,8,2026}, {20,8,2026}, {24,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true },
+        { "B008", "C008", "111", {13,8,2026}, {15,8,2026}, {16,8,2026}, {14,8,2026}, STATUS_CONFIRMED, true },
+        { "B009", "C009", "205", {10,5,2025}, {20,5,2025}, {23,5,2025}, {11,5,2025}, STATUS_COMPLETED, true },
+        { "B010", "C010", "307", {14,8,2026}, {16,8,2026}, {19,8,2026}, {15,8,2026}, STATUS_CONFIRMED, true },
+        { "B011", "C011", "116", {15,8,2026}, {18,8,2026}, {21,8,2026}, {16,8,2026}, STATUS_PENDING, false },
+        { "B012", "C012", "310", {16,8,2026}, {19,8,2026}, {22,8,2026}, {17,8,2026}, STATUS_CONFIRMED, true }
     };
 }
 

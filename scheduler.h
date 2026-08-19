@@ -30,6 +30,10 @@ int autoReleaseExpiredBookings(std::vector<Booking>& bookings,
 void viewFloorAvailabilityMap(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate);
+void viewFloorLayout(const std::vector<Room>& rooms,
+    const std::vector<Booking>& bookings, int floorNumber);
+void viewAllFloorLayouts(const std::vector<Room>& rooms,
+    const std::vector<Booking>& bookings);
 int auditDoubleBookings(const std::vector<Booking>& bookings);
 
 void loadHotelRooms(std::vector<std::vector<Room>>& hotelRooms);
