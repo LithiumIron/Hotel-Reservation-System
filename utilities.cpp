@@ -177,64 +177,34 @@ void mainMenu(int role)
         }
         else
         {
-            // Customer menu (lettered)
-            cout << "[A] View Profile\n";
-            cout << "[B] View Schedule\n";
-            cout << "[C] Booking\n";
-            cout << "[D] View Previous Booking Record\n";
-            cout << "[E] Cancel Booking\n";
-            cout << "[Z] Return\n";
+            // Customer menu (numbered)
+            cout << "[1] View Profile\n";
+            cout << "[2] Booking\n";
+            cout << "[3] View Previous Booking Record\n";
+            cout << "[4] Cancel Booking\n";
+            cout << "[0] Return\n";
             cout << "====================================\n";
 
-            cout << "Select (A-E, Z to return): ";
-            string input;
-            getline(cin, input);
+            int choice = readInteger(
+                "Enter your choice: ", 0, 4);
 
-            char choice = ' ';
-            if (input.length() == 1)
+            if (choice == 0) return;
+
+            if (choice == 1)
             {
-                choice = toupper(input[0]);
-            }
-
-            if (choice == 'Z') return;
-
-            switch (choice)
-            {
-            case 'A':
                 //view profile
-                break;
-
-            case 'B':
-            {
-                vector<Room> rooms;
-                vector<Booking> bookings;
-                loadSchedulerDemoData(rooms, bookings);
-                vector<Booking> saved =
-                    loadSavedBookings();
-                for (const Booking& b : saved)
-                {
-                    bookings.push_back(b);
-                }
-                customerSchedulerMenu(rooms, bookings);
-                break;
             }
-
-            case 'C':
+            else if (choice == 2)
+            {
                 bookingScreen();
-                break;
-
-            case 'D':
+            }
+            else if (choice == 3)
+            {
                 viewPreviousBookings();
-                break;
-
-            case 'E':
+            }
+            else if (choice == 4)
+            {
                 cancelBooking();
-                break;
-
-            default:
-                cout << "Invalid. "
-                     << "Please enter A-E or Z.\n";
-                break;
             }
         }
     }

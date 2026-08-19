@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <set>
 #include <sstream>
 #include <string>
@@ -62,7 +63,7 @@ namespace
         while (true)
         {
             cout << '\n' << heading
-                 << "  (Enter Z to go back to "
+                 << "  (Enter Z to "
                  << backLabel << ")\n";
             cout << "Enter date (DD/MM/YYYY): ";
             string input;
@@ -135,7 +136,7 @@ namespace
     {
         while (true)
         {
-            cout << "Quantity (Enter Z to go back to "
+            cout << "Quantity (Enter Z to "
                  << backLabel << "): ";
             string input;
             getline(cin, input);
@@ -169,7 +170,7 @@ namespace
         while (true)
         {
             cout << "Select (" << range
-                 << ", Enter Z to go back to "
+                 << ", Enter Z to "
                  << backLabel << "): ";
             string input;
             getline(cin, input);
@@ -360,13 +361,10 @@ namespace
             srand((unsigned)time(nullptr));
             seeded = true;
         }
-        const string chars =
-            "ABCDEFGHJKLMNPQRSTUVWXYZ"
-            "23456789";
         string code;
         for (int i = 0; i < 6; i++)
         {
-            code += chars[rand() % chars.length()];
+            code += (char)('0' + rand() % 10);
         }
         return code;
     }
@@ -661,7 +659,8 @@ void bookingScreen()
                 }
 
                 char choice = readLetterOrBack(
-                    'A', 'E', "reselect check-out date");
+                    'A', 'E',
+                    "jump back to previous step");
                 if (choice == 'Z')
                 {
                     stage = STAGE_CHECKOUT;
@@ -681,10 +680,14 @@ void bookingScreen()
                 // Room quantity
                 int qty = readQuantityOrBack(
                     avail[typeIndex],
-                    "reselect room type");
+                    "jump back to previous step");
                 if (qty == -1)
                 {
-                    continue;  // Z → re-select room type
+                    if (!selections.empty())
+                    {
+                        selections.pop_back();
+                    }
+                    continue;
                 }
 
                 selections.push_back({ typeIndex, qty });
@@ -708,8 +711,9 @@ void bookingScreen()
                 cout << "  Total per night: RM" << fixed
                      << setprecision(2) << total << "\n";
 
-                cout << "\nBook more rooms? (Y/N)\n"
-                     << "  Enter Z to reselect room type: ";
+                cout << "\nBook more rooms? (Y/N) "
+                     << "(Enter Z to jump back to "
+                     << "previous step): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -745,22 +749,6 @@ void bookingScreen()
             cout << "  Enhance your stay with extras!\n";
             cout << "  (Prices are per unit per day)\n";
 
-            cout << "\nWould you like to add extra "
-                 << "services? (Y/N)\n"
-                 << "  Enter Z to reselect rooms: ";
-            string addOnChoice;
-            getline(cin, addOnChoice);
-            if (addOnChoice == "Z" || addOnChoice == "z")
-            {
-                stage = STAGE_ROOMS;
-                break;
-            }
-            if (addOnChoice != "Y" && addOnChoice != "y")
-            {
-                stage = STAGE_SUMMARY;
-                break;
-            }
-
             while (true)
             {
                 cout << "\n  -- Available Services --\n\n";
@@ -776,22 +764,43 @@ void bookingScreen()
                          << " / day\n\n";
                 }
 
-                char choice = readLetterOrBack(
-                    'A', 'D', "reselect rooms");
-                if (choice == 'Z')
+                // Add-on selection with N to skip
+                cout << "Select (A-D, Enter N to skip "
+                     << "add-ons, Enter Z to jump back "
+                     << "to previous step): ";
+                string input;
+                getline(cin, input);
+
+                if (input == "N" || input == "n")
                 {
-                    stage = STAGE_ROOMS;  // Z → back to rooms
+                    stage = STAGE_SUMMARY;
                     break;
                 }
+                if (input == "Z" || input == "z")
+                {
+                    stage = STAGE_ROOMS;
+                    break;
+                }
+                if (input.length() != 1
+                    || input[0] < 'A' || input[0] > 'D')
+                {
+                    cout << "Invalid. Please enter "
+                         << "A-D, N, or Z.\n";
+                    continue;
+                }
 
-                int ai = choice - 'A';
+                int ai = input[0] - 'A';
 
                 // Add-on quantity
                 int qty = readQuantityOrBack(
-                    99, "reselect add-on");
+                    99, "jump back to previous step");
                 if (qty == -1)
                 {
-                    continue;  // Z → re-select add-on
+                    if (!addonSelections.empty())
+                    {
+                        addonSelections.pop_back();
+                    }
+                    continue;
                 }
 
                 addonSelections.push_back({ ai, qty });
@@ -819,8 +828,9 @@ void bookingScreen()
                      << fixed << setprecision(2)
                      << addonTotal << "\n";
 
-                cout << "\nAdd more services? (Y/N)\n"
-                     << "  Enter Z to reselect add-on: ";
+                cout << "\nAdd more services? (Y/N) "
+                     << "(Enter Z to jump back to "
+                     << "previous step): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -849,6 +859,8 @@ void bookingScreen()
     // ── SUMMARY ──
     if (stage == STAGE_SUMMARY)
     {
+        while (stage == STAGE_SUMMARY)
+        {
         int nights = 0;
         {
             Date temp = checkInDate;
@@ -933,28 +945,61 @@ void bookingScreen()
         cout << "  Total rooms: " << totalRooms << "\n";
         cout << "====================================\n";
 
-        // ── Payment Method ──
-        cout << "\n====================================\n";
-        cout << "     PAYMENT METHOD\n";
-        cout << "====================================\n";
-        cout << "  [A] Online Banking\n";
-        cout << "  [B] E-Wallet\n";
-
-        char payMethod;
-        while (true)
+        // Z to jump back
+        cout << "\n  Enter Z to jump back to previous "
+             << "step, or press Enter to continue: ";
+        string zInput;
+        getline(cin, zInput);
+        if (zInput == "Z" || zInput == "z")
         {
-            cout << "Select payment method (A/B): ";
+            if (addonSelections.empty())
+            {
+                // Go back to room quantity
+                if (!selections.empty())
+                {
+                    selections.pop_back();
+                }
+            }
+            else
+            {
+                // Go back to add-on
+                addonSelections.pop_back();
+            }
+            bookingScreen();  // restart booking flow
+            return;
+        }
+
+        // ── Payment Method ──
+        bool paymentSelected = false;
+        char payMethod = ' ';
+        while (!paymentSelected)
+        {
+            cout << "\n====================================\n";
+            cout << "     PAYMENT METHOD\n";
+            cout << "====================================\n";
+            cout << "  [A] Online Banking\n";
+            cout << "  [B] E-Wallet\n";
+            cout << "  [Z] Jump back to previous step\n";
+
+            cout << "Select payment method (A/B/Z): ";
             string input;
             getline(cin, input);
+            if (input == "Z" || input == "z")
+            {
+                continue;  // re-show this same summary
+            }
             if (input == "A" || input == "a")
             {
-                payMethod = 'A'; break;
+                payMethod = 'A'; paymentSelected = true;
             }
-            if (input == "B" || input == "b")
+            else if (input == "B" || input == "b")
             {
-                payMethod = 'B'; break;
+                payMethod = 'B'; paymentSelected = true;
             }
-            cout << "Invalid. Please enter A or B.\n";
+            else
+            {
+                cout << "Invalid. Please enter A, B, or Z.\n";
+            }
         }
 
         if (payMethod == 'B')
@@ -1150,6 +1195,8 @@ void bookingScreen()
                 cout << "====================================\n";
             }
         }
+        stage = STAGE_EXIT;
+        }  // end while summary
     }
 }
 
@@ -1181,7 +1228,6 @@ void viewPreviousBookings()
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
     cout << "====================================\n";
-    cout << "  (Enter Z to return to main menu)\n";
 
     if (myBookings.empty())
     {
@@ -1222,8 +1268,7 @@ void viewPreviousBookings()
 
     cout << "\n====================================\n";
 
-    cout << "\nPress any key to continue "
-         << "(Z to return): ";
+    cout << "\nPress any key to continue: ";
     string input;
     getline(cin, input);
 }
@@ -1235,8 +1280,9 @@ void cancelBooking()
     loadSchedulerDemoData(rooms, bookings);
     vector<Booking> saved = loadSavedBookings();
 
-    vector<Booking> myBookings;
-    vector<int> savedIndices;
+    // Group bookings by booking ID
+    vector<string> bookingIds;
+    map<string, vector<Booking>> bookingsById;
 
     for (const Booking& b : bookings)
     {
@@ -1245,17 +1291,25 @@ void cancelBooking()
             && b.status != "CANCELLED"
             && b.status != "COMPLETED")
         {
-            myBookings.push_back(b);
-            savedIndices.push_back(-1);
+            if (bookingsById.find(b.bookingId)
+                == bookingsById.end())
+            {
+                bookingIds.push_back(b.bookingId);
+            }
+            bookingsById[b.bookingId].push_back(b);
         }
     }
-    for (size_t i = 0; i < saved.size(); i++)
+    for (const Booking& b : saved)
     {
-        if (saved[i].customerId == CUSTOMER_ID
-            && saved[i].status != "CANCELLED")
+        if (b.customerId == CUSTOMER_ID
+            && b.status != "CANCELLED")
         {
-            myBookings.push_back(saved[i]);
-            savedIndices.push_back((int)i);
+            if (bookingsById.find(b.bookingId)
+                == bookingsById.end())
+            {
+                bookingIds.push_back(b.bookingId);
+            }
+            bookingsById[b.bookingId].push_back(b);
         }
     }
 
@@ -1263,76 +1317,113 @@ void cancelBooking()
     cout << "     CANCEL BOOKING\n";
     cout << "====================================\n";
 
-    if (myBookings.empty())
+    if (bookingIds.empty())
     {
         cout << "\n  No active bookings to cancel.\n";
         cout << "====================================\n";
         return;
     }
 
-    for (size_t i = 0; i < myBookings.size(); i++)
+    for (size_t i = 0; i < bookingIds.size(); i++)
     {
-        const Booking& b = myBookings[i];
+        const string& bid = bookingIds[i];
+        const vector<Booking>& group = bookingsById[bid];
+        const Booking& first = group[0];
 
-        string roomType = "Unknown";
-        for (const Room& r : rooms)
-        {
-            if (r.roomId == b.roomId)
-            {
-                roomType = r.roomType;
-                break;
-            }
-        }
-
-        cout << "  [" << (i + 1) << "] Booking "
-             << b.bookingId << "\n";
-        cout << "      Room: " << b.roomId
-             << " (" << roomType << ")\n";
+        cout << "\n  [" << (i + 1) << "] Booking "
+             << bid << "\n";
         cout << "      Check-in:  "
-             << formatDate(b.checkInDate) << "\n";
+             << formatDate(first.checkInDate) << "\n";
         cout << "      Check-out: "
-             << formatDate(b.checkOutDate) << "\n";
-        cout << "      Status: " << b.status << "\n\n";
+             << formatDate(first.checkOutDate) << "\n";
+        cout << "      Status: " << first.status << "\n";
+        cout << "      Rooms:\n";
+        for (const Booking& b : group)
+        {
+            string roomType = "Unknown";
+            for (const Room& r : rooms)
+            {
+                if (r.roomId == b.roomId)
+                {
+                    roomType = r.roomType;
+                    break;
+                }
+            }
+            cout << "        - " << b.roomId
+                 << " (" << roomType << ")"
+                 << " Access Code: " << b.accessCode
+                 << "\n";
+        }
     }
 
-    int choice = readInteger(
-        "Select booking to cancel (0 to go back): ",
-        0, (int)myBookings.size());
+    cout << "\n====================================\n";
 
-    if (choice == 0) return;
+    cout << "\n  Enter booking number to cancel\n";
+    cout << "  Enter Z to go back: ";
+    string input;
+    getline(cin, input);
 
-    const Booking& selected = myBookings[choice - 1];
+    if (input == "Z" || input == "z")
+    {
+        return;
+    }
 
-    cout << "\n  Cancel booking "
-         << selected.bookingId
-         << " (Room " << selected.roomId << ")?\n";
+    int choice = 0;
+    try { choice = stoi(input); }
+    catch (...) { choice = 0; }
+
+    if (choice < 1 || choice > (int)bookingIds.size())
+    {
+        cout << "Invalid selection.\n";
+        return;
+    }
+
+    const string& selectedId = bookingIds[choice - 1];
+    const vector<Booking>& group = bookingsById[selectedId];
+
+    cout << "\n  Cancel entire booking "
+         << selectedId << " ("
+         << group.size() << " room(s))?\n";
     cout << "  Confirm (Y/N): ";
     string confirm;
     getline(cin, confirm);
 
     if (confirm == "Y" || confirm == "y")
     {
-        int savedIdx = savedIndices[choice - 1];
-        if (savedIdx >= 0)
+        // Cancel all bookings with this ID in saved
+        for (Booking& b : saved)
         {
-            saved[savedIdx].status = "CANCELLED";
-            saveAllBookings(saved);
-        }
-        else
-        {
-            vector<Booking> allSaved =
-                loadSavedBookings();
-            Booking cancelled = selected;
-            cancelled.status = "CANCELLED";
-            allSaved.push_back(cancelled);
-            saveAllBookings(allSaved);
+            if (b.bookingId == selectedId)
+            {
+                b.status = "CANCELLED";
+            }
         }
 
+        // If not in saved, add cancelled versions
+        bool foundInSaved = false;
+        for (const Booking& b : saved)
+        {
+            if (b.bookingId == selectedId)
+            {
+                foundInSaved = true;
+                break;
+            }
+        }
+        if (!foundInSaved)
+        {
+            for (const Booking& b : group)
+            {
+                Booking cancelled = b;
+                cancelled.status = "CANCELLED";
+                saved.push_back(cancelled);
+            }
+        }
+        saveAllBookings(saved);
+
         cout << "\n  *** CANCELLATION SUCCESSFUL ***\n";
-        cout << "  Booking " << selected.bookingId
+        cout << "  Booking " << selectedId
+             << " (" << group.size() << " room(s))"
              << " has been cancelled.\n";
-        cout << "  Room " << selected.roomId
-             << " is now available.\n";
         cout << "====================================\n";
     }
     else
