@@ -145,8 +145,12 @@ void roleSelection()
     }
     else
     {
+        loggedInUser.clear();
         custHomeScreen();
-        mainMenu(2);
+        if (!loggedInUser.empty())
+        {
+            mainMenu(2);
+        }
     }
 }
 

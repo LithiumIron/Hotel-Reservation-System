@@ -88,6 +88,9 @@ bool signup()
     outFile << username << '\t' << password << '\n';
     outFile.close();
 
+    // Auto-login after successful signup
+    loggedInUser = username;
+
     return true;
 }
 
