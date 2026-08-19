@@ -11,6 +11,9 @@
 #include <vector>
 
 using namespace std;
+
+string loggedInUser;
+
 int readInteger(const string& prompt, int minimum, int maximum)
 {
     while (true)
@@ -111,6 +114,11 @@ bool login(int role)
             continue;
         }
 
+        // Store the logged-in username
+        if (role == 2)
+        {
+            loggedInUser = username;
+        }
         return true;
     }
 }

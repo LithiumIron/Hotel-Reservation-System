@@ -564,21 +564,13 @@ void bookingScreen()
         bookings.push_back(b);
     }
 
-    // Customer identification
+    // Customer identification (from login)
+    string customerId = loggedInUser;
+
     cout << "\n====================================\n";
     cout << "         ROOM BOOKING\n";
     cout << "====================================\n";
-    cout << "\n  Please enter your details:\n";
-    cout << "  Full Name: ";
-    string customerName;
-    getline(cin, customerName);
-    cout << "  Phone Number: ";
-    string customerPhone;
-    getline(cin, customerPhone);
-
-    // Generate a simple customer ID from name+phone
-    string customerId = customerName + "|" + customerPhone;
-
+    cout << "  Welcome, " << customerId << "!\n";
     cout << "====================================\n";
     cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
     cout << "====================================\n";
@@ -1073,8 +1065,7 @@ void bookingScreen()
                 cout << "\n====================================\n";
                 cout << "           RECEIPT\n";
                 cout << "====================================\n";
-                cout << "  Guest: " << customerName << "\n";
-                cout << "  Phone: " << customerPhone << "\n";
+                cout << "  Guest: " << customerId << "\n";
                 cout << "  Check-in:  "
                      << formatDate(checkInDate) << "\n";
                 cout << "  Check-out: "
@@ -1209,8 +1200,7 @@ void bookingScreen()
                 cout << "\n====================================\n";
                 cout << "           RECEIPT\n";
                 cout << "====================================\n";
-                cout << "  Guest: " << customerName << "\n";
-                cout << "  Phone: " << customerPhone << "\n";
+                cout << "  Guest: " << customerId << "\n";
                 cout << "  Check-in:  "
                      << formatDate(checkInDate) << "\n";
                 cout << "  Check-out: "
@@ -1244,20 +1234,13 @@ void bookingScreen()
 
 void viewPreviousBookings()
 {
-    // Prompt for customer identification
+    string customerId = loggedInUser;
+
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
     cout << "====================================\n";
-    cout << "\n  Enter your details to look up\n";
-    cout << "  your booking records:\n";
-    cout << "  Full Name: ";
-    string customerName;
-    getline(cin, customerName);
-    cout << "  Phone Number: ";
-    string customerPhone;
-    getline(cin, customerPhone);
-
-    string customerId = customerName + "|" + customerPhone;
+    cout << "  Showing records for: "
+         << customerId << "\n";
 
     vector<Room> rooms;
     vector<Booking> bookings;
@@ -1334,20 +1317,13 @@ void viewPreviousBookings()
 
 void cancelBooking()
 {
-    // Prompt for customer identification
+    string customerId = loggedInUser;
+
     cout << "\n====================================\n";
     cout << "         CANCEL BOOKING\n";
     cout << "====================================\n";
-    cout << "\n  Enter your details to look up\n";
-    cout << "  your bookings:\n";
-    cout << "  Full Name: ";
-    string customerName;
-    getline(cin, customerName);
-    cout << "  Phone Number: ";
-    string customerPhone;
-    getline(cin, customerPhone);
-
-    string customerId = customerName + "|" + customerPhone;
+    cout << "  Showing bookings for: "
+         << customerId << "\n";
 
     vector<Room> rooms;
     vector<Booking> bookings;
