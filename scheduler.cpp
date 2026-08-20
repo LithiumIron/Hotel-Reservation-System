@@ -645,6 +645,19 @@ namespace
     const int MAP_W = 45;
     const int MAP_INNER = MAP_W - 2;
 
+    // Room IDs to mark with a "*" in the floor layout diagram
+    // (used by the customer-facing Room Location Guide).
+    vector<string> g_highlightRoomIds;
+
+    bool isHighlightedRoom(const string& id)
+    {
+        for (const string& highlighted : g_highlightRoomIds)
+        {
+            if (highlighted == id) return true;
+        }
+        return false;
+    }
+
     void padToWidth(string& line, int width)
     {
         if (static_cast<int>(line.length()) < width)
@@ -670,7 +683,19 @@ namespace
         }
         else
         {
-            box = "|" + centeredText(id, width - 2) + "|";
+            string label = id;
+            int innerWidth = width - 2;
+            if (isHighlightedRoom(id)
+                && static_cast<int>(id.length()) + 2 <= innerWidth)
+            {
+                label = "*" + id + "*";
+            }
+            else if (isHighlightedRoom(id)
+                && static_cast<int>(id.length()) + 1 <= innerWidth)
+            {
+                label = id + "*";
+            }
+            box = "|" + centeredText(label, innerWidth) + "|";
         }
         line.replace(startCol, width, box.substr(0, width));
     }
@@ -909,7 +934,8 @@ namespace
 }
 
 void viewFloorLayout(const vector<Room>& rooms,
-    const vector<Booking>& bookings, int floorNumber)
+    const vector<Booking>& bookings, int floorNumber,
+    const vector<string>& highlightRoomIds)
 {
     vector<vector<Room>> hotelRooms;
     loadHotelRooms(hotelRooms);
@@ -919,6 +945,8 @@ void viewFloorLayout(const vector<Room>& rooms,
     {
         return;
     }
+
+    g_highlightRoomIds = highlightRoomIds;
 
     const vector<Room>& floor = hotelRooms[floorIdx];
     int roomCount = static_cast<int>(floor.size());
@@ -981,7 +1009,24 @@ void viewFloorLayout(const vector<Room>& rooms,
 
     cout << "  +" << string(MAP_INNER, '-') << "+\n";
     cout << "  Legend: [ Room No. ]  |  "
-         << "==== = Lift door\n\n";
+         << "==== = Lift door";
+    if (!highlightRoomIds.empty())
+    {
+        cout << "  |  * = Your Room\n";
+        cout << "  >>> Your room(s) on this floor: ";
+        for (size_t i = 0; i < highlightRoomIds.size(); i++)
+        {
+            if (i > 0) cout << ", ";
+            cout << highlightRoomIds[i];
+        }
+        cout << " <<<\n\n";
+    }
+    else
+    {
+        cout << "\n\n";
+    }
+
+    g_highlightRoomIds.clear();
 }
 
 void viewAllFloorLayouts(const vector<Room>& rooms,

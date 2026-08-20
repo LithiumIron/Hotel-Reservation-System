@@ -1096,7 +1096,8 @@ void bookingScreen()
                 createBookingRecords(
                     selections,
                     checkInDate, checkOutDate,
-                    rooms, bookings, customerId);
+                    rooms, bookings, customerId,
+                    addonsString);
                 cout << "\n====================================\n";
                 cout << "           RECEIPT\n";
                 cout << "====================================\n";
@@ -1243,7 +1244,8 @@ void bookingScreen()
                 createBookingRecords(
                     selections,
                     checkInDate, checkOutDate,
-                    rooms, bookings, customerId);
+                    rooms, bookings, customerId,
+                    addonsString);
                 cout << "\n====================================\n";
                 cout << "           RECEIPT\n";
                 cout << "====================================\n";
@@ -1364,6 +1366,16 @@ void viewPreviousBookings()
             printBoxLine("    Access Code: "
                 + b.accessCode);
         }
+        if (!first.addons.empty())
+        {
+            printBoxLine("Add-ons:");
+            istringstream addonStream(first.addons);
+            string addonItem;
+            while (getline(addonStream, addonItem, ';'))
+            {
+                printBoxLine("  - " + addonItem);
+            }
+        }
         printBoxBorder();
     }
 
@@ -1444,6 +1456,16 @@ void cancelBooking()
                 + " (" + roomType + ")");
             printBoxLine("    Access Code: "
                 + b.accessCode);
+        }
+        if (!first.addons.empty())
+        {
+            printBoxLine("Add-ons:");
+            istringstream addonStream(first.addons);
+            string addonItem;
+            while (getline(addonStream, addonItem, ';'))
+            {
+                printBoxLine("  - " + addonItem);
+            }
         }
         printBoxBorder();
     }
@@ -1530,4 +1552,97 @@ void cancelBooking()
         cout << "  Returning to main menu.\n";
         cout << "====================================\n";
     }
+}
+
+void viewRoomLocationGuide()
+{
+    string customerId = loggedInUser;
+
+    cout << "\n====================================\n";
+    cout << "     VIEW ROOM LOCATION GUIDE\n";
+    cout << "====================================\n";
+
+    vector<Room> rooms;
+    vector<Booking> bookings;
+    loadSchedulerDemoData(rooms, bookings);
+    vector<Booking> saved = loadSavedBookings();
+
+    cout << "\n  Enter booking ID (e.g. B1)\n";
+    cout << "  Enter Z to go back to main menu: ";
+    string input;
+    getline(cin, input);
+
+    if (input == "Z" || input == "z")
+    {
+        return;
+    }
+
+    // Collect all active (non-cancelled) rooms under this booking ID.
+    vector<Booking> group;
+    for (const Booking& b : saved)
+    {
+        if (b.bookingId == input && b.status != "CANCELLED")
+        {
+            group.push_back(b);
+        }
+    }
+
+    // The booking ID must exist AND belong to the logged-in customer.
+    bool belongsToCustomer = !group.empty();
+    for (const Booking& b : group)
+    {
+        if (b.customerId != customerId)
+        {
+            belongsToCustomer = false;
+            break;
+        }
+    }
+
+    if (group.empty() || !belongsToCustomer)
+    {
+        cout << "\n  Invalid Booking Id.\n";
+        cout << "====================================\n";
+        cout << "\nPress any key to continue: ";
+        string dummy;
+        getline(cin, dummy);
+        return;
+    }
+
+    // Group this booking's rooms by floor (first digit of room ID).
+    map<int, vector<string>> roomsByFloor;
+    for (const Booking& b : group)
+    {
+        if (b.roomId.empty()) continue;
+        int floorNum = b.roomId[0] - '0';
+        roomsByFloor[floorNum].push_back(b.roomId);
+    }
+
+    cout << "\n  Booking " << input << " -- Room(s):\n";
+    for (const Booking& b : group)
+    {
+        string roomType = "Unknown";
+        for (const Room& r : rooms)
+        {
+            if (r.roomId == b.roomId)
+            {
+                roomType = r.roomType;
+                break;
+            }
+        }
+        int floorNum = b.roomId.empty() ? 0 : b.roomId[0] - '0';
+        cout << "    - Room " << b.roomId << " (" << roomType
+             << ") - Floor " << floorNum << "\n";
+    }
+
+    // Show the floor layout for every floor this booking has a room on,
+    // with that room (or rooms) marked with a '*'.
+    for (const auto& entry : roomsByFloor)
+    {
+        viewFloorLayout(rooms, bookings, entry.first, entry.second);
+    }
+
+    cout << "====================================\n";
+    cout << "\nPress any key to continue: ";
+    string dummy;
+    getline(cin, dummy);
 }

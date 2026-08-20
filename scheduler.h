@@ -31,7 +31,8 @@ void viewFloorAvailabilityMap(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate);
 void viewFloorLayout(const std::vector<Room>& rooms,
-    const std::vector<Booking>& bookings, int floorNumber);
+    const std::vector<Booking>& bookings, int floorNumber,
+    const std::vector<std::string>& highlightRoomIds = {});
 void viewAllFloorLayouts(const std::vector<Room>& rooms,
     const std::vector<Booking>& bookings);
 int auditDoubleBookings(const std::vector<Booking>& bookings);

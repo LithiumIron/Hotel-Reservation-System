@@ -51,4 +51,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="customerData.txt" />
+    <None Include="employeeData.txt" />
+    <None Include="SCHEDULER_GUIDE.txt" />
+    <None Include="SCHEDULER_TEST_CASES.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="bookingData.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

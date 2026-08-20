@@ -215,11 +215,12 @@ void mainMenu(int role)
             cout << "[2] Booking\n";
             cout << "[3] View Previous Booking Record\n";
             cout << "[4] Cancel Booking\n";
+            cout << "[5] View Room Location Guide\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
 
             int choice = readInteger(
-                "Enter your choice: ", 0, 4);
+                "Enter your choice: ", 0, 5);
 
             if (choice == 0)
             {
@@ -242,6 +243,10 @@ void mainMenu(int role)
             else if (choice == 4)
             {
                 cancelBooking();
+            }
+            else if (choice == 5)
+            {
+                viewRoomLocationGuide();
             }
         }
     }
