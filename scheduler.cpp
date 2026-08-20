@@ -951,15 +951,8 @@ void viewFloorLayout(const vector<Room>& rooms,
     const vector<Room>& floor = hotelRooms[floorIdx];
     int roomCount = static_cast<int>(floor.size());
 
-    int totalCapacity = 0;
-    for (const Room& r : floor)
-    {
-        totalCapacity += r.capacity;
-    }
-
     printBanner("FLOOR " + to_string(floorNumber) + " LAYOUT",
-        to_string(roomCount) + " rooms | capacity: "
-        + to_string(totalCapacity) + " guests");
+        to_string(roomCount) + " rooms");
 
     cout << "  +" << string(MAP_INNER, '-') << "+\n";
 
@@ -1044,7 +1037,7 @@ void viewAllFloorLayouts(const vector<Room>& rooms,
     }
 
     printBanner("HOTEL SUMMARY");
-    cout << "  Total: 38 rooms | Max capacity: 62 guests\n";
+    cout << "  Total: 38 rooms\n";
     cout << "  Standard Single:  14 rooms  (Floor 1)\n";
     cout << "  Standard Double:  12 rooms  "
          << "(F1: 4, F2: 8)\n";
