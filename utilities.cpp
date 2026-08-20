@@ -184,7 +184,28 @@ void mainMenu(int role)
                 vector<Room> rooms;
                 vector<Booking> bookings;
                 loadSchedulerDemoData(rooms, bookings);
+
+                // Merge saved bookings for full visibility
+                vector<Booking> saved = loadSavedBookings();
+                for (const Booking& b : saved)
+                {
+                    bookings.push_back(b);
+                }
+
                 employeeSchedulerMenu(rooms, bookings);
+
+                // Persist any changes (e.g. auto-release)
+                // Only save real bookings, not demo data
+                vector<Booking> realBookings;
+                for (const Booking& b : bookings)
+                {
+                    if (b.bookingId.length() <= 3
+                        || b.bookingId.substr(0, 3) != "B00")
+                    {
+                        realBookings.push_back(b);
+                    }
+                }
+                saveAllBookings(realBookings);
             }
         }
         else
