@@ -155,7 +155,7 @@ namespace
                 }
             }
             catch (...) {}
-            cout << "Invalid. Enter 1-" << maxVal << ".\n";
+            cout << "Invalid quantity.\n";
         }
     }
 
@@ -375,7 +375,8 @@ namespace
         const Date& checkIn, const Date& checkOut,
         const vector<Room>& rooms,
         const vector<Booking>& existingBookings,
-        const string& customerId)
+        const string& customerId,
+        const string& addonsString)
     {
         vector<Booking> saved = loadSavedBookings();
 
@@ -457,6 +458,7 @@ namespace
                 newBooking.paid = true;
                 newBooking.accessCode =
                     generateAccessCode();
+                newBooking.addons = addonsString;
 
                 saveBookingToFile(newBooking);
                 usedRooms.insert(room.roomId);
@@ -504,7 +506,8 @@ vector<Booking> loadSavedBookings()
         getline(iss, b.status, '\t');
         getline(iss, token, '\t');
         b.paid = (token == "1");
-        getline(iss, b.accessCode);
+        getline(iss, b.accessCode, '\t');
+        getline(iss, b.addons);
         result.push_back(b);
     }
     inFile.close();
@@ -528,7 +531,8 @@ static void saveBookingToFile(const Booking& b)
             << b.checkOutDate.year << '\t'
             << b.status << '\t'
             << (b.paid ? "1" : "0") << '\t'
-            << b.accessCode << '\n';
+            << b.accessCode << '\t'
+            << b.addons << '\n';
     outFile.close();
 }
 
@@ -551,7 +555,8 @@ void saveAllBookings(const vector<Booking>& allBookings)
                 << b.checkOutDate.year << '\t'
                 << b.status << '\t'
                 << (b.paid ? "1" : "0") << '\t'
-                << b.accessCode << '\n';
+                << b.accessCode << '\t'
+                << b.addons << '\n';
     }
     outFile.close();
 }
@@ -721,7 +726,8 @@ void bookingScreen()
                      << setprecision(2) << total << "\n";
 
                 cout << "\nBook more rooms? (Y/N) "
-                     << "(Enter Z to reselect room type): ";
+                     << "(Enter Z to reselect the quantity "
+                     << "of the room type): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -775,7 +781,7 @@ void bookingScreen()
                 // Add-on selection with N to skip
                 cout << "Select (A-D, Enter N to skip "
                      << "add-ons, Enter Z to reselect "
-                     << "rooms): ";
+                     << "the quantity of the room type): ";
                 string input;
                 getline(cin, input);
 
@@ -844,7 +850,8 @@ void bookingScreen()
                      << addonTotal << "\n";
 
                 cout << "\nAdd more services? (Y/N) "
-                     << "(Enter Z to reselect add-on): ";
+                     << "(Enter Z to reselect the quantity "
+                     << "of the add-on): ";
                 string more;
                 getline(cin, more);
                 if (more == "Z" || more == "z")
@@ -962,12 +969,14 @@ void bookingScreen()
         // Z to go back
         if (addonSelections.empty())
         {
-            cout << "\n  Enter Z to reselect room quantity, "
+            cout << "\n  Enter Z to reselect the quantity "
+                 << "of the room type, "
                  << "or press Enter to continue: ";
         }
         else
         {
-            cout << "\n  Enter Z to reselect add-on, "
+            cout << "\n  Enter Z to reselect the quantity "
+                 << "of the add-on, "
                  << "or press Enter to continue: ";
         }
         string zInput;
@@ -989,6 +998,15 @@ void bookingScreen()
             }
             bookingScreen();  // restart booking flow
             return;
+        }
+
+        // Build add-ons string for persistence
+        string addonsString;
+        for (size_t i = 0; i < addonSelections.size(); i++)
+        {
+            if (i > 0) addonsString += ";";
+            addonsString += to_string(addonSelections[i].quantity)
+                + "x " + ADDONS[addonSelections[i].addonIndex].name;
         }
 
         // ── Payment Method ──
@@ -1045,8 +1063,6 @@ void bookingScreen()
                 string result = validatePhone(phone);
                 if (result == "valid")
                 {
-                    cout << "  Phone number accepted: "
-                         << phone << "\n";
                     break;
                 }
                 if (result == "format")
@@ -1331,7 +1347,6 @@ void viewPreviousBookings()
             + formatDate(first.checkInDate));
         printBoxLine("Check-out: "
             + formatDate(first.checkOutDate));
-        printBoxLine("Status: " + first.status);
         printBoxLine("Rooms:");
         for (const Booking& b : group)
         {
@@ -1413,7 +1428,6 @@ void cancelBooking()
             + formatDate(first.checkInDate));
         printBoxLine("Check-out: "
             + formatDate(first.checkOutDate));
-        printBoxLine("Status: " + first.status);
         printBoxLine("Rooms:");
         for (const Booking& b : group)
         {

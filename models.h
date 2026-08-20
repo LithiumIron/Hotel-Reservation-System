@@ -30,4 +30,5 @@ struct Booking
     string status;
     bool paid;
     string accessCode;
+    string addons;
 };
