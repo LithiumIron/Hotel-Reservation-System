@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -268,36 +269,30 @@ namespace
     // Returns: "valid", "format", or "invalid"
     string validatePhone(const string& input)
     {
+        // Regex patterns for Malaysian phone numbers
+        regex pattern011("^011-\\d{8}$");
+        regex patternOthers("^(010|012|013|014|016|017|018|019)-\\d{7}$");
+
+        if (regex_match(input, pattern011) || regex_match(input, patternOthers))
+        {
+            return "valid";
+        }
+
+        // Check if it's format error (wrong length/structure) or invalid prefix
         if (input.length() < 5 || input[3] != '-')
         {
             return "format";
         }
 
         string prefix = input.substr(0, 3);
-        string digits = input.substr(4);
-
         if (prefix == "011")
         {
-            if (digits.length() != 8) return "format";
+            return "format"; // Wrong length for 011
         }
         else
         {
-            bool validPrefix =
-                prefix == "010" || prefix == "012"
-                || prefix == "013" || prefix == "014"
-                || prefix == "016" || prefix == "017"
-                || prefix == "018" || prefix == "019";
-
-            if (!validPrefix) return "invalid";
-            if (digits.length() != 7) return "format";
+            return "invalid"; // Invalid prefix
         }
-
-        for (char c : digits)
-        {
-            if (!isdigit(c)) return "invalid";
-        }
-
-        return "valid";
     }
 
     string readSixDigitPin(const string& prompt)
@@ -1161,14 +1156,20 @@ void bookingScreen()
                     reselectPayment = true;
                     break;
                 }
-                if (bankInput.length() == 1
-                    && bankInput[0] >= 'A'
-                    && bankInput[0] <= 'D')
+                if (bankInput.length() == 1)
                 {
-                    bankIdx = bankInput[0] - 'A';
-                    cout << "\n  Bank: "
-                         << BANKS[bankIdx] << "\n";
-                    bankSelected = true;
+                    char c = toupper(bankInput[0]);
+                    if (c >= 'A' && c <= 'D')
+                    {
+                        bankIdx = c - 'A';
+                        cout << "\n  Bank: "
+                             << BANKS[bankIdx] << "\n";
+                        bankSelected = true;
+                    }
+                    else
+                    {
+                        cout << "Invalid. Please enter A-D.\n";
+                    }
                 }
                 else
                 {
@@ -1206,16 +1207,17 @@ void bookingScreen()
                         cout << "\nSelect bank (A-D): ";
                         string bankInput;
                         getline(cin, bankInput);
-                        if (bankInput.length() == 1
-                            && bankInput[0] >= 'A'
-                            && bankInput[0] <= 'D')
+                        if (bankInput.length() == 1)
                         {
-                            bankIdx = bankInput[0]
-                                - 'A';
-                            cout << "\n  Bank: "
-                                 << BANKS[bankIdx]
-                                 << "\n";
-                            break;
+                            char c = toupper(bankInput[0]);
+                            if (c >= 'A' && c <= 'D')
+                            {
+                                bankIdx = c - 'A';
+                                cout << "\n  Bank: "
+                                     << BANKS[bankIdx]
+                                     << "\n";
+                                break;
+                            }
                         }
                         cout << "Invalid. "
                              << "Please enter A-D.\n";
@@ -1472,32 +1474,35 @@ void cancelBooking()
 
     cout << "\n====================================\n";
 
-    cout << "\n  Enter booking ID to cancel "
-         << "(e.g. B1)\n";
-    cout << "  Enter Z to go back: ";
-    string input;
-    getline(cin, input);
-
-    if (input == "Z" || input == "z")
-    {
-        return;
-    }
-
     // Find the booking ID in the list
     string selectedId = "";
-    for (const string& bid : bookingIds)
+    while (selectedId.empty())
     {
-        if (bid == input)
-        {
-            selectedId = bid;
-            break;
-        }
-    }
+        cout << "\n  Enter booking ID to cancel "
+             << "(e.g. B1)\n";
+        cout << "  Enter Z to go back: ";
+        string input;
+        getline(cin, input);
 
-    if (selectedId.empty())
-    {
-        cout << "Invalid booking ID.\n";
-        return;
+        if (input == "Z" || input == "z")
+        {
+            return;
+        }
+
+        // Find the booking ID in the list
+        for (const string& bid : bookingIds)
+        {
+            if (bid == input)
+            {
+                selectedId = bid;
+                break;
+            }
+        }
+
+        if (selectedId.empty())
+        {
+            cout << "Invalid booking ID. Please try again.\n";
+        }
     }
     const vector<Booking>& group = bookingsById[selectedId];
 
