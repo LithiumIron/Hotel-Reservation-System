@@ -965,46 +965,52 @@ void viewFloorLayout(const vector<Room>& rooms,
 
     if (floorNumber == 1)
     {
+        // Floor 1: [SD][SS][SS][SS][SD] top/bottom, SS on left/right edges
         vector<string> topEdge = {
             floor[1].roomId, floor[2].roomId,
-            floor[3].roomId, floor[4].roomId };
+            floor[3].roomId };
         vector<string> bottomEdge = {
             floor[14].roomId, floor[13].roomId,
-            floor[12].roomId, floor[11].roomId };
-        vector<string> rightEdge = {
+            floor[12].roomId };
+        vector<string> leftEdge = {
             floor[6].roomId, floor[7].roomId,
             floor[8].roomId, floor[9].roomId };
-        vector<string> leftEdge = {
-            floor[19].roomId, floor[18].roomId,
-            floor[17].roomId, floor[16].roomId };
+        vector<string> rightEdge = {
+            floor[10].roomId, floor[11].roomId,
+            floor[12].roomId, floor[13].roomId };
 
-        renderEdgeRow(floor[0].roomId, topEdge, floor[5].roomId, 7, 5);
+        renderEdgeRow(floor[0].roomId, topEdge, floor[4].roomId, 7, 3);
         renderMiddleSection(
-            { leftEdge[0], leftEdge[1] },
-            { rightEdge[0], rightEdge[1] }, 5);
-        renderEdgeRow(floor[15].roomId, bottomEdge, floor[10].roomId, 7, 5);
+            { leftEdge[0], leftEdge[1], leftEdge[2], leftEdge[3] },
+            { rightEdge[0], rightEdge[1], rightEdge[2], rightEdge[3] }, 3);
+        renderEdgeRow(floor[17].roomId, bottomEdge, floor[18].roomId, 7, 3);
     }
     else if (floorNumber == 2)
     {
-        renderEdgeRow(floor[0].roomId,
-            { floor[1].roomId }, floor[2].roomId, 7, 13);
+        // Floor 2: [SD][SD][SD] top/bottom, SD on right edge
+        vector<string> topEdge = { floor[1].roomId };
+        vector<string> bottomEdge = { floor[6].roomId };
+        vector<string> rightEdge = { floor[3].roomId, floor[4].roomId };
+
+        renderEdgeRow(floor[0].roomId, topEdge, floor[2].roomId, 7, 5);
         renderMiddleSection(
-            { floor[7].roomId }, { floor[3].roomId }, 13);
-        renderEdgeRow(floor[6].roomId,
-            { floor[5].roomId }, floor[4].roomId, 7, 13);
+            {},
+            { rightEdge[0], rightEdge[1] }, 5);
+        renderEdgeRow(floor[5].roomId, bottomEdge, floor[7].roomId, 7, 5);
     }
     else if (floorNumber == 3)
     {
-        vector<string> topLeft = { floor[1].roomId, floor[2].roomId };
-        vector<string> topRight = { floor[4].roomId, floor[5].roomId };
-        vector<string> botRight = { floor[8].roomId, floor[7].roomId };
-        vector<string> botLeft = { floor[10].roomId, floor[11].roomId };
+        // Floor 3: [PS][DQ][PS] top/bottom, DQ on left/right edges
+        vector<string> topEdge = { floor[1].roomId };
+        vector<string> bottomEdge = { floor[6].roomId };
+        vector<string> leftEdge = { floor[8].roomId, floor[9].roomId };
+        vector<string> rightEdge = { floor[3].roomId, floor[4].roomId };
 
-        renderEdgeRowDual(floor[0].roomId,
-            topLeft, topRight, floor[3].roomId, 7, 7);
-        renderMiddleSection({}, {}, 14);
-        renderEdgeRowDual(floor[9].roomId,
-            botLeft, botRight, floor[6].roomId, 7, 7);
+        renderEdgeRow(floor[0].roomId, topEdge, floor[2].roomId, 9, 7);
+        renderMiddleSection(
+            { leftEdge[0], leftEdge[1] },
+            { rightEdge[0], rightEdge[1] }, 7);
+        renderEdgeRow(floor[7].roomId, bottomEdge, floor[5].roomId, 9, 7);
     }
 
     cout << "  +" << string(MAP_INNER, '-') << "+\n";
@@ -1038,70 +1044,71 @@ void viewAllFloorLayouts(const vector<Room>& rooms,
     }
 
     printBanner("HOTEL SUMMARY");
-    cout << "  Total: 40 rooms | Max capacity: 72 guests\n";
-    cout << "  Standard Single:  16 rooms  (Floor 1)\n";
-    cout << "  Standard Double:   8 rooms  "
-         << "(F1: 4, F2: 4)\n";
+    cout << "  Total: 38 rooms | Max capacity: 62 guests\n";
+    cout << "  Standard Single:  14 rooms  (Floor 1)\n";
+    cout << "  Standard Double:  12 rooms  "
+         << "(F1: 4, F2: 8)\n";
     cout << "  Deluxe Queen:      8 rooms  (Floor 3)\n";
-    cout << "  Family Suite:      4 rooms  (Floor 2)\n";
+    cout << "  Family Suite:      0 rooms  (Not available)\n";
     cout << "  Presidential:      4 rooms  (Floor 3)\n\n";
 }
 
 void loadHotelRooms(vector<vector<Room>>& hotelRooms)
 {
-    // hotelRooms[floorIndex][room]: 3 floors, 40 rooms total
-    // Floor 1: 20 rooms (4 SD corners + 16 SS edges), capacity 24
-    // Floor 2: 8 rooms (4 SD corners + 4 FS edges), capacity 24
+    // hotelRooms[floorIndex][room]: 3 floors, 38 rooms total
+    // Floor 1: 18 rooms (4 SD corners + 14 SS edges), capacity 22
+    // Floor 2: 8 rooms (all SD), capacity 16
     // Floor 3: 12 rooms (4 PS corners + 8 DQ edges), capacity 24
     hotelRooms = {
         {
-            // Floor 1 — clockwise from top-left corner
+            // Floor 1 — 18 rooms: 4 SD corners + 14 SS edges
+            // Layout: 3 SS top/bottom edges, 4 SS left/right edges
             { "101", ROOM_SD, 80.0, 2 },   // top-left corner
             { "102", ROOM_SS, 50.0, 1 },   // top edge
             { "103", ROOM_SS, 50.0, 1 },
             { "104", ROOM_SS, 50.0, 1 },
-            { "105", ROOM_SS, 50.0, 1 },
-            { "106", ROOM_SD, 80.0, 2 },   // top-right corner
-            { "107", ROOM_SS, 50.0, 1 },   // right edge
+            { "105", ROOM_SD, 80.0, 2 },   // top-right corner
+            { "106", ROOM_SS, 50.0, 1 },   // right edge
+            { "107", ROOM_SS, 50.0, 1 },
             { "108", ROOM_SS, 50.0, 1 },
             { "109", ROOM_SS, 50.0, 1 },
-            { "110", ROOM_SS, 50.0, 1 },
-            { "111", ROOM_SD, 80.0, 2 },   // bottom-right corner
-            { "112", ROOM_SS, 50.0, 1 },   // bottom edge
+            { "110", ROOM_SS, 50.0, 1 },   // left edge
+            { "111", ROOM_SS, 50.0, 1 },
+            { "112", ROOM_SS, 50.0, 1 },
             { "113", ROOM_SS, 50.0, 1 },
-            { "114", ROOM_SS, 50.0, 1 },
+            { "114", ROOM_SS, 50.0, 1 },   // bottom edge
             { "115", ROOM_SS, 50.0, 1 },
-            { "116", ROOM_SD, 80.0, 2 },   // bottom-left corner
-            { "117", ROOM_SS, 50.0, 1 },   // left edge
-            { "118", ROOM_SS, 50.0, 1 },
-            { "119", ROOM_SS, 50.0, 1 },
-            { "120", ROOM_SS, 50.0, 1 }
+            { "116", ROOM_SS, 50.0, 1 },
+            { "117", ROOM_SS, 50.0, 1 },
+            { "118", ROOM_SD, 80.0, 2 }    // bottom-right corner
         },
         {
-            // Floor 2 — clockwise from top-left corner
+            // Floor 2 — 8 rooms: all SD (7×5 blocks per ASCII art)
+            // Layout: 3 SD top/bottom, 2 SD right edge
             { "201", ROOM_SD, 80.0, 2 },   // top-left corner
-            { "202", ROOM_FS, 200.0, 4 },  // top edge
+            { "202", ROOM_SD, 80.0, 2 },   // top edge middle
             { "203", ROOM_SD, 80.0, 2 },   // top-right corner
-            { "204", ROOM_FS, 200.0, 4 },  // right edge
-            { "205", ROOM_SD, 80.0, 2 },   // bottom-right corner
-            { "206", ROOM_FS, 200.0, 4 },  // bottom edge
-            { "207", ROOM_SD, 80.0, 2 },   // bottom-left corner
-            { "208", ROOM_FS, 200.0, 4 }   // left edge
+            { "204", ROOM_SD, 80.0, 2 },   // right edge top
+            { "205", ROOM_SD, 80.0, 2 },   // right edge bottom
+            { "206", ROOM_SD, 80.0, 2 },   // bottom-right corner
+            { "207", ROOM_SD, 80.0, 2 },   // bottom edge middle
+            { "208", ROOM_SD, 80.0, 2 }    // bottom-left corner
         },
         {
-            // Floor 3 — clockwise from top-left corner
+            // Floor 3 — 12 rooms: 4 PS corners + 8 DQ edges
+            // Layout: 2 DQ top/bottom edges, 2 DQ left/right edges
             { "301", ROOM_PS, 500.0, 2 },  // top-left corner
             { "302", ROOM_DQ, 120.0, 2 },  // top edge
-            { "303", ROOM_DQ, 120.0, 2 },
-            { "304", ROOM_PS, 500.0, 2 },  // top-right corner
-            { "305", ROOM_DQ, 120.0, 2 },  // right edge
-            { "306", ROOM_DQ, 120.0, 2 },
-            { "307", ROOM_PS, 500.0, 2 },  // bottom-right corner
-            { "308", ROOM_DQ, 120.0, 2 },  // bottom edge
-            { "309", ROOM_DQ, 120.0, 2 },
-            { "310", ROOM_PS, 500.0, 2 },  // bottom-left corner
-            { "311", ROOM_DQ, 120.0, 2 },  // left edge
-            { "312", ROOM_DQ, 120.0, 2 }
+            { "303", ROOM_PS, 500.0, 2 },  // top-right corner
+            { "304", ROOM_DQ, 120.0, 2 },  // right edge top
+            { "305", ROOM_DQ, 120.0, 2 },  // right edge bottom
+            { "306", ROOM_PS, 500.0, 2 },  // bottom-right corner
+            { "307", ROOM_DQ, 120.0, 2 },  // bottom edge
+            { "308", ROOM_PS, 500.0, 2 },  // bottom-left corner
+            { "309", ROOM_DQ, 120.0, 2 },  // left edge top
+            { "310", ROOM_DQ, 120.0, 2 },  // left edge bottom
+            { "311", ROOM_DQ, 120.0, 2 },  // extra DQ
+            { "312", ROOM_DQ, 120.0, 2 }   // extra DQ
         }
     };
 }
