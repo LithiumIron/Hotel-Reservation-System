@@ -9,4 +9,3 @@ void saveAllBookings(const std::vector<Booking>& allBookings);
 void bookingScreen();
 void viewPreviousBookings();
 void cancelBooking();
-void viewRoomLocationGuide();
