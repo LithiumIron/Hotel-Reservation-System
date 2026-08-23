@@ -64,13 +64,13 @@ namespace
         while (true)
         {
             cout << '\n' << heading
-                 << "  (Enter Z to "
+                 << "  (Enter 0 to "
                  << backLabel << ")\n";
             cout << "Enter date (DD/MM/YYYY): ";
             string input;
             getline(cin, input);
 
-            if (input == "Z" || input == "z")
+            if (isGoBackInput(input))
             {
                 return GO_BACK;
             }
@@ -137,11 +137,11 @@ namespace
     {
         while (true)
         {
-            cout << "Quantity (Enter Z to "
+            cout << "Quantity (Enter 0 to "
                  << backLabel << "): ";
             string input;
             getline(cin, input);
-            if (input == "Z" || input == "z")
+            if (isGoBackInput(input))
             {
                 return -1;
             }
@@ -171,11 +171,11 @@ namespace
         while (true)
         {
             cout << "Select (" << range
-                 << ", Enter Z to "
+                 << ", Enter 0 to "
                  << backLabel << "): ";
             string input;
             getline(cin, input);
-            if (input == "Z" || input == "z")
+            if (isGoBackInput(input))
             {
                 return 'Z';
             }
@@ -320,7 +320,7 @@ namespace
         }
     }
 
-    // Returns 6-digit OTP, or "Z" to reselect bank
+    // Returns 6-digit OTP, or "0" to reselect bank
     string readTacOtp(const string& prompt)
     {
         while (true)
@@ -328,7 +328,7 @@ namespace
             cout << prompt;
             string input;
             getline(cin, input);
-            if (input == "Z" || input == "z") return "Z";
+            if (isGoBackInput(input)) return "0";
             if (input.length() != 6)
             {
                 cout << "TAC/OTP must be exactly "
@@ -701,6 +701,33 @@ void bookingScreen()
 
                 selections.push_back({ typeIndex, qty });
 
+                // Fake-hold: add temp bookings so the next availability
+                // count reflects this session's picks. These are never
+                // saved - they vanish if the user exits before payment.
+                int held = 0;
+                for (const Room& room : rooms)
+                {
+                    if (room.roomType != ROOM_TYPES[typeIndex].name)
+                        continue;
+                    if (!isRoomAvailable(bookings, room.roomId,
+                        checkInDate, checkOutDate))
+                        continue;
+
+                    Booking hold;
+                    hold.bookingId = "HOLD";
+                    hold.customerId = customerId;
+                    hold.roomId = room.roomId;
+                    hold.bookingDate = SYSTEM_DATE;
+                    hold.checkInDate = checkInDate;
+                    hold.checkOutDate = checkOutDate;
+                    hold.expiryDate = checkOutDate;
+                    hold.status = "CONFIRMED";
+                    hold.paid = false;
+                    bookings.push_back(hold);
+                    held++;
+                    if (held >= qty) break;
+                }
+
                 cout << "\n  >> Selected: " << qty << "x "
                      << ROOM_TYPES[typeIndex].name << "\n";
 
@@ -721,11 +748,11 @@ void bookingScreen()
                      << setprecision(2) << total << "\n";
 
                 cout << "\nBook more rooms? (Y/N) "
-                     << "(Enter Z to reselect the quantity "
+                     << "(Enter 0 to reselect the quantity "
                      << "of the room type): ";
                 string more;
                 getline(cin, more);
-                if (more == "Z" || more == "z")
+                if (isGoBackInput(more))
                 {
                     if (!selections.empty())
                     {
@@ -735,6 +762,24 @@ void bookingScreen()
                 }
                 if (more != "Y" && more != "y")
                 {
+                    stage = STAGE_ADDONS;
+                    break;
+                }
+
+                // If every room type is now fully taken for these dates,
+                // inform the user and go straight to add-ons.
+                int totalLeft = 0;
+                for (int i = 0; i < NUM_ROOM_TYPES; i++)
+                {
+                    totalLeft += countAvailableByType(
+                        rooms, bookings,
+                        ROOM_TYPES[i].name,
+                        checkInDate, checkOutDate);
+                }
+                if (totalLeft == 0)
+                {
+                    cout << "\n  *** All rooms have been selected. ***\n";
+                    cout << "  Proceeding to add-on services...\n";
                     stage = STAGE_ADDONS;
                     break;
                 }
@@ -775,7 +820,7 @@ void bookingScreen()
 
                 // Add-on selection with N to skip
                 cout << "Select (A-D, Enter N to skip "
-                     << "add-ons, Enter Z to reselect "
+                     << "add-ons, Enter 0 to reselect "
                      << "the quantity of the room type): ";
                 string input;
                 getline(cin, input);
@@ -785,7 +830,7 @@ void bookingScreen()
                     stage = STAGE_SUMMARY;
                     break;
                 }
-                if (input == "Z" || input == "z")
+                if (isGoBackInput(input))
                 {
                     stage = STAGE_ROOMS;
                     break;
@@ -793,7 +838,7 @@ void bookingScreen()
                 if (input.length() != 1)
                 {
                     cout << "Invalid. Please enter "
-                         << "A-D, N, or Z.\n";
+                         << "A-D, N, or 0.\n";
                     continue;
                 }
 
@@ -845,11 +890,11 @@ void bookingScreen()
                      << addonTotal << "\n";
 
                 cout << "\nAdd more services? (Y/N) "
-                     << "(Enter Z to reselect the quantity "
+                     << "(Enter 0 to reselect the quantity "
                      << "of the add-on): ";
                 string more;
                 getline(cin, more);
-                if (more == "Z" || more == "z")
+                if (isGoBackInput(more))
                 {
                     if (!addonSelections.empty())
                     {
@@ -961,22 +1006,22 @@ void bookingScreen()
         cout << "  Total rooms: " << totalRooms << "\n";
         cout << "====================================\n";
 
-        // Z to go back
+        // 0 to go back
         if (addonSelections.empty())
         {
-            cout << "\n  Enter Z to reselect the quantity "
+            cout << "\n  Enter 0 to reselect the quantity "
                  << "of the room type, "
                  << "or press Enter to continue: ";
         }
         else
         {
-            cout << "\n  Enter Z to reselect the quantity "
+            cout << "\n  Enter 0 to reselect the quantity "
                  << "of the add-on, "
                  << "or press Enter to continue: ";
         }
         string zInput;
         getline(cin, zInput);
-        if (zInput == "Z" || zInput == "z")
+        if (isGoBackInput(zInput))
         {
             if (addonSelections.empty())
             {
@@ -1043,13 +1088,13 @@ void bookingScreen()
             while (true)
             {
                 cout << "\nEnter phone number "
-                     << "(Enter Z to reselect payment "
+                     << "(Enter 0 to reselect payment "
                      << "method)\n";
                 cout << "  (e.g. 012-3456789): ";
                 string phone;
                 getline(cin, phone);
 
-                if (phone == "Z" || phone == "z")
+                if (isGoBackInput(phone))
                 {
                     reselectPayment = true;
                     break;
@@ -1140,7 +1185,7 @@ void bookingScreen()
             while (!bankSelected)
             {
                 cout << "  Select your bank "
-                     << "(Enter Z to reselect payment "
+                     << "(Enter 0 to reselect payment "
                      << "method):\n\n";
                 for (int i = 0; i < 4; i++)
                 {
@@ -1148,10 +1193,10 @@ void bookingScreen()
                          << "] " << BANKS[i] << "\n";
                 }
 
-                cout << "\nSelect bank (A-D/Z): ";
+                cout << "\nSelect bank (A-D/0): ";
                 string bankInput;
                 getline(cin, bankInput);
-                if (bankInput == "Z" || bankInput == "z")
+                if (isGoBackInput(bankInput))
                 {
                     reselectPayment = true;
                     break;
@@ -1184,14 +1229,14 @@ void bookingScreen()
             string username;
             getline(cin, username);
 
-            // TAC/OTP (Z to reselect bank)
+            // TAC/OTP (0 to reselect bank)
             string otp;
             while (true)
             {
                 otp = readTacOtp(
                     "Enter 6-digit TAC/OTP "
-                    "(Enter Z to reselect bank): ");
-                if (otp == "Z")
+                    "(Enter 0 to reselect bank): ");
+                if (otp == "0")
                 {
                     // Restart bank selection
                     while (true)
@@ -1480,19 +1525,25 @@ void cancelBooking()
     {
         cout << "\n  Enter booking ID to cancel "
              << "(e.g. B1)\n";
-        cout << "  Enter Z to go back: ";
+        cout << "  Enter 0 to go back: ";
         string input;
         getline(cin, input);
 
-        if (input == "Z" || input == "z")
+        if (isGoBackInput(input))
         {
             return;
         }
 
-        // Find the booking ID in the list
+        // Find the booking ID in the list (case-insensitive)
+        string upperInput = input;
+        for (char& c : upperInput)
+        {
+            c = static_cast<char>(toupper(
+                static_cast<unsigned char>(c)));
+        }
         for (const string& bid : bookingIds)
         {
-            if (bid == input)
+            if (bid == upperInput)
             {
                 selectedId = bid;
                 break;
@@ -1550,12 +1601,14 @@ void cancelBooking()
              << " (" << group.size() << " room(s))"
              << " has been cancelled.\n";
         cout << "====================================\n";
+        EnterToContinue();
     }
     else
     {
-        cout << "\n  Cancellation not confirmed.\n";
+        cout << "\n  Cancellation was not executed.\n";
         cout << "  Returning to main menu.\n";
         cout << "====================================\n";
+        EnterToContinue();
     }
 }
 

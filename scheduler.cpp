@@ -1,7 +1,9 @@
 #include "scheduler.h"
 #include "utilities.h"
+#include "booking.h"
 
 #include <algorithm>
+#include <set>
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -15,12 +17,12 @@ Date getCurrentSystemDate()
     // Get current time from system
     time_t now = time(nullptr);
     tm* localTime = localtime(&now);
-    
+
     Date today;
     today.day = localTime->tm_mday;
     today.month = localTime->tm_mon + 1;  // tm_mon is 0-11
     today.year = localTime->tm_year + 1900;  // tm_year is years since 1900
-    
+
     return today;
 }
 const int UI_WIDTH = 82;
@@ -632,63 +634,164 @@ int auditDoubleBookings(const vector<Booking>& bookings)
 
 namespace
 {
-    struct MapRoom
-    {
-        string roomId;
-        string capLabel;
-        int width;
-    };
+    // Floor maps hardcoded verbatim from the user's maplayout.md
+    // to guarantee pixel-perfect output.
 
-    void renderRoomBlock(const MapRoom& room, bool windowOnTop,
-        vector<string>& lines)
+    string center(const string& text, int width)
     {
-        string windowEdge(room.width - 2,
-            windowOnTop ? '=' : '-');
-        string plainEdge(room.width - 2, '-');
-        lines.push_back("+" + windowEdge + "+");
-        lines.push_back("|"
-            + centeredText(room.roomId + " " + room.capLabel,
-                room.width - 2) + "|");
-        lines.push_back("+" + plainEdge + "+");
-    }
-
-    void renderRoomBand(const vector<MapRoom>& band, bool windowOnTop)
-    {
-        string rows[3];
-        for (const MapRoom& room : band)
+        if (static_cast<int>(text.size()) >= width)
         {
-            vector<string> block;
-            renderRoomBlock(room, windowOnTop, block);
-            for (int i = 0; i < 3; i++)
-            {
-                rows[i] += block[i];
-            }
+            return text.substr(0, width);
         }
-        for (int i = 0; i < 3; i++)
+        int left = (width - static_cast<int>(text.size())) / 2;
+        return string(left, ' ') + text
+            + string(width - left - static_cast<int>(text.size()), ' ');
+    }
+
+    // Replace room labels that belong to the given booking with
+    // Booked rooms render tight (|*101*|), normal rooms keep padding.
+
+    // Booked rooms get *roomId* centred in the cell; normal rooms
+    // just centre the roomId.
+    string cell(const string& roomId, int width, const set<string>& booked)
+    {
+        if (booked.count(roomId))
         {
-            cout << "  " << rows[i] << '\n';
+            return center("*" + roomId + "*", width);
         }
+        return center(roomId, width);
     }
 
-    void renderCorridorWithLift(int totalWidth, int liftWidth)
+    void printFloor1(const set<string>& booked)
     {
-        int sideWidth = (totalWidth - liftWidth) / 2;
-        string grass(sideWidth, '.');
-        string liftEdge(liftWidth - 2, '=');
-        cout << "  " << grass << "+" << liftEdge << "+\n";
-        cout << "  " << grass << "|"
-             << centeredText("LIFT", liftWidth - 2) << "|\n";
-        cout << "  " << grass << "+" << liftEdge << "+\n";
+        cout << "\n  FLOOR 1\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |     |     |     |     |     |     |     |     |     |     |\n";
+        cout << "  |" << cell("101", 5, booked) << "|" << cell("102", 5, booked)
+            << "|" << cell("103", 5, booked) << "|" << cell("104", 5, booked)
+            << "|" << cell("105", 5, booked) << "|" << cell("106", 5, booked)
+            << "|" << cell("107", 5, booked) << "|" << cell("108", 5, booked)
+            << "|" << cell("109", 5, booked) << "|" << cell("110", 5, booked)
+            << "|\n";
+        cout << "  |     |     |     |     |     |     |     |     |     |     |\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("111", 11, booked)
+            << "|                                   |"
+            << cell("114", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  |" << cell("112", 11, booked)
+            << "|              | LIF |              |"
+            << cell("115", 11, booked) << "|\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("113", 11, booked)
+            << "|                                   |"
+            << cell("116", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |     |     |     |     |     |     |     |     |     |     |\n";
+        cout << "  |" << cell("117", 5, booked) << "|" << cell("118", 5, booked)
+            << "|" << cell("119", 5, booked) << "|" << cell("120", 5, booked)
+            << "|" << cell("121", 5, booked) << "|" << cell("122", 5, booked)
+            << "|" << cell("123", 5, booked) << "|" << cell("124", 5, booked)
+            << "|" << cell("125", 5, booked) << "|" << cell("126", 5, booked)
+            << "|\n";
+        cout << "  |     |     |     |     |     |     |     |     |     |     |\n";
+        cout << "  -------------------------------------------------------------\n";
     }
 
-    void renderFloorMap(int floorNumber,
-        const vector<MapRoom>& topBand,
-        const vector<MapRoom>& bottomBand)
+    void printFloor2(const set<string>& booked)
     {
-        cout << "\n  FLOOR " << floorNumber << "\n";
-        renderRoomBand(topBand, true);
-        renderCorridorWithLift(72, 12);
-        renderRoomBand(bottomBand, false);
+        cout << "\n  FLOOR 2\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |                 |           |           |                 |\n";
+        cout << "  |" << cell("201", 17, booked)
+            << "|" << cell("202", 11, booked)
+            << "|" << cell("203", 11, booked)
+            << "|" << cell("204", 17, booked) << "|\n";
+        cout << "  |                 |           |           |                 |\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("205", 11, booked)
+            << "|                                   |"
+            << cell("208", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  |" << cell("206", 11, booked)
+            << "|              | LIF |              |"
+            << cell("209", 11, booked) << "|\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("207", 11, booked)
+            << "|                                   |"
+            << cell("210", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |                 |           |           |                 |\n";
+        cout << "  |" << cell("211", 17, booked)
+            << "|" << cell("212", 11, booked)
+            << "|" << cell("213", 11, booked)
+            << "|" << cell("214", 17, booked) << "|\n";
+        cout << "  |                 |           |           |                 |\n";
+        cout << "  -------------------------------------------------------------\n";
+    }
+
+    void printFloor3(const set<string>& booked)
+    {
+        cout << "\n  FLOOR 3\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |           |           |           |           |           |\n";
+        cout << "  |" << cell("301", 11, booked)
+            << "|" << cell("302", 11, booked)
+            << "|" << cell("303", 11, booked)
+            << "|" << cell("304", 11, booked)
+            << "|" << cell("305", 11, booked) << "|\n";
+        cout << "  |           |           |           |           |           |\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("306", 11, booked)
+            << "|                                   |"
+            << cell("309", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  |" << cell("307", 11, booked)
+            << "|              | LIF |              |"
+            << cell("310", 11, booked) << "|\n";
+        cout << "  |           |              |     |              |           |\n";
+        cout << "  -------------              -------              -------------\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  |" << cell("308", 11, booked)
+            << "|                                   |"
+            << cell("311", 11, booked) << "|\n";
+        cout << "  |           |                                   |           |\n";
+        cout << "  -------------                                   -------------\n";
+        cout << "\n";
+        cout << "  -------------------------------------------------------------\n";
+        cout << "  |           |           |           |           |           |\n";
+        cout << "  |" << cell("312", 11, booked)
+            << "|" << cell("313", 11, booked)
+            << "|" << cell("314", 11, booked)
+            << "|" << cell("315", 11, booked)
+            << "|" << cell("316", 11, booked) << "|\n";
+        cout << "  |           |           |           |           |           |\n";
+        cout << "  -------------------------------------------------------------\n";
     }
 }
 
@@ -696,60 +799,91 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
 {
     (void)rooms;
 
-    printBanner("ROOM LOCATION GUIDE",
-        "All rooms face an exterior window wall");
+    vector<Booking> saved = loadSavedBookings();
 
-    cout << "  Room number = FLOOR + ROOM (e.g. 205 = Floor 2, Room 05).\n";
-    cout << "  '=' marks the window wall. Block size = room size:\n";
-    cout << "  [1P] 1-person (small)   [2P] 2-person (medium)"
-        << "   [4P] 4-person (large)\n";
+    cout << "\n====================================\n";
+    cout << "       ROOM LOCATION GUIDE\n";
+    cout << "====================================\n";
 
-    // Floor 1: 1-person and 2-person only (band widths: 4x12 + 3x8 = 72)
-    vector<MapRoom> f1Top = {
-        { "101", "2P", 12 }, { "102", "2P", 12 },
-        { "103", "2P", 12 }, { "104", "2P", 12 },
-        { "105", "1P", 8 },  { "106", "1P", 8 },  { "107", "1P", 8 }
-    };
-    vector<MapRoom> f1Bottom = {
-        { "108", "2P", 12 }, { "109", "2P", 12 },
-        { "110", "2P", 12 }, { "111", "2P", 12 },
-        { "112", "1P", 8 },  { "113", "1P", 8 },  { "114", "1P", 8 }
-    };
+    // Keep asking until the user enters one of their own booking IDs,
+    // or 0 to go back to the menu. Case-insensitive (b1 == B1).
+    set<string> bookedRooms;
+    string bookingId;
+    while (true)
+    {
+        cout << "\n  Enter your Booking ID to view your room location"
+            << " (Enter 0 to back to menu): ";
+        getline(cin, bookingId);
 
-    // Floor 2: 2-person and 4-person only (band widths: 2x18 + 3x12 = 72)
-    vector<MapRoom> f2Top = {
-        { "201", "4P", 18 }, { "202", "4P", 18 },
-        { "203", "2P", 12 }, { "204", "2P", 12 }, { "205", "2P", 12 }
-    };
-    vector<MapRoom> f2Bottom = {
-        { "206", "4P", 18 }, { "207", "4P", 18 },
-        { "208", "2P", 12 }, { "209", "2P", 12 }, { "210", "2P", 12 }
-    };
+        if (bookingId == "0")
+        {
+            return;
+        }
 
-    // Floor 3: all 2-person (band widths: 6x12 = 72)
-    vector<MapRoom> f3Top = {
-        { "301", "2P", 12 }, { "302", "2P", 12 }, { "303", "2P", 12 },
-        { "304", "2P", 12 }, { "305", "2P", 12 }, { "306", "2P", 12 }
-    };
-    vector<MapRoom> f3Bottom = {
-        { "307", "2P", 12 }, { "308", "2P", 12 }, { "309", "2P", 12 },
-        { "310", "2P", 12 }, { "311", "2P", 12 }, { "312", "2P", 12 }
-    };
+        // Normalise to uppercase for comparison
+        string upperId = bookingId;
+        for (char& c : upperId)
+        {
+            c = static_cast<char>(toupper(
+                static_cast<unsigned char>(c)));
+        }
 
-    renderFloorMap(1, f1Top, f1Bottom);
-    renderFloorMap(2, f2Top, f2Bottom);
-    renderFloorMap(3, f3Top, f3Bottom);
+        bookedRooms.clear();
+        bool owned = false;
+        for (const Booking& b : saved)
+        {
+            if (b.customerId == loggedInUser)
+            {
+                string bUpper = b.bookingId;
+                for (char& c : bUpper)
+                {
+                    c = static_cast<char>(toupper(
+                        static_cast<unsigned char>(c)));
+                }
+                if (bUpper == upperId)
+                {
+                    bookedRooms.insert(b.roomId);
+                    owned = true;
+                }
+            }
+        }
 
-    cout << "\n  Legend: '.' corridor  |  centre block = lift core"
-        << "  |  '=' window wall\n";
-    cout << "  Every floor occupies the same total area"
-        << " (72 x 9 units incl. lift core).\n";
-    cout << "\n  FLOOR SUMMARY\n";
-    cout << "  Floor 1: 6 x 1-person, 8 x 2-person  (14 rooms)\n";
-    cout << "  Floor 2: 6 x 2-person, 4 x 4-person  (10 rooms)\n";
-    cout << "  Floor 3: 12 x 2-person               (12 rooms)\n";
-    cout << "  Total:   6 x 1-person, 20 x 2-person, 4 x 4-person"
-        << "  (36 rooms)\n";
+        if (owned)
+        {
+            break;
+        }
+        cout << "  Booking ID not found under your account. Try again.\n";
+    }
+
+    cout << "\n  Rooms marked with ** are yours.\n";
+
+    bool showFloor1 = false;
+    bool showFloor2 = false;
+    bool showFloor3 = false;
+    for (const string& roomId : bookedRooms)
+    {
+        if (roomId[0] == '1') showFloor1 = true;
+        else if (roomId[0] == '2') showFloor2 = true;
+        else if (roomId[0] == '3') showFloor3 = true;
+    }
+
+    if (showFloor1) printFloor1(bookedRooms);
+    if (showFloor2) printFloor2(bookedRooms);
+    if (showFloor3) printFloor3(bookedRooms);
+
+    // List the user's rooms after the map
+    cout << "\n  Your room : ";
+    bool first = true;
+    for (const string& roomId : bookedRooms)
+    {
+        if (!first)
+        {
+            cout << ", ";
+        }
+        cout << roomId;
+        first = false;
+    }
+    cout << "\n";
 
     cout << "\n  Press ENTER to return...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -757,54 +891,72 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
 
 void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
+    (void)bookings;
+
+    // Floor 1: Standard Single (1-person) + Standard Double (2-person)
     rooms = {
-        { "101", ROOM_SD, 80.0, 2 },
+        { "101", ROOM_SS, 50.0, 1 },
         { "102", ROOM_SS, 50.0, 1 },
         { "103", ROOM_SS, 50.0, 1 },
         { "104", ROOM_SS, 50.0, 1 },
         { "105", ROOM_SS, 50.0, 1 },
-        { "106", ROOM_SD, 80.0, 2 },
+        { "106", ROOM_SS, 50.0, 1 },
         { "107", ROOM_SS, 50.0, 1 },
         { "108", ROOM_SS, 50.0, 1 },
         { "109", ROOM_SS, 50.0, 1 },
         { "110", ROOM_SS, 50.0, 1 },
         { "111", ROOM_SD, 80.0, 2 },
-        { "112", ROOM_SS, 50.0, 1 },
-        { "113", ROOM_SS, 50.0, 1 },
-        { "114", ROOM_SS, 50.0, 1 },
-        { "115", ROOM_SS, 50.0, 1 },
+        { "112", ROOM_SD, 80.0, 2 },
+        { "113", ROOM_SD, 80.0, 2 },
+        { "114", ROOM_SD, 80.0, 2 },
+        { "115", ROOM_SD, 80.0, 2 },
         { "116", ROOM_SD, 80.0, 2 },
         { "117", ROOM_SS, 50.0, 1 },
         { "118", ROOM_SS, 50.0, 1 },
         { "119", ROOM_SS, 50.0, 1 },
         { "120", ROOM_SS, 50.0, 1 },
-        { "201", ROOM_SD, 80.0, 2 },
+        { "121", ROOM_SS, 50.0, 1 },
+        { "122", ROOM_SS, 50.0, 1 },
+        { "123", ROOM_SS, 50.0, 1 },
+        { "124", ROOM_SS, 50.0, 1 },
+        { "125", ROOM_SS, 50.0, 1 },
+        { "126", ROOM_SS, 50.0, 1 },
+
+        // Floor 2: Standard Double (2-person) + Family Suite (4-person)
+        { "201", ROOM_FS, 150.0, 4 },
         { "202", ROOM_SD, 80.0, 2 },
         { "203", ROOM_SD, 80.0, 2 },
-        { "204", ROOM_SD, 80.0, 2 },
+        { "204", ROOM_FS, 150.0, 4 },
         { "205", ROOM_SD, 80.0, 2 },
         { "206", ROOM_SD, 80.0, 2 },
         { "207", ROOM_SD, 80.0, 2 },
         { "208", ROOM_SD, 80.0, 2 },
-        { "301", ROOM_SD, 80.0, 2 },
-        { "302", ROOM_SD, 80.0, 2 },
-        { "303", ROOM_SD, 80.0, 2 }
-    };
+        { "209", ROOM_SD, 80.0, 2 },
+        { "210", ROOM_SD, 80.0, 2 },
+        { "211", ROOM_FS, 150.0, 4 },
+        { "212", ROOM_SD, 80.0, 2 },
+        { "213", ROOM_SD, 80.0, 2 },
+        { "214", ROOM_FS, 150.0, 4 },
 
-    bookings = {
-        { "B001", "C001", "101", {10,8,2026}, {14,8,2026}, {17,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B002", "C002", "102", {11,8,2026}, {15,8,2026}, {19,8,2026}, {12,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B003", "C003", "201", {12,8,2026}, {14,8,2026}, {16,8,2026}, {13,8,2026}, STATUS_CHECKED_IN, true, "" },
-        { "B004", "C004", "202", {12,8,2026}, {16,8,2026}, {18,8,2026}, {13,8,2026}, STATUS_PENDING, false, "" },
-        { "B005", "C005", "301", {13,8,2026}, {18,8,2026}, {22,8,2026}, {16,8,2026}, STATUS_PENDING, false, "" },
-        { "B006", "C006", "302", {10,8,2026}, {14,8,2026}, {20,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B007", "C007", "107", {10,8,2026}, {20,8,2026}, {24,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B008", "C008", "111", {13,8,2026}, {15,8,2026}, {16,8,2026}, {14,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B009", "C009", "205", {10,5,2025}, {20,5,2025}, {23,5,2025}, {11,5,2025}, STATUS_COMPLETED, true, "" },
-        { "B010", "C010", "307", {14,8,2026}, {16,8,2026}, {19,8,2026}, {15,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B011", "C011", "116", {15,8,2026}, {18,8,2026}, {21,8,2026}, {16,8,2026}, STATUS_PENDING, false, "" },
-        { "B012", "C012", "310", {16,8,2026}, {19,8,2026}, {22,8,2026}, {17,8,2026}, STATUS_CONFIRMED, true, "" }
+        // Floor 3: Presidential Suite + Deluxe Queen (all 2-person)
+        { "301", ROOM_PS, 300.0, 2 },
+        { "302", ROOM_DQ, 120.0, 2 },
+        { "303", ROOM_DQ, 120.0, 2 },
+        { "304", ROOM_DQ, 120.0, 2 },
+        { "305", ROOM_PS, 300.0, 2 },
+        { "306", ROOM_DQ, 120.0, 2 },
+        { "307", ROOM_DQ, 120.0, 2 },
+        { "308", ROOM_DQ, 120.0, 2 },
+        { "309", ROOM_DQ, 120.0, 2 },
+        { "310", ROOM_DQ, 120.0, 2 },
+        { "311", ROOM_DQ, 120.0, 2 },
+        { "312", ROOM_DQ, 120.0, 2 },
+        { "313", ROOM_PS, 300.0, 2 },
+        { "314", ROOM_DQ, 120.0, 2 },
+        { "315", ROOM_DQ, 120.0, 2 },
+        { "316", ROOM_PS, 300.0, 2 }
     };
+    bookings.clear();
 }
 
 void customerSchedulerMenu(const vector<Room>& rooms,

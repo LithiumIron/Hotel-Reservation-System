@@ -14,6 +14,11 @@ using namespace std;
 
 string loggedInUser;
 
+bool isGoBackInput(const string& input)
+{
+    return input == "0";
+}
+
 int readInteger(const string& prompt, int minimum, int maximum)
 {
     while (true)
