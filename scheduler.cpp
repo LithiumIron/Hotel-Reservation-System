@@ -791,7 +791,8 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
         bool owned = false;
         for (const Booking& b : saved)
         {
-            if (b.customerId == loggedInUser)
+            if (b.customerId == loggedInUser
+                && b.status != "CANCELLED")
             {
                 string bUpper = b.bookingId;
                 for (char& c : bUpper)
