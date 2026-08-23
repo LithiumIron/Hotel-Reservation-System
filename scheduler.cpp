@@ -811,7 +811,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
         {
             break;
         }
-        cout << "  Booking ID not found under your account. Try again.\n";
+        cout << "Invalid booking ID. Try again.\n";
     }
 
     cout << "\n  Rooms marked with ** are yours.\n";

@@ -1597,13 +1597,14 @@ void cancelBooking()
             return;
         }
 
-        // Find the booking ID in the list (case-insensitive)
+        // Normalise to uppercase (case-insensitive)
         string upperInput = input;
         for (char& c : upperInput)
         {
             c = static_cast<char>(toupper(
                 static_cast<unsigned char>(c)));
         }
+
         for (const string& bid : bookingIds)
         {
             if (bid == upperInput)
