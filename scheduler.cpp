@@ -303,6 +303,8 @@ string formatDate(const Date& date)
 void viewWeeklyHeatmap(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& startDate)
 {
+    clearScreen();
+
     const int DAYS = 7;
 
     printBanner("WEEKLY OCCUPANCY HEATMAP");
@@ -337,11 +339,15 @@ void viewWeeklyHeatmap(const vector<Booking>& bookings,
              << setw(12) << (to_string(occupiedCount) + "/" + to_string(roomLimit))
              << setw(24) << occupancyBar(percentage) << percentage << "%\n";
     }
+
+    EnterToContinue();
 }
 
 void viewMonthlyAvailability(const vector<Booking>& bookings,
     const vector<Room>& rooms, int month, int year)
 {
+    clearScreen();
+
     printBanner("MONTHLY ROOM AVAILABILITY");
     cout << "  Month: " << month << '/' << year
          << "    Cell format: DAY:AVAILABLE ROOMS\n\n";
@@ -382,11 +388,15 @@ void viewMonthlyAvailability(const vector<Booking>& bookings,
         }
     }
     cout << "\n\n  Availability key: -- PAST | 0 FULL | 1-2 LIMITED | 3+ AVAILABLE\n";
+
+    EnterToContinue();
 }
 
 void viewDailyRoomSchedule(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& selectedDate)
 {
+    clearScreen();
+
     printBanner("DAILY ROOM SCHEDULE");
     cout << "  Schedule date: " << dayName(selectedDate) << ' '
          << formatDate(selectedDate) << "\n\n";
@@ -408,6 +418,8 @@ void viewDailyRoomSchedule(const vector<Booking>& bookings,
             cout << setw(13) << "-" << setw(13) << "-" << "[AVAILABLE]\n";
         }
     }
+
+    EnterToContinue();
 }
 
 void viewRoomMonthlyTimeline(const vector<Booking>& bookings,
@@ -439,6 +451,7 @@ void viewRoomMonthlyTimeline(const vector<Booking>& bookings,
             : booking->status == STATUS_CHECKED_IN ? 'I' : 'B';
     }
 
+    clearScreen();
     printBanner("ROOM MONTHLY TIMELINE");
     cout << "Room: " << roomId << " | Month: " << month << '/' << year << "\n";
     cout << "Legend: . Available, P Pending, B Confirmed, I Checked-in\n\n";
@@ -457,11 +470,15 @@ void viewRoomMonthlyTimeline(const vector<Booking>& bookings,
         }
         cout << "\n\n";
     }
+
+    EnterToContinue();
 }
 
 void viewOccupancyForecast(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& startDate, int numberOfDays)
 {
+    clearScreen();
+
     printBanner("OCCUPANCY FORECAST");
     cout << "  " << left << setw(17) << "DATE" << setw(11) << "USED"
          << setw(11) << "FREE" << setw(24) << "FORECAST LOAD" << "RATE\n";
@@ -498,6 +515,8 @@ void viewOccupancyForecast(const vector<Booking>& bookings,
     printResultPanel("AVERAGE", averageText.str());
     printResultPanel("PEAK DATE", formatDate(peakDate) + " | "
         + to_string(peakOccupied) + " rooms occupied");
+
+    EnterToContinue();
 }
 
 
@@ -506,6 +525,8 @@ void viewFloorAvailabilityMap(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate)
 {
+    clearScreen();
+
     printBanner("MULTI-FLOOR ROOM AVAILABILITY",
         formatDate(checkInDate) + " to " + formatDate(checkOutDate));
 
@@ -559,6 +580,8 @@ void viewFloorAvailabilityMap(const vector<Booking>& bookings,
         to_string(totalAvailable) + " of "
         + to_string(rooms.size())
         + " rooms available for the entire stay");
+
+    EnterToContinue();
 }
 
 
@@ -732,6 +755,8 @@ namespace
 
 void viewRoomLocationGuide(const vector<Room>& rooms)
 {
+    clearScreen();
+
     (void)rooms;
 
     vector<Booking> saved = loadSavedBookings();
@@ -900,6 +925,8 @@ void customerSchedulerMenu(const vector<Room>& rooms,
 {
     while (true)
     {
+        clearScreen();
+
         printBanner("SCHEDULER & APPOINTMENT MANAGEMENT", "CUSTOMER PORTAL");
         printMenuOption(1, "WEEKLY HEATMAP", "Compare seven days of occupancy");
         printMenuOption(2, "MONTHLY AVAILABILITY", "Browse a calendar of free rooms");
@@ -955,6 +982,8 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
 {
     while (true)
     {
+        clearScreen();
+
         printBanner("SCHEDULER & APPOINTMENT MANAGEMENT", "EMPLOYEE CONTROL DESK");
         printMenuOption(1, "DAILY SCHEDULE", "Inspect room operations by date");
         printMenuOption(2, "ROOM TIMELINE", "Track one room across a month");

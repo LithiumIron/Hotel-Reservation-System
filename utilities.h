@@ -1,6 +1,7 @@
 
-#include <string>
 #pragma once
+
+#include <string>
 
 // Currently logged-in customer username
 extern std::string loggedInUser;
@@ -18,3 +19,6 @@ void roleSelection();
 void mainMenu(int role);
 
 void EnterToContinue();
+
+// Clears the console before displaying a new screen.
+void clearScreen();

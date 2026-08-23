@@ -5,6 +5,7 @@
 #include "scheduler.h"
 
 #include <cctype>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -137,5 +138,10 @@ void EnterToContinue(){
     cout << "\nPress Enter to continue...";
     string dummy;
     getline(cin, dummy);
+}
+
+void clearScreen()
+{
+    system("cls");
 }
  
