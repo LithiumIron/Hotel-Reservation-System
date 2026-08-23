@@ -74,30 +74,13 @@ void mainMenu(int role)
             else if (choice == 2)
             {
                 vector<Room> rooms;
-                vector<Booking> bookings;
-                loadSchedulerDemoData(rooms, bookings);
+                vector<Booking> unusedDemoBookings;
+                loadSchedulerDemoData(rooms, unusedDemoBookings);
 
-                // Merge saved bookings for full visibility
-                vector<Booking> saved = loadSavedBookings();
-                for (const Booking& b : saved)
-                {
-                    bookings.push_back(b);
-                }
+                // Scheduler displays only real bookings saved by Booking Module.
+                vector<Booking> bookings = loadSavedBookings();
 
                 employeeSchedulerMenu(rooms, bookings);
-
-                // Persist any changes (e.g. auto-release)
-                // Only save real bookings, not demo data
-                vector<Booking> realBookings;
-                for (const Booking& b : bookings)
-                {
-                    if (b.bookingId.length() <= 3
-                        || b.bookingId.substr(0, 3) != "B00")
-                    {
-                        realBookings.push_back(b);
-                    }
-                }
-                saveAllBookings(realBookings);
             }
             else if (choice == 3) viewAllCustomers();
             else if (choice == 4) reportMenu();
@@ -113,12 +96,13 @@ void mainMenu(int role)
             cout << "[5] Booking\n";
             cout << "[6] View Previous Booking Record\n";
             cout << "[7] Cancel Booking\n";
-            cout << "[8] View Room Location Guide\n";
+            cout << "[8] View Room Availability\n";
+            cout << "[9] View Room Location Guide\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
 
             int choice = readInteger(
-                "Enter your choice: ", 0, 8);
+                "Enter your choice: ", 0, 9);
 
             if (choice == 0){
                 loggedInUser.clear();
@@ -135,8 +119,20 @@ void mainMenu(int role)
             else if (choice == 8)
             {
                 vector<Room> rooms;
-                vector<Booking> bookings;
-                loadSchedulerDemoData(rooms, bookings);
+                vector<Booking> unusedDemoBookings;
+                loadSchedulerDemoData(rooms, unusedDemoBookings);
+
+                // Load real bookings so availability reflects actual reservations.
+                vector<Booking> bookings = loadSavedBookings();
+
+                customerSchedulerMenu(rooms, bookings);
+            }
+            else if (choice == 9)
+            {
+                vector<Room> rooms;
+                vector<Booking> unusedDemoBookings;
+                loadSchedulerDemoData(rooms, unusedDemoBookings);
+
                 viewRoomLocationGuide(rooms);
             }
         }

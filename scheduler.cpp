@@ -502,31 +502,7 @@ void viewOccupancyForecast(const vector<Booking>& bookings,
         + to_string(peakOccupied) + " rooms occupied");
 }
 
-int autoReleaseExpiredBookings(vector<Booking>& bookings,
-    const Date& currentDate)
-{
-    vector<Booking> ignoredReleasedBookings;
-    return autoReleaseExpiredBookings(bookings, currentDate,
-        ignoredReleasedBookings);
-}
 
-int autoReleaseExpiredBookings(vector<Booking>& bookings,
-    const Date& currentDate, vector<Booking>& releasedBookings)
-{
-    int releasedCount = 0;
-    releasedBookings.clear();
-    for (Booking& booking : bookings)
-    {
-        if (booking.status == STATUS_PENDING && !booking.paid
-            && compareDates(booking.expiryDate, currentDate) < 0)
-        {
-            booking.status = STATUS_CANCELLED;
-            releasedBookings.push_back(booking);
-            releasedCount++;
-        }
-    }
-    return releasedCount;
-}
 
 void viewFloorAvailabilityMap(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& checkInDate,
@@ -534,97 +510,60 @@ void viewFloorAvailabilityMap(const vector<Booking>& bookings,
 {
     printBanner("MULTI-FLOOR ROOM AVAILABILITY",
         formatDate(checkInDate) + " to " + formatDate(checkOutDate));
-    cout << "\n  A displayed room number means FREE for the whole stay.\n";
-    cout << "  X means the room is occupied for at least one selected night.\n\n";
+
+    cout << "\n  A room number means the room is available for the entire stay.\n";
+    cout << "  X means the room is occupied for at least one selected night.\n";
+
+    int totalAvailable = 0;
 
     for (int floor = 3; floor >= 1; floor--)
     {
-        cout << "  +" << string(68, '-') << "+\n";
-        ostringstream floorRow;
-        floorRow << " FLOOR " << floor << "     ";
+        cout << "\n  FLOOR " << floor << "\n";
+        cout << "  " << string(70, '-') << "\n  ";
 
-        for (int roomNumber = 1; roomNumber <= 3; roomNumber++)
+        int roomsOnLine = 0;
+
+        for (const Room& room : rooms)
         {
-            string roomId = to_string(floor * 100 + roomNumber);
-            bool roomExists = false;
-            for (const Room& room : rooms)
+            if (room.roomId.empty()
+                || room.roomId[0] - '0' != floor)
             {
-                if (room.roomId == roomId)
-                {
-                    roomExists = true;
-                    break;
-                }
+                continue;
             }
 
-            string displayValue = "N/A";
-            if (roomExists)
+            bool available = roomAvailableForStay(
+                bookings, room.roomId, checkInDate, checkOutDate);
+
+            string displayValue = available ? room.roomId : "X";
+
+
+            if (roomsOnLine > 0 && roomsOnLine % 6 == 0)
             {
-                displayValue = roomAvailableForStay(bookings, roomId,
-                    checkInDate, checkOutDate) ? roomId : "X";
+                cout << "\n  ";
             }
 
-            floorRow << "[" << centeredText(displayValue, 9) << "]";
-            if (roomNumber < 3)
+            cout << "[" << centeredText(displayValue, 7) << "] ";
+            roomsOnLine++;
+
+            if (available)
             {
-                floorRow << "     ";
+                totalAvailable++;
             }
         }
-        cout << "  |" << left << setw(68) << floorRow.str() << "|\n";
+
+        cout << '\n';
+
+        cout << "  " << string(70, '-') << '\n';
     }
-    cout << "  +" << string(68, '-') << "+\n";
-    cout << "\n  Legend: [ ROOM NO. ] Available  |  [    X    ] Occupied\n";
+
+    cout << "\n  Legend: [ ROOM ] Available | [   X   ] Occupied\n";
+    printResultPanel("AVAILABLE",
+        to_string(totalAvailable) + " of "
+        + to_string(rooms.size())
+        + " rooms available for the entire stay");
 }
 
-int auditDoubleBookings(const vector<Booking>& bookings)
-{
-    int conflictCount = 0;
-    printBanner("DOUBLE-BOOKING CONFLICT AUDIT", "Integrity and overlap control");
-    cout << "  " << left << setw(10) << "ROOM" << setw(14) << "BOOKING A"
-         << setw(14) << "Booking B" << "Overlap\n";
-    cout << "  " << string(64, '-') << '\n';
 
-    for (size_t first = 0; first < bookings.size(); first++)
-    {
-        if (!isRoomBlocked(bookings[first]))
-        {
-            continue;
-        }
-        for (size_t second = first + 1; second < bookings.size(); second++)
-        {
-            if (bookings[first].roomId == bookings[second].roomId
-                && isRoomBlocked(bookings[second])
-                && dateRangesOverlap(bookings[first].checkInDate,
-                    bookings[first].checkOutDate, bookings[second].checkInDate,
-                    bookings[second].checkOutDate))
-            {
-                conflictCount++;
-                Date overlapStart = compareDates(bookings[first].checkInDate,
-                    bookings[second].checkInDate) > 0
-                    ? bookings[first].checkInDate : bookings[second].checkInDate;
-                Date overlapEnd = compareDates(bookings[first].checkOutDate,
-                    bookings[second].checkOutDate) < 0
-                    ? bookings[first].checkOutDate : bookings[second].checkOutDate;
-
-                cout << "  " << left << setw(10) << bookings[first].roomId
-                     << setw(14) << bookings[first].bookingId
-                     << setw(14) << bookings[second].bookingId
-                     << formatDate(overlapStart) << " to "
-                     << formatDate(overlapEnd) << '\n';
-            }
-        }
-    }
-
-    if (conflictCount == 0)
-    {
-        printResultPanel("AUDIT PASS", "No active double-booking conflict detected");
-    }
-    else
-    {
-        printResultPanel("ACTION NEEDED", to_string(conflictCount)
-            + " conflict(s) require employee action");
-    }
-    return conflictCount;
-}
 
 
 
@@ -757,54 +696,56 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
 
 void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
+    // Central hotel room catalogue shared with Booking and Scheduler.
     rooms = {
+        // Floor 1: Standard rooms
         { "101", ROOM_SD, 80.0, 2 },
-        { "102", ROOM_SS, 50.0, 1 },
-        { "103", ROOM_SS, 50.0, 1 },
-        { "104", ROOM_SS, 50.0, 1 },
+        { "102", ROOM_SD, 80.0, 2 },
+        { "103", ROOM_SD, 80.0, 2 },
+        { "104", ROOM_SD, 80.0, 2 },
         { "105", ROOM_SS, 50.0, 1 },
-        { "106", ROOM_SD, 80.0, 2 },
+        { "106", ROOM_SS, 50.0, 1 },
         { "107", ROOM_SS, 50.0, 1 },
-        { "108", ROOM_SS, 50.0, 1 },
-        { "109", ROOM_SS, 50.0, 1 },
-        { "110", ROOM_SS, 50.0, 1 },
+
+        { "108", ROOM_SD, 80.0, 2 },
+        { "109", ROOM_SD, 80.0, 2 },
+        { "110", ROOM_SD, 80.0, 2 },
         { "111", ROOM_SD, 80.0, 2 },
         { "112", ROOM_SS, 50.0, 1 },
         { "113", ROOM_SS, 50.0, 1 },
         { "114", ROOM_SS, 50.0, 1 },
-        { "115", ROOM_SS, 50.0, 1 },
-        { "116", ROOM_SD, 80.0, 2 },
-        { "117", ROOM_SS, 50.0, 1 },
-        { "118", ROOM_SS, 50.0, 1 },
-        { "119", ROOM_SS, 50.0, 1 },
-        { "120", ROOM_SS, 50.0, 1 },
-        { "201", ROOM_SD, 80.0, 2 },
-        { "202", ROOM_SD, 80.0, 2 },
-        { "203", ROOM_SD, 80.0, 2 },
-        { "204", ROOM_SD, 80.0, 2 },
-        { "205", ROOM_SD, 80.0, 2 },
-        { "206", ROOM_SD, 80.0, 2 },
-        { "207", ROOM_SD, 80.0, 2 },
-        { "208", ROOM_SD, 80.0, 2 },
-        { "301", ROOM_SD, 80.0, 2 },
-        { "302", ROOM_SD, 80.0, 2 },
-        { "303", ROOM_SD, 80.0, 2 }
+
+        // Floor 2: Deluxe and family rooms
+        { "201", ROOM_FS, 200.0, 4 },
+        { "202", ROOM_FS, 200.0, 4 },
+        { "203", ROOM_DQ, 120.0, 2 },
+        { "204", ROOM_DQ, 120.0, 2 },
+        { "205", ROOM_DQ, 120.0, 2 },
+
+        { "206", ROOM_FS, 200.0, 4 },
+        { "207", ROOM_FS, 200.0, 4 },
+        { "208", ROOM_DQ, 120.0, 2 },
+        { "209", ROOM_DQ, 120.0, 2 },
+        { "210", ROOM_DQ, 120.0, 2 },
+
+        // Floor 3: Presidential suites
+        { "301", ROOM_PS, 500.0, 2 },
+        { "302", ROOM_PS, 500.0, 2 },
+        { "303", ROOM_PS, 500.0, 2 },
+        { "304", ROOM_PS, 500.0, 2 },
+        { "305", ROOM_PS, 500.0, 2 },
+        { "306", ROOM_PS, 500.0, 2 },
+        { "307", ROOM_PS, 500.0, 2 },
+        { "308", ROOM_PS, 500.0, 2 },
+        { "309", ROOM_PS, 500.0, 2 },
+        { "310", ROOM_PS, 500.0, 2 },
+        { "311", ROOM_PS, 500.0, 2 },
+        { "312", ROOM_PS, 500.0, 2 }
     };
 
-    bookings = {
-        { "B001", "C001", "101", {10,8,2026}, {14,8,2026}, {17,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B002", "C002", "102", {11,8,2026}, {15,8,2026}, {19,8,2026}, {12,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B003", "C003", "201", {12,8,2026}, {14,8,2026}, {16,8,2026}, {13,8,2026}, STATUS_CHECKED_IN, true, "" },
-        { "B004", "C004", "202", {12,8,2026}, {16,8,2026}, {18,8,2026}, {13,8,2026}, STATUS_PENDING, false, "" },
-        { "B005", "C005", "301", {13,8,2026}, {18,8,2026}, {22,8,2026}, {16,8,2026}, STATUS_PENDING, false, "" },
-        { "B006", "C006", "302", {10,8,2026}, {14,8,2026}, {20,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B007", "C007", "107", {10,8,2026}, {20,8,2026}, {24,8,2026}, {11,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B008", "C008", "111", {13,8,2026}, {15,8,2026}, {16,8,2026}, {14,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B009", "C009", "205", {10,5,2025}, {20,5,2025}, {23,5,2025}, {11,5,2025}, STATUS_COMPLETED, true, "" },
-        { "B010", "C010", "307", {14,8,2026}, {16,8,2026}, {19,8,2026}, {15,8,2026}, STATUS_CONFIRMED, true, "" },
-        { "B011", "C011", "116", {15,8,2026}, {18,8,2026}, {21,8,2026}, {16,8,2026}, STATUS_PENDING, false, "" },
-        { "B012", "C012", "310", {16,8,2026}, {19,8,2026}, {22,8,2026}, {17,8,2026}, STATUS_CONFIRMED, true, "" }
-    };
+    // Real bookings are loaded from bookingData.txt by Booking Module.
+    // Scheduler must not create fake reservations.
+    bookings.clear();
 }
 
 void customerSchedulerMenu(const vector<Room>& rooms,
@@ -863,7 +804,7 @@ void customerSchedulerMenu(const vector<Room>& rooms,
 }
 
 void employeeSchedulerMenu(const vector<Room>& rooms,
-    vector<Booking>& bookings)
+    const vector<Booking>& bookings)
 {
     while (true)
     {
@@ -871,12 +812,11 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
         printMenuOption(1, "DAILY SCHEDULE", "Inspect room operations by date");
         printMenuOption(2, "ROOM TIMELINE", "Track one room across a month");
         printMenuOption(3, "OCCUPANCY FORECAST", "Project demand and peak dates");
-        printMenuOption(4, "AUTO-RELEASE", "Cancel expired unpaid reservations");
-        printMenuOption(5, "CONFLICT AUDIT", "Detect overlapping room bookings");
+        
         cout << '|' << string(UI_WIDTH - 2, '-') << "|\n";
         printMenuOption(0, "RETURN", "Exit Scheduler");
         cout << '+' << string(UI_WIDTH - 2, '=') << "+\n";
-        int choice = readInteger("Choice: ", 0, 5);
+        int choice = readInteger("Choice: ", 0, 3);
 
         if (choice == 0)
         {
@@ -901,46 +841,6 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
             int days = readInteger("Forecast days (1-31): ", 1, 31);
             viewOccupancyForecast(bookings, rooms, startDate, days);
         }
-        else if (choice == 4)
-        {
-            vector<Booking> releasedBookings;
-            int released = autoReleaseExpiredBookings(bookings, SYSTEM_DATE,
-                releasedBookings);
-
-            printBanner("AUTO-RELEASE REPORT",
-                "System date: " + formatDate(SYSTEM_DATE));
-            if (releasedBookings.empty())
-            {
-                printResultPanel("NO ACTION",
-                    "No expired unpaid PENDING booking found");
-            }
-            else
-            {
-                cout << "  " << left << setw(10) << "BOOKING" << setw(11)
-                     << "CUSTOMER" << setw(8) << "ROOM" << setw(13)
-                     << "CHECK-IN" << setw(13) << "CHECK-OUT" << "RESULT\n";
-                cout << "  " << string(76, '-') << '\n';
-
-                for (const Booking& booking : releasedBookings)
-                {
-                    cout << "  " << left << setw(10) << booking.bookingId
-                         << setw(11) << booking.customerId << setw(8)
-                         << booking.roomId << setw(13)
-                         << formatDate(booking.checkInDate) << setw(13)
-                         << formatDate(booking.checkOutDate)
-                         << "PENDING -> CANCELLED\n";
-                    cout << "  Payment deadline expired on "
-                         << formatDate(booking.expiryDate) << ". Room "
-                         << booking.roomId << " is now available.\n";
-                }
-
-                printResultPanel("RELEASED", to_string(released)
-                    + " unpaid room hold(s) cancelled and made available");
-            }
-        }
-        else
-        {
-            auditDoubleBookings(bookings);
-        }
+        
     }
 }

@@ -24,18 +24,15 @@ void viewRoomMonthlyTimeline(const std::vector<Booking>& bookings,
     int month, int year);
 void viewOccupancyForecast(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& startDate, int numberOfDays);
-int autoReleaseExpiredBookings(std::vector<Booking>& bookings,
-    const Date& currentDate);
-int autoReleaseExpiredBookings(std::vector<Booking>& bookings,
-    const Date& currentDate, std::vector<Booking>& releasedBookings);
+
 void viewFloorAvailabilityMap(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate);
-int auditDoubleBookings(const std::vector<Booking>& bookings);
+
 void viewRoomLocationGuide(const std::vector<Room>& rooms);
 void loadSchedulerDemoData(std::vector<Room>& rooms,
     std::vector<Booking>& bookings);
 void customerSchedulerMenu(const std::vector<Room>& rooms,
     const std::vector<Booking>& bookings);
 void employeeSchedulerMenu(const std::vector<Room>& rooms,
-    std::vector<Booking>& bookings);
+    const std::vector<Booking>& bookings);
