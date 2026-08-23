@@ -558,6 +558,7 @@ void saveAllBookings(const vector<Booking>& allBookings)
 
 void bookingScreen()
 {
+    clearScreen();
     vector<Room> rooms;
     vector<Booking> bookings;
     loadSchedulerDemoData(rooms, bookings);
@@ -638,12 +639,33 @@ void bookingScreen()
         {
             while (true)
             {
+                clearScreen();
                 cout << "\n====================================\n";
                 cout << "  Stay: " << formatDate(checkInDate)
                      << " to " << formatDate(checkOutDate)
                      << "\n";
                 cout << "====================================\n";
-                cout << "  Select room type:\n\n";
+
+                if (!selections.empty())
+                {
+                    cout << "\n  --- Previous Selection ---\n";
+                    double prevTotal = 0;
+                    for (const SelectedRoom& sel : selections)
+                    {
+                        double cost = sel.quantity
+                            * ROOM_TYPES[sel.typeIndex].price;
+                        cout << "  " << sel.quantity << "x "
+                             << ROOM_TYPES[sel.typeIndex].name
+                             << " (RM" << fixed << setprecision(2)
+                             << cost << "/night)\n";
+                        prevTotal += cost;
+                    }
+                    cout << "  ----------------------\n";
+                    cout << "  Total per night: RM" << fixed
+                         << setprecision(2) << prevTotal << "\n";
+                }
+
+                cout << "\n  Select room type:\n\n";
 
                 int avail[NUM_ROOM_TYPES];
                 for (int i = 0; i < NUM_ROOM_TYPES; i++)
@@ -797,14 +819,52 @@ void bookingScreen()
         // ── STAGE: Add-on Services ──
         case STAGE_ADDONS:
         {
-            cout << "\n====================================\n";
-            cout << "     ADD-ON SERVICES\n";
-            cout << "====================================\n";
-            cout << "  Enhance your stay with extras!\n";
-            cout << "  (Prices are per unit per day)\n";
-
             while (true)
             {
+                clearScreen();
+                cout << "\n====================================\n";
+                cout << "     ADD-ON SERVICES\n";
+                cout << "====================================\n";
+                cout << "  Enhance your stay with extras!\n";
+                cout << "  (Prices are per unit per day)\n";
+
+                cout << "\n  --- Previous Selection ---\n";
+                double roomPrevTotal = 0;
+                for (const SelectedRoom& sel : selections)
+                {
+                    double cost = sel.quantity
+                        * ROOM_TYPES[sel.typeIndex].price;
+                    cout << "  " << sel.quantity << "x "
+                         << ROOM_TYPES[sel.typeIndex].name
+                         << " (RM" << fixed << setprecision(2)
+                         << cost << "/night)\n";
+                    roomPrevTotal += cost;
+                }
+                if (!addonSelections.empty())
+                {
+                    for (const SelectedAddOn& sel : addonSelections)
+                    {
+                        double cost = sel.quantity
+                            * ADDONS[sel.addonIndex].pricePerUnit;
+                        cout << "  " << sel.quantity << "x "
+                             << ADDONS[sel.addonIndex].name
+                             << " (RM" << fixed << setprecision(2)
+                             << cost << "/day)\n";
+                    }
+                }
+                double addonPrevTotal = 0;
+                for (const SelectedAddOn& sel : addonSelections)
+                {
+                    addonPrevTotal += sel.quantity
+                        * ADDONS[sel.addonIndex].pricePerUnit;
+                }
+                cout << "  ----------------------\n";
+                cout << "  Room total/night: RM" << fixed
+                     << setprecision(2) << roomPrevTotal << "\n";
+                cout << "  Add-on total/day: RM" << fixed
+                     << setprecision(2) << addonPrevTotal << "\n";
+                cout << "  ----------------------\n";
+
                 cout << "\n  -- Available Services --\n\n";
                 for (int i = 0; i < NUM_ADDONS; i++)
                 {
@@ -922,6 +982,7 @@ void bookingScreen()
     {
         while (stage == STAGE_SUMMARY)
         {
+        clearScreen();
         int nights = 0;
         {
             Date temp = checkInDate;
@@ -1345,6 +1406,7 @@ static void printBoxBorder()
 
 void viewPreviousBookings()
 {
+    clearScreen();
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
@@ -1435,6 +1497,7 @@ void viewPreviousBookings()
 
 void cancelBooking()
 {
+    clearScreen();
     string customerId = loggedInUser;
 
     cout << "\n====================================\n";
@@ -1534,13 +1597,14 @@ void cancelBooking()
             return;
         }
 
-        // Find the booking ID in the list (case-insensitive)
+        // Normalise to uppercase (case-insensitive)
         string upperInput = input;
         for (char& c : upperInput)
         {
             c = static_cast<char>(toupper(
                 static_cast<unsigned char>(c)));
         }
+
         for (const string& bid : bookingIds)
         {
             if (bid == upperInput)

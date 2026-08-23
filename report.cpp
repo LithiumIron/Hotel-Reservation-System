@@ -489,8 +489,46 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
 }
 
 // ============================================================
-// Read Date For Report
+// View Daily Report
 // ============================================================
+
+void viewDailyReport()
+{
+    clearScreen();
+    cout << "\n====================================\n";
+    cout << "         DAILY REPORT\n";
+    cout << "====================================\n";
+    
+    Date date = readDateForReport("Enter date for report", 2026, 2028);
+    
+    vector<Room> rooms;
+    vector<Booking> bookings;
+    loadSchedulerDemoData(rooms, bookings);
+    vector<Booking> saved = loadSavedBookings();
+    for (const Booking& b : saved)
+        bookings.push_back(b);
+    
+    DailyReport report = generateDailyReport(date, rooms, bookings);
+    
+    cout << "\n  " << string(50, '-') << "\n";
+    cout << "  Report Date: " << formatDate(report.date) << "\n";
+    cout << "  " << string(50, '-') << "\n";
+    cout << "  " << left << setw(25) << "Total Rooms:" << report.totalRooms << "\n";
+    cout << "  " << left << setw(25) << "Occupied Rooms:" << report.occupiedRooms << "\n";
+    cout << "  " << left << setw(25) << "Available Rooms:" << report.availableRooms << "\n";
+    cout << "  " << left << setw(25) << "Occupancy Rate:" << fixed << setprecision(1) << report.occupancyRate << "%\n";
+    cout << "  " << string(50, '-') << "\n";
+    cout << "  " << left << setw(25) << "Check-ins Today:" << report.checkIns << "\n";
+    cout << "  " << left << setw(25) << "Check-outs Today:" << report.checkOuts << "\n";
+    cout << "  " << string(50, '-') << "\n";
+    cout << "  " << left << setw(25) << "Pending Bookings:" << report.pendingBookings << "\n";
+    cout << "  " << left << setw(25) << "Cancelled Bookings:" << report.cancelledBookings << "\n";
+    cout << "  " << string(50, '-') << "\n";
+    cout << "  " << left << setw(25) << "Total Revenue:" << "RM " << fixed << setprecision(2) << report.totalRevenue << "\n";
+    cout << "  " << string(50, '-') << "\n";
+    cout << "====================================\n";
+    EnterToContinue();
+}
 
 Date readDateForReport(const string& prompt, int minYear, int maxYear)
 {
@@ -516,62 +554,7 @@ Date readDateForReport(const string& prompt, int minYear, int maxYear)
     }
 }
 
-// ============================================================
-// View Daily Report
-// ============================================================
 
-void viewDailyReport()
-{
-    cout << "\n====================================\n";
-    cout << "         DAILY REPORT\n";
-    cout << "====================================\n";
-
-    Date date = readDateForReport("Enter date for report", 2026, 2028);
-
-    vector<Room> rooms;
-    vector<Booking> bookings;
-
-    loadSchedulerDemoData(rooms, bookings);
-
-    vector<Booking> saved = loadSavedBookings();
-
-    for (const Booking& b : saved)
-    {
-        bookings.push_back(b);
-    }
-
-    DailyReport report = generateDailyReport(date, rooms, bookings);
-
-    cout << "\n  " << string(50, '-') << "\n";
-    cout << "  Report Date: " << formatDate(report.date) << "\n";
-    cout << "  " << string(50, '-') << "\n";
-
-    cout << "  Total Rooms: " << report.totalRooms << "\n";
-    cout << "  Occupied Rooms: " << report.occupiedRooms << "\n";
-    cout << "  Available Rooms: " << report.availableRooms << "\n";
-    cout << "  Occupancy Rate: " << fixed << setprecision(1)
-         << report.occupancyRate << "%\n";
-
-    cout << "  " << string(50, '-') << "\n";
-
-    cout << "  Check-ins Today: " << report.checkIns << "\n";
-    cout << "  Check-outs Today: " << report.checkOuts << "\n";
-
-    cout << "  " << string(50, '-') << "\n";
-
-    cout << "  Pending Bookings: " << report.pendingBookings << "\n";
-    cout << "  Cancelled Bookings: " << report.cancelledBookings << "\n";
-
-    cout << "  " << string(50, '-') << "\n";
-
-    cout << "  Total Revenue: RM " << fixed << setprecision(2)
-         << report.totalRevenue << "\n";
-
-    cout << "  " << string(50, '-') << "\n";
-    cout << "====================================\n";
-
-    EnterToContinue();
-}
 
 // ============================================================
 // View Monthly Report
@@ -579,6 +562,7 @@ void viewDailyReport()
 
 void viewMonthlyReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         MONTHLY REPORT\n";
     cout << "====================================\n";
@@ -635,6 +619,7 @@ void viewMonthlyReport()
 
 void viewCustomerReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         CUSTOMER REPORT\n";
     cout << "====================================\n";
@@ -680,6 +665,7 @@ void viewCustomerReport()
 
 void viewRevenueReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         REVENUE REPORT\n";
     cout << "====================================\n";
@@ -792,6 +778,7 @@ void reportMenu()
 {
     while (true)
     {
+        clearScreen();
         cout << "\n====================================\n";
         cout << "       REPORT MANAGEMENT\n";
         cout << "====================================\n";
