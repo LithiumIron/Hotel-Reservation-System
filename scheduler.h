@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+Date getCurrentSystemDate();
 bool isLeapYear(int year);
 int daysInMonth(int month, int year);
 bool isValidDate(const Date& date);

@@ -54,7 +54,8 @@ int readInteger(const string& prompt, int minimum, int maximum)
 
 bool login(int role)
 {
-    string username,password,fileUsername,filePassword;
+    string username, password;
+    string fileUsername, filePassword;
 
     cout << "\nLogin\n";
 
@@ -62,10 +63,16 @@ bool login(int role)
     {
         bool usernameFound = false;
 
-        cout << "Enter your username [999 to go back]: ";
+        cout << "Enter your username [Z to go back]: ";
         getline(cin, username);
 
-        if (username == "999")
+        if (username.empty())
+        {
+            cout << "Error: Username cannot be empty.\n";
+            continue;
+        }
+
+        if (toupper(static_cast<unsigned char>(username[0])) == 'Z')
         {
             return false;
         }
@@ -75,7 +82,7 @@ bool login(int role)
 
         ifstream inFile;
 
-        // Role 1 represents employee; role 2 represents customer.
+        // Role 1 = employee, Role 2 = customer
         if (role == 1)
         {
             inFile.open("employeeData.txt");
@@ -114,135 +121,16 @@ bool login(int role)
             continue;
         }
 
-        // Store the logged-in username
         if (role == 2)
-        {
             loggedInUser = username;
-        }
+
         return true;
     }
 }
 
-void roleSelection()
-{
-    cout << "Welcome to Hotel Reservation System!\n";
-    cout << "Are you:\n";
-    cout << "[1] An Employee\n";
-    cout << "[2] A Customer\n";
-    cout << "[0] Exit\n";
-
-    int choice = readInteger("Enter your choice: ", 0, 2);
-
-    if (choice==0)
-    {
-        exit(0);
-    }
-    
-    else if (choice == 1)
-    {
-        empHomeScreen();
-        mainMenu(1);
-    }
-    else
-    {
-        loggedInUser.clear();
-        custHomeScreen();
-        if (!loggedInUser.empty())
-        {
-            mainMenu(2);
-        }
-    }
+void EnterToContinue(){
+    cout << "\nPress Enter to continue...";
+    string dummy;
+    getline(cin, dummy);
 }
-
-void mainMenu(int role)
-{
-    while (true)
-    {
-        cout << "\n====================================\n";
-        cout << "     HOTEL RESERVATION SYSTEM\n";
-        cout << "====================================\n";
-
-        if (role == 1)
-        {
-            // Employee menu (numbered)
-            cout << "[1] View Profile\n";
-            cout << "[2] View Schedule\n";
-            cout << "[0] Return\n";
-            cout << "====================================\n";
-
-            int choice = readInteger(
-                "Enter your choice: ", 0, 2);
-
-            if (choice == 0) return;
-
-            if (choice == 1)
-            {
-                //view profile
-            }
-            else if (choice == 2)
-            {
-                vector<Room> rooms;
-                vector<Booking> bookings;
-                loadSchedulerDemoData(rooms, bookings);
-
-                // Merge saved bookings for full visibility
-                vector<Booking> saved = loadSavedBookings();
-                for (const Booking& b : saved)
-                {
-                    bookings.push_back(b);
-                }
-
-                employeeSchedulerMenu(rooms, bookings);
-
-                // Persist any changes (e.g. auto-release)
-                // Only save real bookings, not demo data
-                vector<Booking> realBookings;
-                for (const Booking& b : bookings)
-                {
-                    if (b.bookingId.length() <= 3
-                        || b.bookingId.substr(0, 3) != "B00")
-                    {
-                        realBookings.push_back(b);
-                    }
-                }
-                saveAllBookings(realBookings);
-            }
-        }
-        else
-        {
-            // Customer menu (numbered)
-            cout << "[1] View Profile\n";
-            cout << "[2] Booking\n";
-            cout << "[3] View Previous Booking Record\n";
-            cout << "[4] Cancel Booking\n";
-            cout << "[0] Return\n";
-            cout << "====================================\n";
-
-            int choice = readInteger(
-                "Enter your choice: ", 0, 4);
-
-            if (choice == 0)
-            {
-                loggedInUser.clear();
-                return;
-            }
-
-            if (choice == 1)
-            {
-                //view profile
-            }
-            else if (choice == 2)
-            {
-                bookingScreen();
-            }
-            else if (choice == 3)
-            {
-                viewPreviousBookings();
-            }
-            else if (choice == 4)
-            {
-                cancelBooking();
-            }
-        }
-    }
-}
+ 

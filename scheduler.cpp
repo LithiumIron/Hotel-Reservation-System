@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "utilities.h"
 
 #include <algorithm>
 #include <iomanip>
@@ -9,237 +10,222 @@
 
 using namespace std;
 
-namespace
+Date getCurrentSystemDate()
 {
-    const int UI_WIDTH = 82;
-    const int CUSTOMER_MIN_YEAR = 2026;
-    const int EMPLOYEE_MIN_YEAR = 2020;
-    const int MAX_SCHEDULE_YEAR = 2028;
-    const Date SYSTEM_DATE{ 14, 8, 2026 };
-    const string STATUS_PENDING = "PENDING";
-    const string STATUS_CONFIRMED = "CONFIRMED";
-    const string STATUS_CHECKED_IN = "CHECKED_IN";
-    const string STATUS_CANCELLED = "CANCELLED";
-    const string STATUS_COMPLETED = "COMPLETED";
+    // Get current time from system
+    time_t now = time(nullptr);
+    tm* localTime = localtime(&now);
+    
+    Date today;
+    today.day = localTime->tm_mday;
+    today.month = localTime->tm_mon + 1;  // tm_mon is 0-11
+    today.year = localTime->tm_year + 1900;  // tm_year is years since 1900
+    
+    return today;
+}
+const int UI_WIDTH = 82;
+const int CUSTOMER_MIN_YEAR = 2026;
+const int EMPLOYEE_MIN_YEAR = 2020;
+const int MAX_SCHEDULE_YEAR = 2028;
+const Date SYSTEM_DATE= getCurrentSystemDate();
+const string STATUS_PENDING = "PENDING";
+const string STATUS_CONFIRMED = "CONFIRMED";
+const string STATUS_CHECKED_IN = "CHECKED_IN";
+const string STATUS_CANCELLED = "CANCELLED";
+const string STATUS_COMPLETED = "COMPLETED";
 
-    const string ROOM_SS = "Standard Single";
-    const string ROOM_SD = "Standard Double";
-    const string ROOM_DQ = "Deluxe Queen";
-    const string ROOM_FS = "Family Suite";
-    const string ROOM_PS = "Presidential Suite";
+const string ROOM_SS = "Standard Single";
+const string ROOM_SD = "Standard Double";
+const string ROOM_DQ = "Deluxe Queen";
+const string ROOM_FS = "Family Suite";
+const string ROOM_PS = "Presidential Suite";
 
-    string centeredText(const string& text, int width)
+string centeredText(const string& text, int width)
+{
+    if (static_cast<int>(text.length()) >= width)
     {
-        if (static_cast<int>(text.length()) >= width)
+        return text.substr(0, width);
+    }
+    int leftPadding = (width - static_cast<int>(text.length())) / 2;
+    return string(leftPadding, ' ') + text
+        + string(width - leftPadding - static_cast<int>(text.length()), ' ');
+}
+
+void printBanner(const string& title, const string& subtitle = "")
+{
+    cout << '\n' << '+' << string(UI_WIDTH - 2, '=') << "+\n";
+    cout << '|' << centeredText("HOTEL RESERVATION SYSTEM", UI_WIDTH - 2) << "|\n";
+    cout << '|' << centeredText(title, UI_WIDTH - 2) << "|\n";
+    if (!subtitle.empty())
+    {
+        cout << '|' << centeredText(subtitle, UI_WIDTH - 2) << "|\n";
+    }
+    cout << '+' << string(UI_WIDTH - 2, '=') << "+\n";
+}
+
+void printMenuOption(int option, const string& title, const string& description)
+{
+    ostringstream label;
+    label << "[" << option << "] " << title;
+    cout << "|  " << left << setw(32) << label.str()
+            << setw(UI_WIDTH - 36) << description << "|\n";
+}
+
+string occupancyBar(int percentage, int width = 20)
+{
+    int filled = percentage * width / 100;
+    return "[" + string(filled, '#') + string(width - filled, '.') + "]";
+}
+
+void printResultPanel(const string& label, const string& message)
+{
+    cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
+    cout << "| " << left << setw(14) << label << setw(UI_WIDTH - 17)
+            << message << "|\n";
+    cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
+}
+
+bool isRoomBlocked(const Booking& booking)
+{
+    return booking.status == STATUS_PENDING
+        || booking.status == STATUS_CONFIRMED
+        || booking.status == STATUS_CHECKED_IN;
+}
+
+bool bookingOccupiesDate(const Booking& booking, const Date& date)
+{
+    return booking.status != STATUS_CANCELLED
+        && compareDates(booking.checkInDate, date) <= 0
+        && compareDates(date, booking.checkOutDate) < 0;
+}
+
+bool dateRangesOverlap(const Date& firstCheckIn, const Date& firstCheckOut,
+    const Date& secondCheckIn, const Date& secondCheckOut)
+{
+    return compareDates(firstCheckIn, secondCheckOut) < 0
+        && compareDates(secondCheckIn, firstCheckOut) < 0;
+}
+
+bool roomAvailableForStay(const vector<Booking>& bookings,
+    const string& roomId, const Date& checkInDate, const Date& checkOutDate)
+{
+    for (const Booking& booking : bookings)
+    {
+        if (booking.roomId == roomId && isRoomBlocked(booking)
+            && dateRangesOverlap(checkInDate, checkOutDate,
+                booking.checkInDate, booking.checkOutDate))
         {
-            return text.substr(0, width);
-        }
-        int leftPadding = (width - static_cast<int>(text.length())) / 2;
-        return string(leftPadding, ' ') + text
-            + string(width - leftPadding - static_cast<int>(text.length()), ' ');
-    }
-
-    void printBanner(const string& title, const string& subtitle = "")
-    {
-        cout << '\n' << '+' << string(UI_WIDTH - 2, '=') << "+\n";
-        cout << '|' << centeredText("HOTEL RESERVATION SYSTEM", UI_WIDTH - 2) << "|\n";
-        cout << '|' << centeredText(title, UI_WIDTH - 2) << "|\n";
-        if (!subtitle.empty())
-        {
-            cout << '|' << centeredText(subtitle, UI_WIDTH - 2) << "|\n";
-        }
-        cout << '+' << string(UI_WIDTH - 2, '=') << "+\n";
-    }
-
-    void printMenuOption(int option, const string& title, const string& description)
-    {
-        ostringstream label;
-        label << "[" << option << "] " << title;
-        cout << "|  " << left << setw(32) << label.str()
-             << setw(UI_WIDTH - 36) << description << "|\n";
-    }
-
-    string occupancyBar(int percentage, int width = 20)
-    {
-        int filled = percentage * width / 100;
-        return "[" + string(filled, '#') + string(width - filled, '.') + "]";
-    }
-
-    void printResultPanel(const string& label, const string& message)
-    {
-        cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
-        cout << "| " << left << setw(14) << label << setw(UI_WIDTH - 17)
-             << message << "|\n";
-        cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
-    }
-
-    bool isRoomBlocked(const Booking& booking)
-    {
-        return booking.status == STATUS_PENDING
-            || booking.status == STATUS_CONFIRMED
-            || booking.status == STATUS_CHECKED_IN;
-    }
-
-    bool bookingOccupiesDate(const Booking& booking, const Date& date)
-    {
-        return booking.status != STATUS_CANCELLED
-            && compareDates(booking.checkInDate, date) <= 0
-            && compareDates(date, booking.checkOutDate) < 0;
-    }
-
-    bool dateRangesOverlap(const Date& firstCheckIn, const Date& firstCheckOut,
-        const Date& secondCheckIn, const Date& secondCheckOut)
-    {
-        return compareDates(firstCheckIn, secondCheckOut) < 0
-            && compareDates(secondCheckIn, firstCheckOut) < 0;
-    }
-
-    bool roomAvailableForStay(const vector<Booking>& bookings,
-        const string& roomId, const Date& checkInDate, const Date& checkOutDate)
-    {
-        for (const Booking& booking : bookings)
-        {
-            if (booking.roomId == roomId && isRoomBlocked(booking)
-                && dateRangesOverlap(checkInDate, checkOutDate,
-                    booking.checkInDate, booking.checkOutDate))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    const Booking* findBookingForRoom(const vector<Booking>& bookings,
-        const string& roomId, const Date& date)
-    {
-        for (const Booking& booking : bookings)
-        {
-            if (booking.roomId == roomId && bookingOccupiesDate(booking, date))
-            {
-                return &booking;
-            }
-        }
-        return nullptr;
-    }
-
-    int countOccupiedRooms(const vector<Booking>& bookings,
-        const vector<Room>& rooms, const Date& date)
-    {
-        int occupiedRooms = 0;
-        for (const Room& room : rooms)
-        {
-            if (findBookingForRoom(bookings, room.roomId, date) != nullptr)
-            {
-                occupiedRooms++;
-            }
-        }
-        return occupiedRooms;
-    }
-
-    int readInteger(const string& prompt, int minimum, int maximum)
-    {
-        while (true)
-        {
-            string input;
-            cout << prompt;
-            getline(cin, input);
-
-            try
-            {
-                size_t processedCharacters = 0;
-                int value = stoi(input, &processedCharacters);
-                if (processedCharacters == input.length()
-                    && value >= minimum && value <= maximum)
-                {
-                    return value;
-                }
-            }
-            catch (...)
-            {
-            }
-
-            cout << "Invalid input. Enter a number from " << minimum
-                 << " to " << maximum << ".\n";
+            return false;
         }
     }
+    return true;
+}
 
-    Date readDate(const string& heading, int minimumYear, int maximumYear)
+const Booking* findBookingForRoom(const vector<Booking>& bookings,
+    const string& roomId, const Date& date)
+{
+    for (const Booking& booking : bookings)
     {
-        while (true)
+        if (booking.roomId == roomId && bookingOccupiesDate(booking, date))
         {
-            cout << '\n' << heading << "\n";
-            Date date;
-            ostringstream yearPrompt;
-            yearPrompt << "Year (" << minimumYear << '-' << maximumYear << "): ";
-            date.year = readInteger(yearPrompt.str(), minimumYear, maximumYear);
-            date.month = readInteger("Month (1-12): ", 1, 12);
-            date.day = readInteger("Day: ", 1, 31);
-
-            if (isValidDate(date))
-            {
-                return date;
-            }
-            cout << "Invalid date. Please try again.\n";
+            return &booking;
         }
     }
+    return nullptr;
+}
 
-    Date readCurrentOrFutureDate(const string& heading)
+int countOccupiedRooms(const vector<Booking>& bookings,
+    const vector<Room>& rooms, const Date& date)
+{
+    int occupiedRooms = 0;
+    for (const Room& room : rooms)
     {
-        while (true)
+        if (findBookingForRoom(bookings, room.roomId, date) != nullptr)
         {
-            Date date = readDate(heading, CUSTOMER_MIN_YEAR, MAX_SCHEDULE_YEAR);
-            if (compareDates(date, SYSTEM_DATE) >= 0)
-            {
-                return date;
-            }
-            cout << "Past dates are not available to customers. Earliest date: "
-                 << formatDate(SYSTEM_DATE) << ".\n";
+            occupiedRooms++;
         }
     }
+    return occupiedRooms;
+}
 
-    string readRoomId(const vector<Room>& rooms)
+
+Date readDate(const string& heading, int minimumYear, int maximumYear)
+{
+    while (true)
     {
-        while (true)
+        cout << '\n' << heading << "\n";
+        Date date;
+        ostringstream yearPrompt;
+        yearPrompt << "Year (" << minimumYear << '-' << maximumYear << "): ";
+        date.year = readInteger(yearPrompt.str(), minimumYear, maximumYear);
+        date.month = readInteger("Month (1-12): ", 1, 12);
+        date.day = readInteger("Day: ", 1, 31);
+
+        if (isValidDate(date))
         {
-            string roomId;
-            cout << "Room ID: ";
-            getline(cin, roomId);
-
-            for (const Room& room : rooms)
-            {
-                if (room.roomId == roomId)
-                {
-                    return roomId;
-                }
-            }
-            cout << "Room ID not found. Available rooms: ";
-            for (const Room& room : rooms)
-            {
-                cout << room.roomId << ' ';
-            }
-            cout << '\n';
+            return date;
         }
-    }
-
-    int dayIndexForDate(const Date& date)
-    {
-        static const int offsets[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
-        int year = date.year;
-        if (date.month < 3)
-        {
-            year--;
-        }
-        return (year + year / 4 - year / 100 + year / 400
-            + offsets[date.month - 1] + date.day) % 7;
-    }
-
-    string dayName(const Date& date)
-    {
-        static const string names[] =
-            { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-        return names[dayIndexForDate(date)];
+        cout << "Invalid date. Please try again.\n";
     }
 }
+
+Date readCurrentOrFutureDate(const string& heading)
+{
+    while (true)
+    {
+        Date date = readDate(heading, CUSTOMER_MIN_YEAR, MAX_SCHEDULE_YEAR);
+        if (compareDates(date, SYSTEM_DATE) >= 0)
+        {
+            return date;
+        }
+        cout << "Past dates are not available to customers. Earliest date: "
+                << formatDate(SYSTEM_DATE) << ".\n";
+    }
+}
+
+string readRoomId(const vector<Room>& rooms)
+{
+    while (true)
+    {
+        string roomId;
+        cout << "Room ID: ";
+        getline(cin, roomId);
+
+        for (const Room& room : rooms)
+        {
+            if (room.roomId == roomId)
+            {
+                return roomId;
+            }
+        }
+        cout << "Room ID not found. Available rooms: ";
+        for (const Room& room : rooms)
+        {
+            cout << room.roomId << ' ';
+        }
+        cout << '\n';
+    }
+}
+
+int dayIndexForDate(const Date& date)
+{
+    static const int offsets[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    int year = date.year;
+    if (date.month < 3)
+    {
+        year--;
+    }
+    return (year + year / 4 - year / 100 + year / 400
+        + offsets[date.month - 1] + date.day) % 7;
+}
+
+string dayName(const Date& date)
+{
+    static const string names[] =
+        { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    return names[dayIndexForDate(date)];
+}
+
 
 bool isLeapYear(int year)
 {

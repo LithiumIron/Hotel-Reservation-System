@@ -32,3 +32,13 @@ struct Booking
     string accessCode;
     string addons;
 };
+
+struct VIPMembership
+{
+    string customerId;
+    string tier;       
+    Date purchaseDate;
+    Date expiryDate;
+    double price;
+    bool isActive;
+};

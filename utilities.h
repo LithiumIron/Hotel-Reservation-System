@@ -13,3 +13,5 @@ bool login(int role);
 void roleSelection();
 
 void mainMenu(int role);
+
+void EnterToContinue();
