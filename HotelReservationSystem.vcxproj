@@ -135,19 +135,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="booking.cpp" />
     <ClCompile Include="customer.cpp" />
     <ClCompile Include="employee.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="report.cpp" />
     <ClCompile Include="scheduler.cpp" />
-    <ClCompile Include="tempBook.cpp" />
     <ClCompile Include="utilities.cpp" />
+    <ClCompile Include="vip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="booking.h" />
     <ClInclude Include="customer.h" />
     <ClInclude Include="employee.h" />
     <ClInclude Include="models.h" />
+    <ClInclude Include="report.h" />
     <ClInclude Include="scheduler.h" />
     <ClInclude Include="utilities.h" />
+    <ClInclude Include="vip.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="customerData.txt" />
