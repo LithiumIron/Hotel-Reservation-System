@@ -22,11 +22,11 @@ bool signup()
     string password2;
 
     cout << "\n====================================\n";
-    cout << "             Sign Up\n";
+    cout << "             SIGN UP\n";
     cout << "====================================\n";
     while (true)
     {
-        cout << "Create your username [Z to go back]: ";
+        cout << "Create your username [0 to go back]: ";
         getline(cin, username);
 
         if (username.empty())
@@ -35,7 +35,7 @@ bool signup()
             continue;
         }
 
-        if (toupper(static_cast<unsigned char>(username[0])) == 'Z') 
+        if (isGoBackInput(username)) 
             return false;
 
         
@@ -197,9 +197,9 @@ void viewCustomerProfile()
             
             // ✅ VIP Membership Status
             string vipTier = getVIPStatus(loggedInUser);
-            cout << "\n  " << string(40, '-') << "\n";
+            cout << "\n" << string(45, '-') << "\n";
             cout << "  VIP MEMBERSHIP\n";
-            cout << "  " << string(40, '-') << "\n";
+            cout << string(45, '-') << "\n";
             
             if (vipTier == "None")
             {
@@ -223,7 +223,7 @@ void viewCustomerProfile()
                             temp = addDays(temp, 1);
                         }
                         
-                        cout << "  " << left << setw(20) << "Tier:" << "⭐ " << m.tier << " VIP" << "\n";
+                        cout << "  " << left << setw(20) << "Tier:" << m.tier << " VIP" << "\n";
                         cout << "  " << left << setw(20) << "Valid Until:" << formatDate(m.expiryDate) << "\n";
                         cout << "  " << left << setw(20) << "Days Remaining:" << daysRemaining << " days" << "\n";
                         
@@ -238,7 +238,7 @@ void viewCustomerProfile()
                 }
             }
             
-            cout << "  " << string(40, '-') << "\n";
+            cout <<string(45, '-') << "\n";
             
             // Account stats
             cout << "\n  " << left << setw(20) << "Account Status:" << "Active" << "\n";
@@ -279,8 +279,20 @@ void viewCustomerProfile()
     }
 
     inFile.close();
-    cout << "====================================\n";
-    EnterToContinue();
+    cout << "=========================================\n";
+
+    cout << "\n[1] Edit Profile\n";
+    cout << "[2] View VIP Benefits\n";
+    cout << "[3] Purchase VIP Membership\n";
+    cout << "[0] Back\n";
+
+    int choice = readInteger("Enter your choice: ", 0, 3);
+
+    if (choice == 1) editCustomerProfile();
+        
+    else if (choice == 2) viewVIPBenefits();
+        
+    else if (choice == 3) purchaseVIPMembership();
 }
 
 void editCustomerProfile()
@@ -329,11 +341,11 @@ void editCustomerProfile()
         return;
     }
 
-    cout << "\n  What would you like to change?\n";
-    cout << "  [1] Change Password\n";
-    cout << "  [2] Change Username\n";
-    cout << "  [3] Change Both\n";
-    cout << "  [0] Cancel\n";
+    cout << "\nWhat would you like to change?\n";
+    cout << "[1] Change Username\n";
+    cout << "[2] Change Password\n";
+    cout << "[3] Change Both\n";
+    cout << "[0] Cancel\n";
     cout << "----------------------------------------\n";
 
     int choice = readInteger("Enter your choice: ", 0, 3);
@@ -351,58 +363,8 @@ void editCustomerProfile()
 
     if (choice == 1 || choice == 3)
     {
-        // Change Password
-        cout << "\n  Enter current password: ";
-        string currentPass;
-        getline(cin, currentPass);
-        
-        // Verify current password
-        bool passVerified = false;
-        for (const auto& user : users)
-        {
-            if (user.first == loggedInUser && user.second == currentPass)
-            {
-                passVerified = true;
-                break;
-            }
-        }
-        
-        if (!passVerified)
-        {
-            cout << "  Incorrect password.\n";
-            cout << "====================================\n";
-            EnterToContinue();
-            return;
-        }
-        
-        cout << "  Enter new password (min 8 characters): ";
-        getline(cin, newPassword);
-        
-        if (newPassword.length() < 8)
-        {
-            cout << "  Password must be at least 8 characters.\n";
-            cout << "====================================\n";
-            EnterToContinue();
-            return;
-        }
-        
-        cout << "  Confirm new password: ";
-        string confirmPassword;
-        getline(cin, confirmPassword);
-        
-        if (newPassword != confirmPassword)
-        {
-            cout << "  Passwords do not match.\n";
-            cout << "====================================\n";
-            EnterToContinue();
-            return;
-        }
-    }
-
-    if (choice == 2 || choice == 3)
-    {
         // Change Username
-        cout << "\n  Enter current password to verify: ";
+        cout << "\nEnter current password to verify: ";
         string currentPass;
         getline(cin, currentPass);
         
@@ -419,19 +381,19 @@ void editCustomerProfile()
         
         if (!passVerified)
         {
-            cout << "  Incorrect password.\n";
+            cout << "Incorrect password.\n";
             cout << "====================================\n";
             EnterToContinue();
             return;
         }
         
-        cout << "  Enter new username: ";
+        cout << "Enter new username: ";
         string newUser;
         getline(cin, newUser);
         
         if (newUser.empty())
         {
-            cout << "  Username cannot be empty.\n";
+            cout << "Username cannot be empty.\n";
             cout << "====================================\n";
             EnterToContinue();
             return;
@@ -450,7 +412,7 @@ void editCustomerProfile()
         
         if (usernameExists)
         {
-            cout << "  Username already exists. Please choose another.\n";
+            cout << "Username already exists. Please choose another.\n";
             cout << "====================================\n";
             EnterToContinue();
             return;
@@ -458,6 +420,58 @@ void editCustomerProfile()
 
         newUsername = newUser;
     }
+
+    if (choice == 2 || choice == 3)
+    {
+        // Change Password
+        cout << "\nEnter current password: ";
+        string currentPass;
+        getline(cin, currentPass);
+        
+        // Verify current password
+        bool passVerified = false;
+        for (const auto& user : users)
+        {
+            if (user.first == loggedInUser && user.second == currentPass)
+            {
+                passVerified = true;
+                break;
+            }
+        }
+        
+        if (!passVerified)
+        {
+            cout << "Incorrect password.\n";
+            cout << "====================================\n";
+            EnterToContinue();
+            return;
+        }
+        
+        cout << "Enter new password (min 8 characters): ";
+        getline(cin, newPassword);
+        
+        if (newPassword.length() < 8)
+        {
+            cout << "Password must be at least 8 characters.\n";
+            cout << "====================================\n";
+            EnterToContinue();
+            return;
+        }
+        
+        cout << "Confirm new password: ";
+        string confirmPassword;
+        getline(cin, confirmPassword);
+        
+        if (newPassword != confirmPassword)
+        {
+            cout << "Passwords do not match.\n";
+            cout << "====================================\n";
+            EnterToContinue();
+            return;
+        }
+    }
+
+    
 
     // Update user data
     for (auto& user : users)
@@ -494,12 +508,12 @@ void editCustomerProfile()
     if (choice == 2 || choice == 3)
         loggedInUser = newUsername;
 
-    cout << "\n  ✅ Profile updated successfully!\n";
+    cout << "\nProfile updated successfully!\n";
     
     if (choice == 1 || choice == 3)
-        cout << "  Password changed.\n";
+        cout << "Password changed.\n";
     if (choice == 2 || choice == 3)
-        cout << "  Username changed to: " << newUsername << "\n";
+        cout << "Username changed to: " << newUsername << "\n";
     
     cout << "====================================\n";
     EnterToContinue();

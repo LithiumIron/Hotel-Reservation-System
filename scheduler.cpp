@@ -199,7 +199,7 @@ string readRoomId(const vector<Room>& rooms)
                 return roomId;
             }
         }
-        cout << "Room ID not found. Available rooms: ";
+        cout << "Room ID not found. \nAvailable rooms: ";
         for (const Room& room : rooms)
         {
             cout << room.roomId << ' ';

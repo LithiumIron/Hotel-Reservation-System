@@ -6,7 +6,6 @@
 #include "booking.h"
 #include "scheduler.h"
 #include "report.h"
-#include "vip.h"
 using namespace std;
 
 void roleSelection()
@@ -17,7 +16,7 @@ void roleSelection()
     cout << "========================================\n";
     cout << "Are you:\n";
     cout << "----------------------------------------\n";
-    cout << "[1] An Manager\n";
+    cout << "[1] A Manager\n";
     cout << "[2] A Customer\n";
     cout << "[0] Exiting\n";
 
@@ -30,10 +29,8 @@ void roleSelection()
     
     else if (choice == 1)
     {
-        if(empHomeScreen()==true) {
-            login(1);
+        if (empHomeScreen() && login(1))
             mainMenu(1);
-        }
         
     }
     else
@@ -92,14 +89,11 @@ void mainMenu(int role)
         {
             // Customer menu (numbered)
             cout << "[1] View Profile\n";
-            cout << "[2] Edit Profile\n";
-            cout << "[3] View VIP Benefits\n";
-            cout << "[4] Purchase VIP Membership\n";
-            cout << "[5] Booking\n";
-            cout << "[6] View Previous Booking Record\n";
-            cout << "[7] Cancel Booking\n";
-            cout << "[8] View Room Availability\n";
-            cout << "[9] View Room Location Guide\n";
+            cout << "[2] Booking\n";
+            cout << "[3] View Previous Booking Record\n";
+            cout << "[4] Cancel Booking\n";
+            cout << "[5] View Room Availability\n";
+            cout << "[6] View Room Location Guide\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
 
@@ -112,24 +106,20 @@ void mainMenu(int role)
             }
 
             if (choice == 1) viewCustomerProfile();
-            else if (choice == 2) editCustomerProfile();
-            else if (choice == 3) viewVIPBenefits();
-            else if (choice == 4) purchaseVIPMembership();
-            else if (choice == 5) bookingScreen();
-            else if (choice == 6) viewPreviousBookings();
-            else if (choice == 7) cancelBooking();
-            else if (choice == 8)
+            else if (choice == 2) bookingScreen();
+            else if (choice == 3) viewPreviousBookings();
+            else if (choice == 4) cancelBooking();
+            else if (choice == 5)
             {
                 vector<Room> rooms;
                 vector<Booking> unusedDemoBookings;
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
-                // Load real bookings so availability reflects actual reservations.
                 vector<Booking> bookings = loadSavedBookings();
 
                 customerSchedulerMenu(rooms, bookings);
             }
-            else if (choice == 9)
+            else if (choice == 6)
             {
                 vector<Room> rooms;
                 vector<Booking> unusedDemoBookings;

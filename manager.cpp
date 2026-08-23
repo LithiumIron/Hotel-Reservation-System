@@ -24,10 +24,10 @@ bool empHomeScreen()
         cout << "\n====================================\n";
         cout << "         Manager Access\n";
         cout << "====================================\n";
-        cout << "Enter manager passcode [Z to go back]: ";
+        cout << "Enter manager passcode [0 to go back]: ";
         getline(cin, enteredPasscode);
 
-        if (toupper(static_cast<unsigned char>(enteredPasscode[0])) == 'Z') 
+        if (isGoBackInput(enteredPasscode)) 
             return false;
 
         if (enteredPasscode == MANAGER_PASSCODE)
@@ -44,11 +44,13 @@ bool empHomeScreen()
 void viewManagerProfile()
 {
     clearScreen();
+
     cout << "\n====================================\n";
     cout << "         MANAGER PROFILE\n";
     cout << "====================================\n";
 
     ifstream inFile("managerData.txt");
+
     if (inFile.fail())
     {
         cout << "Error: Could not open manager data file.\n";
@@ -57,24 +59,27 @@ void viewManagerProfile()
         return;
     }
 
-    string username, password;
+    string username;
     bool found = false;
 
-    cout << "  " << left << setw(20) << "USERNAME" << "\n";
-    cout << "  " << string(40, '-') << "\n";
-
-    while (inFile >> username >> password)
+    while (inFile >> username)
     {
-        cout << "  " << left << setw(20) << username << setw(20) << password << "\n";
+        cout << "  Username : " << username << "\n";
+        cout << "  Password : ********\n";
+        cout << "  Status   : Active\n";
+        cout << "  Role     : Manager\n";
+
         found = true;
+        break;
     }
+
+    inFile.close();
 
     if (!found)
     {
         cout << "  No manager records found.\n";
     }
 
-    inFile.close();
     cout << "====================================\n";
     EnterToContinue();
 }

@@ -499,7 +499,8 @@ void viewDailyReport()
     cout << "         DAILY REPORT\n";
     cout << "====================================\n";
     
-    Date date = readDateForReport("Enter date for report", 2026, 2028);
+    Date date = readDateForReport("Enter date for report [0 at any prompt to go back]", 2026, 2028);
+    if (date.year == 0) return;
     
     vector<Room> rooms;
     vector<Booking> bookings;
@@ -537,13 +538,15 @@ Date readDateForReport(const string& prompt, int minYear, int maxYear)
         cout << '\n' << prompt << "\n";
 
         Date date;
-
         date.year = readInteger("Year (" + to_string(minYear) + "-" +
                                     to_string(maxYear) + "): ",
                                 minYear, maxYear);
+        if (date.year == 0) return {0,0,0};
 
         date.month = readInteger("Month (1-12): ", 1, 12);
+        if (date.month == 0) return {0,0,0};
         date.day = readInteger("Day: ", 1, 31);
+        if (date.day == 0) return {0,0,0};
 
         if (isValidDate(date))
         {
@@ -567,8 +570,12 @@ void viewMonthlyReport()
     cout << "         MONTHLY REPORT\n";
     cout << "====================================\n";
 
+    cout<<"Enter 0 at any prompt to go back.\n";
     int year = readInteger("Enter year (2026-2028): ", 2026, 2028);
+    if (year == 0) return;
     int month = readInteger("Enter month (1-12): ", 1, 12);
+    if (month == 0) return;
+    
 
     vector<Room> rooms;
     vector<Booking> bookings;

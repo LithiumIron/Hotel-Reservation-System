@@ -35,6 +35,9 @@ int readInteger(const string& prompt, int minimum, int maximum)
             continue;
         }
 
+        if (isGoBackInput(input))
+            return 0;
+
         try
         {
             size_t processedCharacters = 0;
@@ -60,16 +63,19 @@ int readInteger(const string& prompt, int minimum, int maximum)
 
 bool login(int role)
 {
+    clearScreen();
     string username, password;
     string fileUsername, filePassword;
 
-    cout << "\nLogin\n";
+    cout << "\n====================================\n";
+    cout << "               LOGIN\n";
+    cout << "====================================\n";
 
     while (true)
     {
         bool usernameFound = false;
 
-        cout << "Enter your username [Z to go back]: ";
+        cout << "Enter your username [0 to go back]: ";
         getline(cin, username);
 
         if (username.empty())
@@ -78,7 +84,7 @@ bool login(int role)
             continue;
         }
 
-        if (toupper(static_cast<unsigned char>(username[0])) == 'Z')
+        if (isGoBackInput(username))
         {
             return false;
         }
