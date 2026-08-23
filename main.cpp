@@ -11,6 +11,7 @@ using namespace std;
 
 void roleSelection()
 {
+    clearScreen();
     cout << "\n========================================\n";
     cout << "  Welcome to Hotel Reservation System!\n";
     cout << "========================================\n";
@@ -50,6 +51,7 @@ void mainMenu(int role)
 {
     while (true)
     {
+        clearScreen();
         cout << "\n====================================\n";
         cout << "     HOTEL RESERVATION SYSTEM\n";
         cout << "====================================\n";

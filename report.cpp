@@ -215,6 +215,7 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
 
 void viewDailyReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         DAILY REPORT\n";
     cout << "====================================\n";
@@ -270,6 +271,7 @@ Date readDateForReport(const string& prompt, int minYear, int maxYear)
 
 void viewMonthlyReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         MONTHLY REPORT\n";
     cout << "====================================\n";
@@ -306,6 +308,7 @@ void viewMonthlyReport()
 
 void viewCustomerReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         CUSTOMER REPORT\n";
     cout << "====================================\n";
@@ -347,6 +350,7 @@ void viewCustomerReport()
 
 void viewRevenueReport()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         REVENUE REPORT\n";
     cout << "====================================\n";
@@ -417,6 +421,7 @@ void reportMenu()
 {
     while (true)
     {
+        clearScreen();
         cout << "\n====================================\n";
         cout << "       REPORT MANAGEMENT\n";
         cout << "====================================\n";

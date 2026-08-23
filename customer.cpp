@@ -16,6 +16,7 @@ using namespace std;
 
 bool signup()
 {
+    clearScreen();
     string username;
     string password;
     string password2;
@@ -105,6 +106,7 @@ void custHomeScreen()
 {
     while (true)
     {
+        clearScreen();
         cout << "\n====================================\n";
         cout << "          Customer Menu\n";
         cout << "====================================\n";
@@ -140,6 +142,7 @@ void custHomeScreen()
 
 void viewCustomerProfile()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         CUSTOMER PROFILE\n";
     cout << "====================================\n";
@@ -282,6 +285,7 @@ void viewCustomerProfile()
 
 void editCustomerProfile()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         EDIT PROFILE\n";
     cout << "====================================\n";

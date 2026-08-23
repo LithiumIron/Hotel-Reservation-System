@@ -2,7 +2,6 @@
 #include "utilities.h"
 #include "booking.h"
 
-#include <algorithm>
 #include <set>
 #include <iomanip>
 #include <iostream>
@@ -853,7 +852,6 @@ void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
     (void)bookings;
 
-    // Floor 1: Standard Single (1-person) + Standard Double (2-person)
     rooms = {
         { "101", ROOM_SS, 50.0, 1 },
         { "102", ROOM_SS, 50.0, 1 },
@@ -883,7 +881,6 @@ void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
         { "125", ROOM_SS, 50.0, 1 },
         { "126", ROOM_SS, 50.0, 1 },
 
-        // Floor 2: Standard Double (2-person) + Family Suite (4-person)
         { "201", ROOM_FS, 150.0, 4 },
         { "202", ROOM_SD, 80.0, 2 },
         { "203", ROOM_SD, 80.0, 2 },
@@ -899,7 +896,6 @@ void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
         { "213", ROOM_SD, 80.0, 2 },
         { "214", ROOM_FS, 150.0, 4 },
 
-        // Floor 3: Presidential Suite + Deluxe Queen (all 2-person)
         { "301", ROOM_PS, 300.0, 2 },
         { "302", ROOM_DQ, 120.0, 2 },
         { "303", ROOM_DQ, 120.0, 2 },
@@ -988,7 +984,7 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
         printMenuOption(1, "DAILY SCHEDULE", "Inspect room operations by date");
         printMenuOption(2, "ROOM TIMELINE", "Track one room across a month");
         printMenuOption(3, "OCCUPANCY FORECAST", "Project demand and peak dates");
-        
+
         cout << '|' << string(UI_WIDTH - 2, '-') << "|\n";
         printMenuOption(0, "RETURN", "Exit Scheduler");
         cout << '+' << string(UI_WIDTH - 2, '=') << "+\n";
@@ -1017,6 +1013,6 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
             int days = readInteger("Forecast days (1-31): ", 1, 31);
             viewOccupancyForecast(bookings, rooms, startDate, days);
         }
-        
+
     }
 }

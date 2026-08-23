@@ -357,6 +357,7 @@ void viewVIPMembership()
 
 void purchaseVIPMembership()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "     VIP MEMBERSHIP\n";
     cout << "====================================\n";
@@ -688,6 +689,7 @@ void purchaseVIPMembership()
 
 void viewVIPBenefits()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         VIP BENEFITS\n";
     cout << "====================================\n";

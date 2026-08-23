@@ -19,6 +19,7 @@ bool empHomeScreen()
 
     while (true)
     {   
+        clearScreen();
         cout << "\n====================================\n";
         cout << "         Employee Access\n";
         cout << "====================================\n";
@@ -41,6 +42,7 @@ bool empHomeScreen()
 }
 void viewEmployeeProfile()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         EMPLOYEE PROFILE\n";
     cout << "====================================\n";
@@ -78,6 +80,7 @@ void viewEmployeeProfile()
 
 void viewAllCustomers()
 {
+    clearScreen();
     cout << "\n====================================\n";
     cout << "         CUSTOMER DETAILS\n";
     cout << "====================================\n";
