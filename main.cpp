@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "utilities.h"
-#include "employee.h"
+#include "manager.h"
 #include "customer.h"
 #include "booking.h"
 #include "scheduler.h"
@@ -16,7 +16,7 @@ void roleSelection()
     cout << "========================================\n";
     cout << "Are you:\n";
     cout << "----------------------------------------\n";
-    cout << "[1] An Employee\n";
+    cout << "[1] An Manager\n";
     cout << "[2] A Customer\n";
     cout << "[0] Exiting\n";
 
@@ -56,7 +56,7 @@ void mainMenu(int role)
 
         if (role == 1)
         {
-            // Employee menu (numbered)
+            // Manager menu (numbered)
             cout << "[1] View Profile\n";
             cout << "[2] View Schedule\n";
             cout << "[3] Customer Details\n";
@@ -69,7 +69,7 @@ void mainMenu(int role)
 
             if (choice == 0) return;
 
-            if (choice == 1) viewEmployeeProfile();
+            if (choice == 1) viewManagerProfile();
 
             else if (choice == 2)
             {
@@ -80,7 +80,7 @@ void mainMenu(int role)
                 // Scheduler displays only real bookings saved by Booking Module.
                 vector<Booking> bookings = loadSavedBookings();
 
-                employeeSchedulerMenu(rooms, bookings);
+                managerSchedulerMenu(rooms, bookings);
             }
             else if (choice == 3) viewAllCustomers();
             else if (choice == 4) reportMenu();

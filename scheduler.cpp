@@ -27,7 +27,7 @@ Date getCurrentSystemDate()
 }
 const int UI_WIDTH = 82;
 const int CUSTOMER_MIN_YEAR = 2026;
-const int EMPLOYEE_MIN_YEAR = 2020;
+const int MANAGER_MIN_YEAR = 2020;
 const int MAX_SCHEDULE_YEAR = 2028;
 const Date SYSTEM_DATE= getCurrentSystemDate();
 const string STATUS_PENDING = "PENDING";
@@ -977,14 +977,14 @@ void customerSchedulerMenu(const vector<Room>& rooms,
     }
 }
 
-void employeeSchedulerMenu(const vector<Room>& rooms,
+void managerSchedulerMenu(const vector<Room>& rooms,
     const vector<Booking>& bookings)
 {
     while (true)
     {
         clearScreen();
 
-        printBanner("SCHEDULER & APPOINTMENT MANAGEMENT", "EMPLOYEE CONTROL DESK");
+        printBanner("SCHEDULER & APPOINTMENT MANAGEMENT", "MANAGER CONTROL DESK");
         printMenuOption(1, "DAILY SCHEDULE", "Inspect room operations by date");
         printMenuOption(2, "ROOM TIMELINE", "Track one room across a month");
         printMenuOption(3, "OCCUPANCY FORECAST", "Project demand and peak dates");
@@ -1001,13 +1001,13 @@ void employeeSchedulerMenu(const vector<Room>& rooms,
         if (choice == 1)
         {
             viewDailyRoomSchedule(bookings, rooms,
-                readDate("Enter schedule date", EMPLOYEE_MIN_YEAR, MAX_SCHEDULE_YEAR));
+                readDate("Enter schedule date", MANAGER_MIN_YEAR, MAX_SCHEDULE_YEAR));
         }
         else if (choice == 2)
         {
             string roomId = readRoomId(rooms);
             int year = readInteger("Year (2020-2028): ",
-                EMPLOYEE_MIN_YEAR, MAX_SCHEDULE_YEAR);
+                MANAGER_MIN_YEAR, MAX_SCHEDULE_YEAR);
             int month = readInteger("Month (1-12): ", 1, 12);
             viewRoomMonthlyTimeline(bookings, rooms, roomId, month, year);
         }

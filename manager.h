@@ -1,6 +1,6 @@
 #pragma once
 
 bool empHomeScreen();
-void viewEmployeeProfile();
+void viewManagerProfile();
 void viewAllCustomers();
 

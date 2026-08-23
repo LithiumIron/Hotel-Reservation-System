@@ -4,7 +4,12 @@
 #include <vector>
 #include <string>
 
-// Report types
+using namespace std;
+
+// ============================================================
+// Report Types
+// ============================================================
+
 struct DailyReport
 {
     Date date;
@@ -43,18 +48,18 @@ struct CustomerReport
     string vipStatus;
 };
 
-// Report generation functions
-DailyReport generateDailyReport(const Date& date, 
-                                const std::vector<Room>& rooms, 
-                                const std::vector<Booking>& bookings);
+// ============================================================
+// Report Generation Functions
+// ============================================================
 
-MonthlyReport generateMonthlyReport(int month, int year,
-                                   const std::vector<Room>& rooms,
-                                   const std::vector<Booking>& bookings);
+DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms, const vector<Booking>& bookings);
+MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& rooms, const vector<Booking>& bookings);
+vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings);
 
-std::vector<CustomerReport> generateCustomerReport(const std::vector<Booking>& bookings);
+// ============================================================
+// Display Functions
+// ============================================================
 
-// Display functions
 void viewDailyReport();
 Date readDateForReport(const string& prompt, int minYear, int maxYear);
 void viewMonthlyReport();

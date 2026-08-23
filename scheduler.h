@@ -34,5 +34,5 @@ void loadSchedulerDemoData(std::vector<Room>& rooms,
     std::vector<Booking>& bookings);
 void customerSchedulerMenu(const std::vector<Room>& rooms,
     const std::vector<Booking>& bookings);
-void employeeSchedulerMenu(const std::vector<Room>& rooms,
+void managerSchedulerMenu(const std::vector<Room>& rooms,
     const std::vector<Booking>& bookings);

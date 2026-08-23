@@ -1,6 +1,6 @@
 #include "booking.h"
 #include "customer.h"
-#include "employee.h"
+#include "manager.h"
 #include "utilities.h"
 #include "scheduler.h"
 
@@ -88,10 +88,10 @@ bool login(int role)
 
         ifstream inFile;
 
-        // Role 1 = employee, Role 2 = customer
+        // Role 1 = manager, Role 2 = customer
         if (role == 1)
         {
-            inFile.open("employeeData.txt");
+            inFile.open("managerData.txt");
         }
         else
         {

@@ -1,7 +1,8 @@
-#include "employee.h"
+#include "manager.h"
 #include "scheduler.h"
 #include "utilities.h"
 #include "booking.h"
+#include "vip.h"
 
 #include <iostream>
 #include <cctype>
@@ -14,41 +15,41 @@ using namespace std;
 
 bool empHomeScreen()
 {
-    const string EMPLOYEE_PASSCODE = "1234";
+    const string MANAGER_PASSCODE = "1234";
     string enteredPasscode;
 
     while (true)
     {   
         cout << "\n====================================\n";
-        cout << "         Employee Access\n";
+        cout << "         Manager Access\n";
         cout << "====================================\n";
-        cout << "Enter employee passcode [Z to go back]: ";
+        cout << "Enter manager passcode [Z to go back]: ";
         getline(cin, enteredPasscode);
 
         if (toupper(static_cast<unsigned char>(enteredPasscode[0])) == 'Z') 
             return false;
 
-        if (enteredPasscode == EMPLOYEE_PASSCODE)
+        if (enteredPasscode == MANAGER_PASSCODE)
         {
-            cout << "\nEmployee passcode accepted.\n";
+            cout << "\nManager passcode accepted.\n";
             EnterToContinue();
             return true;
         }
 
-        cout << "Invalid employee passcode. Please try again.\n";
+        cout << "Invalid manager passcode. Please try again.\n";
         EnterToContinue();
     }
 }
-void viewEmployeeProfile()
+void viewManagerProfile()
 {
     cout << "\n====================================\n";
-    cout << "         EMPLOYEE PROFILE\n";
+    cout << "         MANAGER PROFILE\n";
     cout << "====================================\n";
 
-    ifstream inFile("employeeData.txt");
+    ifstream inFile("managerData.txt");
     if (inFile.fail())
     {
-        cout << "Error: Could not open employee data file.\n";
+        cout << "Error: Could not open manager data file.\n";
         cout << "====================================\n";
         EnterToContinue();
         return;
@@ -68,7 +69,7 @@ void viewEmployeeProfile()
 
     if (!found)
     {
-        cout << "  No employee records found.\n";
+        cout << "  No manager records found.\n";
     }
 
     inFile.close();
@@ -120,6 +121,9 @@ void viewAllCustomers()
          << "VIP STATUS\n";
     cout << "  " << string(65, '-') << "\n";
 
+    vector<VIPMembership> memberships = loadVIPMemberships();
+    Date today = getCurrentSystemDate();
+    
     for (const auto& customer : customers)
     {
         string username = customer.first;
@@ -143,13 +147,19 @@ void viewAllCustomers()
             }
         }
         
+        // ✅ CORRECT: Check actual VIP membership
         string vipStatus = "Standard";
-        if (totalBookings >= 10)
-            vipStatus = "⭐ Platinum";
-        else if (totalBookings >= 5)
-            vipStatus = "⭐ Gold";
-        else if (totalBookings >= 3)
-            vipStatus = "⭐ Silver";
+        for (const VIPMembership& m : memberships)
+        {
+            if (m.customerId == username && m.isActive)
+            {
+                if (compareDates(today, m.expiryDate) <= 0)
+                {
+                    vipStatus = "⭐ " + m.tier;
+                    break;
+                }
+            }
+        }
         
         cout << "  " << left << setw(15) << username 
              << setw(12) << totalBookings 
