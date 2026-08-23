@@ -630,6 +630,131 @@ int auditDoubleBookings(const vector<Booking>& bookings)
 
 
 
+namespace
+{
+    struct MapRoom
+    {
+        string roomId;
+        string capLabel;
+        int width;
+    };
+
+    void renderRoomBlock(const MapRoom& room, bool windowOnTop,
+        vector<string>& lines)
+    {
+        string windowEdge(room.width - 2,
+            windowOnTop ? '=' : '-');
+        string plainEdge(room.width - 2, '-');
+        lines.push_back("+" + windowEdge + "+");
+        lines.push_back("|"
+            + centeredText(room.roomId + " " + room.capLabel,
+                room.width - 2) + "|");
+        lines.push_back("+" + plainEdge + "+");
+    }
+
+    void renderRoomBand(const vector<MapRoom>& band, bool windowOnTop)
+    {
+        string rows[3];
+        for (const MapRoom& room : band)
+        {
+            vector<string> block;
+            renderRoomBlock(room, windowOnTop, block);
+            for (int i = 0; i < 3; i++)
+            {
+                rows[i] += block[i];
+            }
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            cout << "  " << rows[i] << '\n';
+        }
+    }
+
+    void renderCorridorWithLift(int totalWidth, int liftWidth)
+    {
+        int sideWidth = (totalWidth - liftWidth) / 2;
+        string grass(sideWidth, '.');
+        string liftEdge(liftWidth - 2, '=');
+        cout << "  " << grass << "+" << liftEdge << "+\n";
+        cout << "  " << grass << "|"
+             << centeredText("LIFT", liftWidth - 2) << "|\n";
+        cout << "  " << grass << "+" << liftEdge << "+\n";
+    }
+
+    void renderFloorMap(int floorNumber,
+        const vector<MapRoom>& topBand,
+        const vector<MapRoom>& bottomBand)
+    {
+        cout << "\n  FLOOR " << floorNumber << "\n";
+        renderRoomBand(topBand, true);
+        renderCorridorWithLift(72, 12);
+        renderRoomBand(bottomBand, false);
+    }
+}
+
+void viewRoomLocationGuide(const vector<Room>& rooms)
+{
+    (void)rooms;
+
+    printBanner("ROOM LOCATION GUIDE",
+        "All rooms face an exterior window wall");
+
+    cout << "  Room number = FLOOR + ROOM (e.g. 205 = Floor 2, Room 05).\n";
+    cout << "  '=' marks the window wall. Block size = room size:\n";
+    cout << "  [1P] 1-person (small)   [2P] 2-person (medium)"
+        << "   [4P] 4-person (large)\n";
+
+    // Floor 1: 1-person and 2-person only (band widths: 4x12 + 3x8 = 72)
+    vector<MapRoom> f1Top = {
+        { "101", "2P", 12 }, { "102", "2P", 12 },
+        { "103", "2P", 12 }, { "104", "2P", 12 },
+        { "105", "1P", 8 },  { "106", "1P", 8 },  { "107", "1P", 8 }
+    };
+    vector<MapRoom> f1Bottom = {
+        { "108", "2P", 12 }, { "109", "2P", 12 },
+        { "110", "2P", 12 }, { "111", "2P", 12 },
+        { "112", "1P", 8 },  { "113", "1P", 8 },  { "114", "1P", 8 }
+    };
+
+    // Floor 2: 2-person and 4-person only (band widths: 2x18 + 3x12 = 72)
+    vector<MapRoom> f2Top = {
+        { "201", "4P", 18 }, { "202", "4P", 18 },
+        { "203", "2P", 12 }, { "204", "2P", 12 }, { "205", "2P", 12 }
+    };
+    vector<MapRoom> f2Bottom = {
+        { "206", "4P", 18 }, { "207", "4P", 18 },
+        { "208", "2P", 12 }, { "209", "2P", 12 }, { "210", "2P", 12 }
+    };
+
+    // Floor 3: all 2-person (band widths: 6x12 = 72)
+    vector<MapRoom> f3Top = {
+        { "301", "2P", 12 }, { "302", "2P", 12 }, { "303", "2P", 12 },
+        { "304", "2P", 12 }, { "305", "2P", 12 }, { "306", "2P", 12 }
+    };
+    vector<MapRoom> f3Bottom = {
+        { "307", "2P", 12 }, { "308", "2P", 12 }, { "309", "2P", 12 },
+        { "310", "2P", 12 }, { "311", "2P", 12 }, { "312", "2P", 12 }
+    };
+
+    renderFloorMap(1, f1Top, f1Bottom);
+    renderFloorMap(2, f2Top, f2Bottom);
+    renderFloorMap(3, f3Top, f3Bottom);
+
+    cout << "\n  Legend: '.' corridor  |  centre block = lift core"
+        << "  |  '=' window wall\n";
+    cout << "  Every floor occupies the same total area"
+        << " (72 x 9 units incl. lift core).\n";
+    cout << "\n  FLOOR SUMMARY\n";
+    cout << "  Floor 1: 6 x 1-person, 8 x 2-person  (14 rooms)\n";
+    cout << "  Floor 2: 6 x 2-person, 4 x 4-person  (10 rooms)\n";
+    cout << "  Floor 3: 12 x 2-person               (12 rooms)\n";
+    cout << "  Total:   6 x 1-person, 20 x 2-person, 4 x 4-person"
+        << "  (36 rooms)\n";
+
+    cout << "\n  Press ENTER to return...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
 void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
     rooms = {

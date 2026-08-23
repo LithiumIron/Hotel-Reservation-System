@@ -32,6 +32,7 @@ void viewFloorAvailabilityMap(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate);
 int auditDoubleBookings(const std::vector<Booking>& bookings);
+void viewRoomLocationGuide(const std::vector<Room>& rooms);
 void loadSchedulerDemoData(std::vector<Room>& rooms,
     std::vector<Booking>& bookings);
 void customerSchedulerMenu(const std::vector<Room>& rooms,

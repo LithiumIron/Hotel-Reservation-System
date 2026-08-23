@@ -113,11 +113,12 @@ void mainMenu(int role)
             cout << "[5] Booking\n";
             cout << "[6] View Previous Booking Record\n";
             cout << "[7] Cancel Booking\n";
+            cout << "[8] View Room Location Guide\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
 
             int choice = readInteger(
-                "Enter your choice: ", 0, 7);
+                "Enter your choice: ", 0, 8);
 
             if (choice == 0){
                 loggedInUser.clear();
@@ -131,6 +132,13 @@ void mainMenu(int role)
             else if (choice == 5) bookingScreen();
             else if (choice == 6) viewPreviousBookings();
             else if (choice == 7) cancelBooking();
+            else if (choice == 8)
+            {
+                vector<Room> rooms;
+                vector<Booking> bookings;
+                loadSchedulerDemoData(rooms, bookings);
+                viewRoomLocationGuide(rooms);
+            }
         }
     }
 }
