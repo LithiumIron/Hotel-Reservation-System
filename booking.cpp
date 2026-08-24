@@ -678,14 +678,6 @@ void bookingScreen()
     // Customer identification (from login)
     string customerId = loggedInUser;
 
-    cout << "\n====================================\n";
-    cout << "         ROOM BOOKING\n";
-    cout << "====================================\n";
-    cout << "  Welcome, " << customerId << "!\n";
-    cout << "====================================\n";
-    cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
-    cout << "====================================\n";
-
     Date checkInDate;
     Date checkOutDate;
     vector<SelectedRoom> selections;
@@ -709,6 +701,15 @@ void bookingScreen()
             // ── STAGE: Check-in Date ──
         case STAGE_CHECKIN:
         {
+            clearScreen();
+            cout << "\n====================================\n";
+            cout << "         ROOM BOOKING\n";
+            cout << "====================================\n";
+            cout << "  Welcome, " << customerId << "!\n";
+            cout << "====================================\n";
+            cout << "Format: DD/MM/YYYY (e.g. 25/12/2026)\n";
+            cout << "====================================\n";
+
             checkInDate =
                 readCurrentOrFutureDate(
                     "Check-in Date", "main menu",
