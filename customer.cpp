@@ -250,15 +250,36 @@ void viewCustomerProfile()
             if (!saved.empty())
             {
                 cout << "\n  --- Recent Booking History ---\n";
+                vector<string> displayedBookingIds;
                 int count = 0;
+
                 for (const Booking& b : saved)
                 {
                     if (b.customerId == loggedInUser && count < 5)
                     {
-                        cout << "  " << b.bookingId << " | " 
-                             << formatDate(b.checkInDate) << " - " 
-                             << formatDate(b.checkOutDate) << " | " 
-                             << b.status << "\n";
+                        // Check for duplicate booking ID
+                        bool alreadyDisplayed = false;
+
+                        for (const string& id : displayedBookingIds)
+                        {
+                            if (id == b.bookingId)
+                            {
+                                alreadyDisplayed = true;
+                                break;
+                            }
+                        }
+
+                        if (alreadyDisplayed)
+                            continue;
+
+                        // Remember this booking ID
+                        displayedBookingIds.push_back(b.bookingId);
+
+                        cout << "  " << b.bookingId << " | "
+                            << formatDate(b.checkInDate) << " - "
+                            << formatDate(b.checkOutDate) << " | "
+                            << b.status << "\n";
+
                         count++;
                     }
                 }
