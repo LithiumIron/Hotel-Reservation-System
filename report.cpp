@@ -772,7 +772,7 @@ void viewRevenueReport()
          << "RM " << setw(16) << fixed << setprecision(2) << totalRevenue
          << "RM " << fixed << setprecision(2) << overallAvg << "\n";
 
-    cout << "====================================\n";
+    cout << "======================================================\n";
 
     EnterToContinue();
 }
