@@ -15,8 +15,8 @@ struct VIPTier
 
 // Function declarations
 void viewVIPMembership();
-void purchaseVIPMembership();
-void viewVIPBenefits();
+void purchaseVIPMembership(const std::string& customerId);
+void viewVIPBenefits(const std::string& customerId);
 bool hasActiveVIP(const std::string& customerId);
 std::string getVIPStatus(const std::string& customerId);
 void saveVIPMembership(const VIPMembership& membership);

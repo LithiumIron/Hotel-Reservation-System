@@ -648,7 +648,7 @@ void saveReceiptToFile(
     cout << "\nReceipt saved successfully as \"" << filename << "\".\n";
 }
 
-void bookingScreen()
+void bookingScreen(const string& customerId)
 {
     clearScreen();
     vector<Room> rooms;
@@ -663,7 +663,6 @@ void bookingScreen()
     }
 
     // Customer identification (from login)
-    string customerId = loggedInUser;
 
     cout << "\n====================================\n";
     cout << "         ROOM BOOKING\n";
@@ -1236,7 +1235,7 @@ void bookingScreen()
                     // Go back to add-on
                     addonSelections.pop_back();
                 }
-                bookingScreen();  // restart booking flow
+                bookingScreen(customerId);  // restart booking flow
                 return;
             }
 
@@ -1869,10 +1868,9 @@ static void printBoxBorder()
     cout << "  +----------------------------------+\n";
 }
 
-void viewPreviousBookings()
+void viewPreviousBookings(const string& customerId)
 {
     clearScreen();
-    string customerId = loggedInUser;
 
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
@@ -1960,10 +1958,9 @@ void viewPreviousBookings()
     getline(cin, input);
 }
 
-void cancelBooking()
+void cancelBooking(const string& customerId)
 {
     clearScreen();
-    string customerId = loggedInUser;
 
     cout << "\n====================================\n";
     cout << "         CANCEL BOOKING\n";

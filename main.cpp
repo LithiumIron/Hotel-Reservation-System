@@ -29,22 +29,24 @@ void roleSelection()
     
     else if (choice == 1)
     {
-        if (empHomeScreen() && login(1))
-            mainMenu(1);
+        string managerUser;    
+        if (empHomeScreen() && login(1, managerUser))
+            mainMenu(1,managerUser);
         
     }
     else
     {
-        loggedInUser.clear();
-        custHomeScreen();
-        if (!loggedInUser.empty())
+        string currentUser;
+        currentUser.clear();
+        custHomeScreen(currentUser);
+        if (!currentUser.empty())
         {
-            mainMenu(2);
+            mainMenu(2, currentUser);
         }
     }
 }
 
-void mainMenu(int role)
+void mainMenu(int role, string &username)
 {
     while (true)
     {
@@ -101,11 +103,11 @@ void mainMenu(int role)
                 "Enter your choice: ", 0, 9);
 
             if (choice == 0){
-                loggedInUser.clear();
+                username.clear();
                 return;
             }
 
-            if (choice == 1) viewCustomerProfile();
+            if (choice == 1) viewCustomerProfile(username);
             else if (choice == 2) bookingScreen();
             else if (choice == 3) viewPreviousBookings();
             else if (choice == 4) cancelBooking();
@@ -125,7 +127,7 @@ void mainMenu(int role)
                 vector<Booking> unusedDemoBookings;
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
-                viewRoomLocationGuide(rooms);
+                viewRoomLocationGuide(rooms, username);
             }
         }
     }

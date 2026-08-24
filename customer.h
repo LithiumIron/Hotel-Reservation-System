@@ -1,8 +1,8 @@
 
 #pragma once
 
-bool signup();
+bool signup(std::string& loggedInUser);
 
-void custHomeScreen();
-void viewCustomerProfile();
-void editCustomerProfile();
+void custHomeScreen(std::string& loggedInUser);
+void viewCustomerProfile(std::string& loggedInUser);
+void editCustomerProfile(std::string& loggedInUser);
