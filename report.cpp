@@ -496,7 +496,7 @@ void viewDailyReport()
 {
     clearScreen();
     cout << "\n====================================\n";
-    cout << "         DAILY REPORT\n";
+    cout << "           DAILY REPORT\n";
     cout << "====================================\n";
     
     Date date = readDateForReport("Enter date for report [0 at any prompt to go back]", 2026, 2028);
@@ -511,22 +511,22 @@ void viewDailyReport()
     
     DailyReport report = generateDailyReport(date, rooms, bookings);
     
-    cout << "\n  " << string(50, '-') << "\n";
-    cout << "  Report Date: " << formatDate(report.date) << "\n";
-    cout << "  " << string(50, '-') << "\n";
-    cout << "  " << left << setw(25) << "Total Rooms:" << report.totalRooms << "\n";
-    cout << "  " << left << setw(25) << "Occupied Rooms:" << report.occupiedRooms << "\n";
-    cout << "  " << left << setw(25) << "Available Rooms:" << report.availableRooms << "\n";
-    cout << "  " << left << setw(25) << "Occupancy Rate:" << fixed << setprecision(1) << report.occupancyRate << "%\n";
-    cout << "  " << string(50, '-') << "\n";
-    cout << "  " << left << setw(25) << "Check-ins Today:" << report.checkIns << "\n";
-    cout << "  " << left << setw(25) << "Check-outs Today:" << report.checkOuts << "\n";
-    cout << "  " << string(50, '-') << "\n";
-    cout << "  " << left << setw(25) << "Pending Bookings:" << report.pendingBookings << "\n";
-    cout << "  " << left << setw(25) << "Cancelled Bookings:" << report.cancelledBookings << "\n";
-    cout << "  " << string(50, '-') << "\n";
-    cout << "  " << left << setw(25) << "Total Revenue:" << "RM " << fixed << setprecision(2) << report.totalRevenue << "\n";
-    cout << "  " << string(50, '-') << "\n";
+    cout << "\n" << string(50, '-') << "\n";
+    cout << "Report Date: " << formatDate(report.date) << "\n";
+    cout << string(50, '-') << "\n";
+    cout << left << setw(25) << "Total Rooms:" << report.totalRooms << "\n";
+    cout << left << setw(25) << "Occupied Rooms:" << report.occupiedRooms << "\n";
+    cout << left << setw(25) << "Available Rooms:" << report.availableRooms << "\n";
+    cout << left << setw(25) << "Occupancy Rate:" << fixed << setprecision(1) << report.occupancyRate << "%\n";
+    cout << string(50, '-') << "\n";
+    cout << left << setw(25) << "Check-ins Today:" << report.checkIns << "\n";
+    cout << left << setw(25) << "Check-outs Today:" << report.checkOuts << "\n";
+    cout << string(50, '-') << "\n";
+    cout << left << setw(25) << "Pending Bookings:" << report.pendingBookings << "\n";
+    cout << left << setw(25) << "Cancelled Bookings:" << report.cancelledBookings << "\n";
+    cout << string(50, '-') << "\n";
+    cout << left << setw(25) << "Total Revenue:" << "RM " << fixed << setprecision(2) << report.totalRevenue << "\n";
+    cout << string(50, '-') << "\n";
     cout << "====================================\n";
     EnterToContinue();
 }
@@ -592,29 +592,29 @@ void viewMonthlyReport()
     MonthlyReport report =
         generateMonthlyReport(month, year, rooms, bookings);
 
-    cout << "\n  " << string(50, '-') << "\n";
-    cout << "  Report Month: " << month << "/" << year << "\n";
-    cout << "  " << string(50, '-') << "\n";
+    cout << "\n" << string(50, '-') << "\n";
+    cout << "Report Month: " << month << "/" << year << "\n";
+    cout << string(50, '-') << "\n";
 
-    cout << "  Total Rooms: " << report.totalRooms << "\n";
-    cout << "  Avg Occupancy: " << fixed << setprecision(1)
+    cout << "Total Rooms: " << report.totalRooms << "\n";
+    cout << "Avg Occupancy: " << fixed << setprecision(1)
          << report.avgOccupancyRate << "%\n";
 
-    cout << "  " << string(50, '-') << "\n";
+    cout << string(50, '-') << "\n";
 
-    cout << "  Total Bookings: " << report.totalBookings << "\n";
-    cout << "  Check-ins: " << report.totalCheckIns << "\n";
-    cout << "  Check-outs: " << report.totalCheckOuts << "\n";
-    cout << "  Cancellations: " << report.cancellations << "\n";
-    cout << "  Cancellation Rate: " << fixed << setprecision(1)
+    cout << "Total Bookings: " << report.totalBookings << "\n";
+    cout << "Check-ins: " << report.totalCheckIns << "\n";
+    cout << "Check-outs: " << report.totalCheckOuts << "\n";
+    cout << "Cancellations: " << report.cancellations << "\n";
+    cout << "Cancellation Rate: " << fixed << setprecision(1)
          << report.cancellationRate << "%\n";
 
-    cout << "  " << string(50, '-') << "\n";
+    cout << string(50, '-') << "\n";
 
-    cout << "  Total Revenue: RM " << fixed << setprecision(2)
+    cout << "Total Revenue: RM " << fixed << setprecision(2)
          << report.totalRevenue << "\n";
 
-    cout << "  " << string(50, '-') << "\n";
+    cout << string(50, '-') << "\n";
     cout << "====================================\n";
 
     EnterToContinue();
@@ -636,7 +636,7 @@ void viewCustomerReport()
 
     if (reports.empty())
     {
-        cout << "  No customer data available.\n";
+        cout << "No customer data available.\n";
         cout << "====================================\n";
 
         EnterToContinue();
@@ -647,11 +647,11 @@ void viewCustomerReport()
          << setw(10) << "COMPLETED" << setw(10) << "CANCELLED"
          << setw(15) << "TOTAL SPENT" << "VIP STATUS\n";
 
-    cout << "  " << string(70, '-') << "\n";
+    cout << string(70, '-') << "\n";
 
     for (const CustomerReport& cr : reports)
     {
-        cout << "  " << left << setw(12) << cr.customerId
+        cout << left << setw(12) << cr.customerId
              << setw(10) << cr.totalBookings
              << setw(10) << cr.completedBookings
              << setw(10) << cr.cancelledBookings
@@ -659,8 +659,8 @@ void viewCustomerReport()
              << cr.totalSpent << cr.vipStatus << "\n";
     }
 
-    cout << "  " << string(70, '-') << "\n";
-    cout << "  Total Customers: " << reports.size() << "\n";
+    cout << string(70, '-') << "\n";
+    cout << "Total Customers: " << reports.size() << "\n";
     cout << "====================================\n";
 
     EnterToContinue();
@@ -681,7 +681,7 @@ void viewRevenueReport()
 
     if (saved.empty())
     {
-        cout << "  No booking data available.\n";
+        cout << "No booking data available.\n";
         cout << "====================================\n";
 
         EnterToContinue();
@@ -732,14 +732,14 @@ void viewRevenueReport()
     }
 
     cout << "\n  Monthly Revenue Breakdown:\n";
-    cout << "  " << string(50, '-') << "\n";
+    cout << string(50, '-') << "\n";
 
-    cout << "  " << left << setw(12) << "MONTH"
+    cout << left << setw(12) << "MONTH"
          << setw(10) << "BOOKINGS"
          << setw(20) << "REVENUE"
          << setw(12) << "AVG/BOOKING" << "\n";
 
-    cout << "  " << string(55, '-') << "\n";
+    cout << string(55, '-') << "\n";
 
     double totalRevenue = 0.0;
     int totalBookings = 0;
@@ -755,19 +755,19 @@ void viewRevenueReport()
         totalRevenue += revenue;
         totalBookings += count;
 
-        cout << "  " << left << setw(12) << month
+        cout << left << setw(12) << month
              << setw(10) << count
              << "RM " << setw(16) << fixed << setprecision(2) << revenue
              << "RM " << fixed << setprecision(2) << avg << "\n";
     }
 
-    cout << "  " << string(55, '-') << "\n";
+    cout << string(55, '-') << "\n";
 
     double overallAvg = totalBookings > 0
                             ? totalRevenue / totalBookings
                             : 0.0;
 
-    cout << "  " << left << setw(12) << "TOTAL"
+    cout << left << setw(12) << "TOTAL"
          << setw(10) << totalBookings
          << "RM " << setw(16) << fixed << setprecision(2) << totalRevenue
          << "RM " << fixed << setprecision(2) << overallAvg << "\n";
@@ -787,7 +787,7 @@ void reportMenu()
     {
         clearScreen();
         cout << "\n====================================\n";
-        cout << "       REPORT MANAGEMENT\n";
+        cout << "         REPORT MANAGEMENT\n";
         cout << "====================================\n";
         cout << "[1] Daily Report\n";
         cout << "[2] Monthly Report\n";
