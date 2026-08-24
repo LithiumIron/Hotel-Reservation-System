@@ -29,22 +29,24 @@ void roleSelection()
     
     else if (choice == 1)
     {
-        if (empHomeScreen() && login(1))
-            mainMenu(1);
+        string managerUser;    
+        if (empHomeScreen() && login(1, managerUser))
+            mainMenu(1,managerUser);
         
     }
     else
     {
-        loggedInUser.clear();
-        custHomeScreen();
-        if (!loggedInUser.empty())
+        string currentUser;
+        currentUser.clear();
+        custHomeScreen(currentUser);
+        if (!currentUser.empty())
         {
-            mainMenu(2);
+            mainMenu(2, currentUser);
         }
     }
 }
 
-void mainMenu(int role)
+void mainMenu(int role, string &username)
 {
     while (true)
     {
@@ -58,7 +60,7 @@ void mainMenu(int role)
             // Manager menu (numbered)
             cout << "[1] View Profile\n";
             cout << "[2] View Schedule\n";
-            cout << "[3] Customer Details\n";
+            cout << "[3] View All Customer Details\n";
             cout << "[4] Report Management\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
@@ -101,14 +103,14 @@ void mainMenu(int role)
                 "Enter your choice: ", 0, 9);
 
             if (choice == 0){
-                loggedInUser.clear();
+                username.clear();
                 return;
             }
 
-            if (choice == 1) viewCustomerProfile();
-            else if (choice == 2) bookingScreen();
-            else if (choice == 3) viewPreviousBookings();
-            else if (choice == 4) cancelBooking();
+            if (choice == 1) viewCustomerProfile(username);
+            else if (choice == 2) bookingScreen(username);
+            else if (choice == 3) viewPreviousBookings(username);
+            else if (choice == 4) cancelBooking(username);
             else if (choice == 5)
             {
                 vector<Room> rooms;
@@ -125,7 +127,7 @@ void mainMenu(int role)
                 vector<Booking> unusedDemoBookings;
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
-                viewRoomLocationGuide(rooms);
+                viewRoomLocationGuide(rooms, username);
             }
         }
     }

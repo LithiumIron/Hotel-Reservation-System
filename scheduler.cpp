@@ -753,7 +753,7 @@ namespace
     }
 }
 
-void viewRoomLocationGuide(const vector<Room>& rooms)
+void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
 {
     clearScreen();
 
@@ -792,7 +792,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms)
         bool owned = false;
         for (const Booking& b : saved)
         {
-            if (b.customerId == loggedInUser
+            if (b.customerId == customerId
                 && b.status != "CANCELLED")
             {
                 string bUpper = b.bookingId;

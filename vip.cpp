@@ -244,7 +244,7 @@ void applyVIPDiscount(double& total, const string& customerId)
 // PURCHASE / UPGRADE VIP MEMBERSHIP
 // ============================================================
 
-void purchaseVIPMembership()
+void purchaseVIPMembership(const string& customerId)
 {
     clearScreen();
 
@@ -252,7 +252,7 @@ void purchaseVIPMembership()
     cout << "         VIP MEMBERSHIP\n";
     cout << "====================================\n";
 
-    if (loggedInUser.empty())
+    if (customerId.empty())
     {
         cout << "  Please login first.\n";
         cout << "====================================\n";
@@ -261,7 +261,7 @@ void purchaseVIPMembership()
     }
 
     // Check current membership
-    string currentTier = getVIPStatus(loggedInUser);
+    string currentTier = getVIPStatus(customerId);
 
     if (currentTier != "None")
     {
@@ -317,7 +317,7 @@ void purchaseVIPMembership()
             // Deactivate old membership
             for (VIPMembership& m : memberships)
             {
-                if (m.customerId == loggedInUser && m.isActive)
+                if (m.customerId == customerId && m.isActive)
                 {
                     m.isActive = false;
                 }
@@ -326,7 +326,7 @@ void purchaseVIPMembership()
             // Create new membership
             VIPMembership membership;
 
-            membership.customerId = loggedInUser;
+            membership.customerId = customerId;
             membership.tier = nextVIP.name;
             membership.purchaseDate = getCurrentSystemDate();
             membership.expiryDate =
@@ -525,7 +525,7 @@ void purchaseVIPMembership()
     // Create membership
     VIPMembership membership;
 
-    membership.customerId = loggedInUser;
+    membership.customerId = customerId;
     membership.tier = selectedTier.name;
     membership.purchaseDate = getCurrentSystemDate();
     membership.expiryDate =
@@ -554,7 +554,7 @@ void purchaseVIPMembership()
 // VIEW VIP BENEFITS
 // ============================================================
 
-void viewVIPBenefits()
+void viewVIPBenefits(const string& customerId)
 {
     clearScreen();
 
@@ -584,9 +584,9 @@ void viewVIPBenefits()
     }
 
     // Show current user status
-    if (!loggedInUser.empty())
+    if (!customerId.empty())
     {
-        string currentTier = getVIPStatus(loggedInUser);
+        string currentTier = getVIPStatus(customerId);
 
         cout << "\nYour current status: ";
 

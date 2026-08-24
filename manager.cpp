@@ -88,7 +88,7 @@ void viewAllCustomers()
 {
     clearScreen();
     cout << "\n====================================\n";
-    cout << "         CUSTOMER DETAILS\n";
+    cout << "       ALL CUSTOMER DETAILS\n";
     cout << "====================================\n";
     cout << "  All registered customers and their booking stats\n\n";
 
@@ -127,7 +127,7 @@ void viewAllCustomers()
          << setw(12) << "ACTIVE" 
          << setw(12) << "COMPLETED" 
          << "VIP STATUS\n";
-    cout << "  " << string(65, '-') << "\n";
+    cout << string(65, '-') << "\n";
 
     vector<VIPMembership> memberships = loadVIPMemberships();
     Date today = getCurrentSystemDate();
@@ -163,7 +163,7 @@ void viewAllCustomers()
             {
                 if (compareDates(today, m.expiryDate) <= 0)
                 {
-                    vipStatus = "⭐ " + m.tier;
+                    vipStatus = "* " + m.tier;
                     break;
                 }
             }
@@ -176,7 +176,7 @@ void viewAllCustomers()
              << vipStatus << "\n";
     }
 
-    cout << "\n  " << string(65, '-') << "\n";
+    cout << "\n" << string(65, '-') << "\n";
     cout << "  Total Customers: " << customers.size() << "\n";
     cout << "  Total Bookings: " << saved.size() << "\n";
     cout << "====================================\n";

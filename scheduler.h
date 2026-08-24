@@ -29,7 +29,7 @@ void viewFloorAvailabilityMap(const std::vector<Booking>& bookings,
     const std::vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate);
 
-void viewRoomLocationGuide(const std::vector<Room>& rooms);
+void viewRoomLocationGuide(const std::vector<Room>& rooms, const std::string& customerId);
 void loadSchedulerDemoData(std::vector<Room>& rooms,
     std::vector<Booking>& bookings);
 void customerSchedulerMenu(const std::vector<Room>& rooms,
