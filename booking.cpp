@@ -984,6 +984,9 @@ void bookingScreen()
                 }
                 if (isGoBackInput(input))
                 {
+                    // Going back to room selection: undo the last
+                    // room pick AND its fake-hold bookings so the
+                    // availability count is accurate again.
                     stage = STAGE_ROOMS;
                     break;
                 }
@@ -1236,10 +1239,165 @@ void bookingScreen()
                     // Go back to add-on
                     addonSelections.pop_back();
                 }
-                bookingScreen();  // restart booking flow
-                return;
+                // Restart the stage loop so the user re-enters
+                // room selection without recursion.
+                stage = STAGE_ROOMS;
             }
+            else
+            {
+                break;  // proceed to payment
+            }
+        }  // end while summary
+    }
 
+    if (stage == STAGE_ROOMS)
+    {
+        // User pressed 0 on the summary - resume the booking
+        // flow from room selection (no recursion).
+        while (stage != STAGE_SUMMARY && stage != STAGE_EXIT)
+        {
+            switch (stage)
+            {
+            case STAGE_ROOMS:
+            {
+                while (true)
+                {
+                    clearScreen();
+                    cout << "\n====================================\n";
+                    cout << "  Stay: " << formatDate(checkInDate)
+                        << " to " << formatDate(checkOutDate)
+                        << "\n";
+                    cout << "====================================\n";
+
+                    if (!selections.empty())
+                    {
+                        cout << "\n  --- Previous Selection ---\n";
+                        double prevTotal = 0;
+                        for (const SelectedRoom& sel : selections)
+                        {
+                            double cost = sel.quantity
+                                * ROOM_TYPES[sel.typeIndex].price;
+                            cout << "  " << sel.quantity << "x "
+                                << ROOM_TYPES[sel.typeIndex].name
+                                << " (RM" << fixed << setprecision(2)
+                                << cost << "/night)\n";
+                            prevTotal += cost;
+                        }
+                        cout << "  ----------------------\n";
+                        cout << "  Total per night: RM" << fixed
+                            << setprecision(2) << prevTotal << "\n";
+                    }
+
+                    cout << "\n  Select room type:\n\n";
+
+                    int avail[NUM_ROOM_TYPES];
+                    for (int i = 0; i < NUM_ROOM_TYPES; i++)
+                    {
+                        avail[i] = countAvailableByType(
+                            rooms, bookings,
+                            ROOM_TYPES[i].name,
+                            checkInDate, checkOutDate);
+
+                        char label = 'A' + i;
+                        cout << "  [" << label << "] "
+                            << ROOM_TYPES[i].name << "\n";
+                        cout << "      Recommended Occupancy: "
+                            << ROOM_TYPES[i].capacity
+                            << " Guest(s)\n";
+                        cout << "      Price: RM" << fixed
+                            << setprecision(2)
+                            << ROOM_TYPES[i].price
+                            << " / night\n";
+                        cout << "      Available: " << avail[i]
+                            << " room(s)\n\n";
+                    }
+
+                    char choice = readLetterOrBack(
+                        'A', 'E',
+                        "reselect check-out date");
+                    if (choice == 'Z')
+                    {
+                        stage = STAGE_CHECKOUT;
+                        break;
+                    }
+
+                    int typeIndex = choice - 'A';
+
+                    if (avail[typeIndex] == 0)
+                    {
+                        cout << "\nSorry, no "
+                            << ROOM_TYPES[typeIndex].name
+                            << " rooms available.\n";
+                        continue;
+                    }
+
+                    int qty = readQuantityOrBack(
+                        avail[typeIndex],
+                        "reselect room type");
+                    if (qty == -1)
+                    {
+                        if (!selections.empty())
+                        {
+                            selections.pop_back();
+                        }
+                        continue;
+                    }
+
+                    selections.push_back({ typeIndex, qty });
+
+                    cout << "\nBook more rooms? (Y/N) "
+                        << "(Enter 0 to reselect the quantity "
+                        << "of the room type): ";
+                    string more;
+                    getline(cin, more);
+                    if (isGoBackInput(more))
+                    {
+                        if (!selections.empty())
+                        {
+                            selections.pop_back();
+                        }
+                        continue;
+                    }
+                    if (more != "Y" && more != "y")
+                    {
+                        stage = STAGE_ADDONS;
+                        break;
+                    }
+                }
+                break;
+            }
+            case STAGE_ADDONS:
+            {
+                while (true)
+                {
+                    clearScreen();
+                    cout << "\n====================================\n";
+                    cout << "     ADD-ON SERVICES\n";
+                    cout << "====================================\n";
+                    cout << "Select (A-C, Enter N to skip, Enter 0 to go back): ";
+                    string input;
+                    getline(cin, input);
+                    if (input == "N" || input == "n")
+                    {
+                        stage = STAGE_SUMMARY;
+                        break;
+                    }
+                    if (isGoBackInput(input))
+                    {
+                        stage = STAGE_ROOMS;
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+                stage = STAGE_EXIT;
+                break;
+            }
+        }
+
+        if (stage == STAGE_SUMMARY)
+        {
             // Build add-ons string for persistence
             string addonsString;
             for (size_t i = 0; i < addonSelections.size(); i++)
@@ -1905,6 +2063,7 @@ void viewPreviousBookings()
     {
         cout << "\n  No booking records found.\n";
         cout << "====================================\n";
+        EnterToContinue();
         return;
     }
 
@@ -1997,6 +2156,7 @@ void cancelBooking()
     {
         cout << "\n  No active bookings to cancel.\n";
         cout << "====================================\n";
+        EnterToContinue();
         return;
     }
 
