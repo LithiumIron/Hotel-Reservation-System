@@ -1038,6 +1038,23 @@ void bookingScreen()
                     << fixed << setprecision(2)
                     << addonTotal << "\n";
 
+                // Auto-advance when all 3 add-ons selected
+                bool allSelected = true;
+                for (int i = 0; i < NUM_ADDONS; i++)
+                {
+                    bool found = false;
+                    for (const SelectedAddOn& sel : addonSelections)
+                    {
+                        if (sel.addonIndex == i) { found = true; break; }
+                    }
+                    if (!found) { allSelected = false; break; }
+                }
+                if (allSelected)
+                {
+                    stage = STAGE_SUMMARY;
+                    break;
+                }
+
                 cout << "\nAdd more services? (Y/N) "
                     << "(Enter 0 to remove the "
                     << "last add-on): ";
