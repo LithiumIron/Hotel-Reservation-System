@@ -1004,13 +1004,21 @@ void bookingScreen()
 
                 int ai = upperInput - 'A';
 
-                // Add-on quantity is fixed to the total
-                // capacity of all booked rooms
+                // Add-on quantity:
+                //  - person-based (Breakfast, Gym): total guest capacity
+                //  - room-based (WiFi): total number of rooms
                 int qty = 0;
                 for (const SelectedRoom& sel : selections)
                 {
-                    qty += sel.quantity
-                        * ROOM_TYPES[sel.typeIndex].capacity;
+                    if (ADDONS[ai].unit == "room")
+                    {
+                        qty += sel.quantity;
+                    }
+                    else
+                    {
+                        qty += sel.quantity
+                            * ROOM_TYPES[sel.typeIndex].capacity;
+                    }
                 }
 
                 addonSelections.push_back({ ai, qty });
