@@ -565,7 +565,7 @@ namespace
     }
 
     // =========================================================================
-    // PAYMENT METHOD FUNCTIONS (High Cohesion, Low Coupling)
+    // PAYMENT METHOD FUNCTIONS 
     // =========================================================================
 
     bool processOnlineBankingPayment(
@@ -1129,7 +1129,7 @@ void saveAllBookings(const vector<Booking>& allBookings)
 }
 
 
-void bookingScreen()
+void bookingScreen(const string& customerId)
 {
     clearScreen();
     vector<Room> rooms;
@@ -1141,8 +1141,6 @@ void bookingScreen()
     {
         bookings.push_back(b);
     }
-
-    string customerId = loggedInUser;
 
     Date checkInDate;
     Date checkOutDate;
@@ -1772,10 +1770,10 @@ static void printBoxBorder()
     cout << "  +----------------------------------+\n";
 }
 
-void viewPreviousBookings()
+void viewPreviousBookings(const string& customerId)
 {
     clearScreen();
-    string customerId = loggedInUser;
+
 
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
@@ -1855,10 +1853,9 @@ void viewPreviousBookings()
     getline(cin, input);
 }
 
-void cancelBooking()
+void cancelBooking(const string& customerId)
 {
     clearScreen();
-    string customerId = loggedInUser;
 
     cout << "\n====================================\n";
     cout << "         CANCEL BOOKING\n";
