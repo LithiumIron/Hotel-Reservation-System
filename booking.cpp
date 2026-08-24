@@ -213,6 +213,31 @@ namespace
             || booking.status == "CHECKED_IN";
     }
 
+    // Prompts until a valid Y/N answer is given.
+    // Pressing 0 returns "0" so callers can treat it as go-back.
+    string readYesNoOrBack(const string& prompt)
+    {
+        while (true)
+        {
+            cout << prompt;
+            string ans;
+            getline(cin, ans);
+            if (isGoBackInput(ans))
+            {
+                return "0";
+            }
+            if (ans == "Y" || ans == "y")
+            {
+                return "Y";
+            }
+            if (ans == "N" || ans == "n")
+            {
+                return "N";
+            }
+            cout << "Invalid. Please enter Y or N.\n\n";
+        }
+    }
+
     bool datesOverlap(const Date& a1, const Date& a2,
         const Date& b1, const Date& b2)
     {
@@ -487,11 +512,10 @@ namespace
         const vector<SelectedAddOn>& addonSelections,
         int nights, double roomTotal, double addonTotal)
     {
-        cout << "\nWould you like to save a copy of this receipt to a file? (Y/N): ";
-        string saveChoice;
-        getline(cin, saveChoice);
+        string saveChoice = readYesNoOrBack(
+            "\nWould you like to save a copy of this receipt to a file? (Y/N): ");
 
-        if (saveChoice != "Y" && saveChoice != "y")
+        if (saveChoice != "Y")
         {
             return;
         }
@@ -666,13 +690,14 @@ namespace
             break;
         }
 
-        cout << "\n====================================\n";
-        cout << "  Confirm payment of RM" << fixed << setprecision(2)
-            << grandTotal << " via " << BANKS[bankIdx] << "? (Y/N): ";
-        string confirm;
-        getline(cin, confirm);
+        ostringstream confirmPrompt;
+        confirmPrompt << "\n====================================\n";
+        confirmPrompt << "  Confirm payment of RM" << fixed
+            << setprecision(2) << grandTotal << " via "
+            << BANKS[bankIdx] << "? (Y/N): ";
+        string confirm = readYesNoOrBack(confirmPrompt.str());
 
-        if (confirm == "Y" || confirm == "y")
+        if (confirm == "Y")
         {
             createBookingRecords(selections, checkInDate, checkOutDate, rooms, bookings, customerId, addonsString);
             cout << "\n====================================\n";
@@ -778,12 +803,13 @@ namespace
 
         readSixDigitPin("Enter 6-digit Wallet PIN: ");
 
-        cout << "\n====================================\n";
-        cout << "  Confirm payment of RM" << fixed << setprecision(2) << grandTotal << "? (Y/N): ";
-        string confirm;
-        getline(cin, confirm);
+        ostringstream confirmPrompt;
+        confirmPrompt << "\n====================================\n";
+        confirmPrompt << "  Confirm payment of RM" << fixed
+            << setprecision(2) << grandTotal << "? (Y/N): ";
+        string confirm = readYesNoOrBack(confirmPrompt.str());
 
-        if (confirm == "Y" || confirm == "y")
+        if (confirm == "Y")
         {
             createBookingRecords(selections, checkInDate, checkOutDate, rooms, bookings, customerId, addonsString);
             cout << "\n====================================\n";
@@ -959,12 +985,13 @@ namespace
 
         cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush leftover '\n'
 
-        cout << "\n====================================\n";
-        cout << "  Confirm payment of RM" << fixed << setprecision(2) << grandTotal << "? (Y/N): ";
-        string confirm;
-        getline(cin, confirm);
+        ostringstream confirmPrompt;
+        confirmPrompt << "\n====================================\n";
+        confirmPrompt << "  Confirm payment of RM" << fixed
+            << setprecision(2) << grandTotal << "? (Y/N): ";
+        string confirm = readYesNoOrBack(confirmPrompt.str());
 
-        if (confirm == "Y" || confirm == "y")
+        if (confirm == "Y")
         {
             createBookingRecords(selections, checkInDate, checkOutDate, rooms, bookings, customerId, addonsString);
             cout << "\n====================================\n";
@@ -1329,10 +1356,9 @@ void bookingScreen(const string& customerId)
                 cout << "  ----------------------\n";
                 cout << "  Total per night: RM" << fixed << setprecision(2) << total << "\n";
 
-                cout << "\nBook more rooms? (Y/N) (Enter 0 to reselect the quantity of the room type): ";
-                string more;
-                getline(cin, more);
-                if (isGoBackInput(more))
+                string more = readYesNoOrBack(
+                    "\nBook more rooms? (Y/N) (Enter 0 to reselect the quantity of the room type): ");
+                if (more == "0")
                 {
                     if (!selections.empty())
                     {
@@ -1341,7 +1367,7 @@ void bookingScreen(const string& customerId)
                     }
                     continue;
                 }
-                if (more != "Y" && more != "y")
+                if (more == "N")
                 {
                     stage = STAGE_ADDONS;
                     break;
@@ -1533,10 +1559,9 @@ void bookingScreen(const string& customerId)
                     break;
                 }
 
-                cout << "\nAdd more services? (Y/N) (Enter 0 to remove the last add-on): ";
-                string more;
-                getline(cin, more);
-                if (isGoBackInput(more))
+                string more = readYesNoOrBack(
+                    "\nAdd more services? (Y/N) (Enter 0 to remove the last add-on): ");
+                if (more == "0")
                 {
                     if (!addonSelections.empty())
                     {
@@ -1544,7 +1569,7 @@ void bookingScreen(const string& customerId)
                     }
                     continue;
                 }
-                if (more != "Y" && more != "y")
+                if (more == "N")
                 {
                     stage = STAGE_SUMMARY;
                     break;
@@ -1774,7 +1799,6 @@ void viewPreviousBookings(const string& customerId)
 {
     clearScreen();
 
-
     cout << "\n====================================\n";
     cout << "   PREVIOUS BOOKING RECORDS\n";
     cout << "====================================\n";
@@ -1967,11 +1991,9 @@ void cancelBooking(const string& customerId)
     const vector<Booking>& group = bookingsById[selectedId];
 
     cout << "\n  Cancel entire booking " << selectedId << " (" << group.size() << " room(s))?\n";
-    cout << "  Confirm (Y/N): ";
-    string confirm;
-    getline(cin, confirm);
+    string confirm = readYesNoOrBack("  Confirm (Y/N): ");
 
-    if (confirm == "Y" || confirm == "y")
+    if (confirm == "Y")
     {
         for (Booking& b : saved)
         {
