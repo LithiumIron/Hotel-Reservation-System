@@ -1,6 +1,7 @@
 #include "booking.h"
 #include "scheduler.h"
 #include "utilities.h"
+#include "vip.h"
 
 #include <algorithm>
 #include <cctype>
@@ -562,6 +563,7 @@ void saveReceiptToFile(
     const string& customerId,
     const Date& checkInDate, const Date& checkOutDate,
     const string& paymentMethod,
+    double subtotalBeforeDiscount, double vipDiscountAmount,
     double grandTotal,
     double amountPaid, double change, bool showAmountPaid,
     const vector<SelectedRoom>& selections,
@@ -597,6 +599,11 @@ void saveReceiptToFile(
     outFile << "  Check-in:  " << formatDate(checkInDate) << "\n";
     outFile << "  Check-out: " << formatDate(checkOutDate) << "\n";
     outFile << "  Payment: " << paymentMethod << "\n";
+    if (vipDiscountAmount > 0.0)
+    {
+        outFile << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+        outFile << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
+    }
     outFile << "  Amount: RM" << fixed << setprecision(2) << grandTotal << "\n";
 
     if (showAmountPaid)
@@ -1102,7 +1109,12 @@ void bookingScreen()
             double roomTotal = roomPerNight * nights;
             double addonTotal = addonPerDay * nights;
             double total = roomTotal + addonTotal;
-            double serviceAmount = total * SERVICE_CHARGE_RATE;
+
+            double subtotalBeforeDiscount = total;      // NEW: remember the pre-discount figure
+            applyVIPDiscount(total, customerId);        // NEW: mutates 'total' in place if VIP is active
+            double vipDiscountAmount = subtotalBeforeDiscount - total;   // NEW: how much was saved
+
+            double serviceAmount = total * SERVICE_CHARGE_RATE;   // now calculated on the discounted total
             double taxAmount = total * TAX_RATE;
             double grandTotal = total + serviceAmount + taxAmount;
    
@@ -1153,6 +1165,13 @@ void bookingScreen()
                 cout << "  --------------------------------\n";
                 cout << "  Add-on total: RM" << fixed
                     << setprecision(2) << addonTotal << "\n";
+            }
+
+            if (vipDiscountAmount > 0.0)
+            {
+                cout << "  --------------------------------\n";
+                cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+                cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
             }
 
             cout << "  ================================\n";
@@ -1351,6 +1370,14 @@ void bookingScreen()
                             cout << "  Add-on total: RM" << fixed
                                 << setprecision(2) << addonTotal << "\n";
                         }
+
+                        if (vipDiscountAmount > 0.0)
+                        {
+                            cout << "  --------------------------------\n";
+                            cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+                            cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
+                        }
+
                         cout << "  --------------------------------\n";
                         cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
@@ -1363,8 +1390,10 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            "E-Wallet", grandTotal, 0.0, 0.0, false,
+                            "E-Wallet", subtotalBeforeDiscount, vipDiscountAmount, 
+                            grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
+
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
                         cout << "  Press Enter to back to main menu: ";
                         string dummy;
@@ -1383,7 +1412,7 @@ void bookingScreen()
 
                 else if (payMethod == 'C')
                 {
-                    // ── E-Wallet Flow ──
+                    // ── Cash Payment Flow ──
                     cout << "\n====================================\n";
                     cout << "        CASH PAYMENT\n";
                     cout << "====================================\n";
@@ -1466,6 +1495,14 @@ void bookingScreen()
                             cout << "  Add-on total: RM" << fixed
                                 << setprecision(2) << addonTotal << "\n";
                         }
+
+                        if (vipDiscountAmount > 0.0)
+                        {
+                            cout << "  --------------------------------\n";
+                            cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+                            cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
+                        }
+
                         cout << "  --------------------------------\n";
                         cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
@@ -1482,7 +1519,8 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            "Cash", grandTotal, amountPaid, change, true,
+                            "Cash", subtotalBeforeDiscount, vipDiscountAmount, grandTotal,
+                            amountPaid, change, true,
                             selections, addonSelections, nights, roomTotal, addonTotal);
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
                         cout << "  Press Enter to back to main menu: ";
@@ -1502,24 +1540,25 @@ void bookingScreen()
 
                 else if (payMethod == 'D')
                 {
-                    // ── E-Wallet Flow ──
+                    // ── Card Payment Flow ──
                     cout << "\n====================================\n";
                     cout << "     CREDIT/DEBIT CARD PAYMENT\n";
                     cout << "====================================\n";
 
                     string cardNumber;
                     string pin;
-                    regex cardPattern = regex("[0-9]{16}");
+                    regex cardPattern = regex("[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}");
                     regex pinPattern = regex("[0-9]{6}");
 
                     do {
                         cout << "Enter 16-digit card number: ";
                         cin >> cardNumber;
 
-                        if (!regex_match(cardNumber, cardPattern))
+                        if (!regex_match(cardNumber, cardPattern)) {
                             cout << "Card number format incorrect (16-digits)" << endl;
-
-                    } while (!regex_match(cardNumber, cardPattern) || cardNumber.length() != 16);
+                            cout << "Format: XXXX-XXXX-XXXX-XXXX" << endl;
+                        }
+                    } while (!regex_match(cardNumber, cardPattern) || cardNumber.length() != 19);
 
                     do {
                         cout << "Enter card PIN: ";
@@ -1597,6 +1636,14 @@ void bookingScreen()
                             cout << "  Add-on total: RM" << fixed
                                 << setprecision(2) << addonTotal << "\n";
                         }
+
+                        if (vipDiscountAmount > 0.0)
+                        {
+                            cout << "  --------------------------------\n";
+                            cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+                            cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
+                        }
+
                         cout << "  --------------------------------\n";
                         cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
@@ -1609,8 +1656,10 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            "Credit/Debit Card", grandTotal, 0.0, 0.0, false,
+                            "Credit/Debit Card", subtotalBeforeDiscount, vipDiscountAmount,
+                            grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
+                        
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
                         cout << "  Press Enter to back to main menu: ";
                         string dummy;
@@ -1797,6 +1846,14 @@ void bookingScreen()
                             cout << "  Add-on total: RM" << fixed
                                 << setprecision(2) << addonTotal << "\n";
                         }
+
+                        if (vipDiscountAmount > 0.0)
+                        {
+                            cout << "  --------------------------------\n";
+                            cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
+                            cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
+                        }
+
                         cout << "  --------------------------------\n";
                         cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
@@ -1809,7 +1866,8 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            BANKS[bankIdx], grandTotal, 0.0, 0.0, false,
+                            BANKS[bankIdx], subtotalBeforeDiscount, vipDiscountAmount, 
+                            grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
                         cout << "  Press Enter to back to main menu: ";
