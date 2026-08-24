@@ -15,12 +15,13 @@ Date getCurrentSystemDate()
 {
     // Get current time from system
     time_t now = time(nullptr);
-    tm* localTime = localtime(&now);
+    tm localTime{};
+    localtime_s(&localTime, &now);
 
     Date today;
-    today.day = localTime->tm_mday;
-    today.month = localTime->tm_mon + 1;  // tm_mon is 0-11
-    today.year = localTime->tm_year + 1900;  // tm_year is years since 1900
+    today.day = localTime.tm_mday;
+    today.month = localTime.tm_mon + 1;
+    today.year = localTime.tm_year + 1900;
 
     return today;
 }

@@ -36,7 +36,16 @@ int readInteger(const string& prompt, int minimum, int maximum)
         }
 
         if (isGoBackInput(input))
-            return 0;
+        {
+            if (minimum <= 0 && maximum >= 0)
+            {
+                return 0;
+            }
+
+            cout << "Invalid input. Enter a number from "
+                << minimum << " to " << maximum << ".\n";
+            continue;
+        }
 
         try
         {
