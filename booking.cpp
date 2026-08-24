@@ -1004,22 +1004,19 @@ void bookingScreen()
 
                 int ai = upperInput - 'A';
 
-                // Add-on quantity
-                int qty = readQuantityOrBack(
-                    99, "reselect add-on");
-                if (qty == -1)
+                // Add-on quantity is fixed to the total
+                // capacity of all booked rooms
+                int qty = 0;
+                for (const SelectedRoom& sel : selections)
                 {
-                    if (!addonSelections.empty())
-                    {
-                        addonSelections.pop_back();
-                    }
-                    continue;
+                    qty += sel.quantity
+                        * ROOM_TYPES[sel.typeIndex].capacity;
                 }
 
                 addonSelections.push_back({ ai, qty });
 
                 cout << "\n  >> Selected: " << qty << "x "
-                    << ADDONS[ai].name
+                    << ADDONS[ai].name << " x" << qty
                     << " (RM" << fixed << setprecision(2)
                     << ADDONS[ai].pricePerUnit << "/"
                     << ADDONS[ai].unit << "/day)\n";
@@ -1042,8 +1039,8 @@ void bookingScreen()
                     << addonTotal << "\n";
 
                 cout << "\nAdd more services? (Y/N) "
-                    << "(Enter 0 to reselect the quantity "
-                    << "of the add-on): ";
+                    << "(Enter 0 to remove the "
+                    << "last add-on): ";
                 string more;
                 getline(cin, more);
                 if (isGoBackInput(more))
@@ -1160,7 +1157,7 @@ void bookingScreen()
                         << "\n";
                     cout << "     RM" << fixed << setprecision(2)
                         << perDay << "/day x " << nights
-                        << " nights = RM" << lineTotal << "\n";
+                        << " day(s) = RM" << lineTotal << "\n";
                 }
                 cout << "  --------------------------------\n";
                 cout << "  Add-on total: RM" << fixed
@@ -1193,8 +1190,8 @@ void bookingScreen()
             }
             else
             {
-                cout << "\n  Enter 0 to reselect the quantity "
-                    << "of the add-on, "
+                cout << "\n  Enter 0 to remove the "
+                    << "last add-on, "
                     << "or press Enter to continue: ";
             }
             string zInput;
