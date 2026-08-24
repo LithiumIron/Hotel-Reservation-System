@@ -1115,7 +1115,7 @@ void bookingScreen()
             double serviceAmount = total * SERVICE_CHARGE_RATE;   // now calculated on the discounted total
             double taxAmount = total * TAX_RATE;
             double grandTotal = total + serviceAmount + taxAmount;
-   
+
 
             cout << "\n====================================\n";
             cout << "       BOOKING SUMMARY\n";
@@ -1388,7 +1388,7 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            "E-Wallet", subtotalBeforeDiscount, vipDiscountAmount, 
+                            "E-Wallet", subtotalBeforeDiscount, vipDiscountAmount,
                             grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
 
@@ -1414,127 +1414,21 @@ void bookingScreen()
                     cout << "\n====================================\n";
                     cout << "        CASH PAYMENT\n";
                     cout << "====================================\n";
+                    cout << "  Please pay at the counter. Thanks.\n";
+                    cout << "====================================\n";
 
-                    double cashGiven;
-                    do {                                 // REPETITION: keep asking until sufficient
-                        cout << "Total due is RM " << fixed << setprecision(2) << grandTotal
-                            << "." << "\nEnter cash received : RM ";
-                        cin >> cashGiven;
-                        if (cin.eof()) exit(0);
-                        if (cin.fail()) { cin.clear(); cin.ignore(1000, '\n'); cashGiven = 0; }
-                        if (cashGiven < grandTotal) {
-                            cout << "Insufficient amount! Please enter an amount greater or equal to RM "
-                                << fixed << setprecision(2) << grandTotal << "\n";
-                        }
-                    } while (cashGiven < grandTotal);
+                    createBookingRecords(
+                        selections,
+                        checkInDate, checkOutDate,
+                        rooms, bookings, customerId,
+                        addonsString);
 
-                    double amountPaid = cashGiven;
-                    double change = cashGiven - grandTotal;
-                    cout << "Payment accepted. Change due: RM "
-                        << fixed << setprecision(2) << change << "\n";
+                    cout << "  Press Enter to back to main menu: ";
+                    string dummy;
+                    getline(cin, dummy);
+                    return;
+}
 
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-                    // Confirmation
-                    cout << "\n====================================\n";
-                    cout << "  Confirm payment of RM"
-                        << fixed << setprecision(2)
-                        << grandTotal << "? (Y/N): ";
-                    string confirm;
-                    getline(cin, confirm);
-
-                    if (confirm == "Y" || confirm == "y")
-                    {
-                        createBookingRecords(
-                            selections,
-                            checkInDate, checkOutDate,
-                            rooms, bookings, customerId,
-                            addonsString);
-                        cout << "\n====================================\n";
-                        cout << "           RECEIPT\n";
-                        cout << "====================================\n";
-                        cout << "  Guest: " << customerId << "\n";
-                        cout << "  Check-in:  "
-                            << formatDate(checkInDate) << "\n";
-                        cout << "  Check-out: "
-                            << formatDate(checkOutDate) << "\n";
-                        cout << "  Payment: Cash\n";
-                        cout << "  --------------------------------\n";
-                        cout << "  ROOMS: " << "\n";
-                        for (const SelectedRoom& sel : selections)
-                        {
-                            double perNight = sel.quantity
-                                * ROOM_TYPES[sel.typeIndex].price;
-                            double lineTotal = perNight * nights;
-                            cout << "  " << sel.quantity << "x "
-                                << ROOM_TYPES[sel.typeIndex].name
-                                << "\n";
-                            cout << "     RM" << lineTotal << "\n";
-                        }
-                        cout << "  --------------------------------\n";
-                        cout << "  Room total: RM" << fixed
-                            << setprecision(2) << roomTotal << "\n";
-
-                        if (!addonSelections.empty())
-                        {
-                            cout << "  --------------------------------\n";
-                            cout << "  ADD-ONS:\n";
-                            for (const SelectedAddOn& sel : addonSelections)
-                            {
-                                double perDay = sel.quantity
-                                    * ADDONS[sel.addonIndex].pricePerUnit;
-                                double lineTotal = perDay * nights;
-                                cout << "  " << sel.quantity << "x "
-                                    << ADDONS[sel.addonIndex].name
-                                    << "\n";
-                                cout << "     RM" << lineTotal << "\n";
-                            }
-                            cout << "  --------------------------------\n";
-                            cout << "  Add-on total: RM" << fixed
-                                << setprecision(2) << addonTotal << "\n";
-                        }
-
-                        if (vipDiscountAmount > 0.0)
-                        {
-                            cout << "  --------------------------------\n";
-                            cout << "  Subtotal: RM" << fixed << setprecision(2) << subtotalBeforeDiscount << "\n";
-                            cout << "  VIP Discount: - RM" << fixed << setprecision(2) << vipDiscountAmount << "\n";
-                        }
-
-                        cout << "  --------------------------------\n";
-                        cout << "  Service Charge (8%) : RM" << fixed
-                            << setprecision(2) << serviceAmount << "\n";
-                        cout << "  Government Tax (6%) : RM" << fixed
-                            << setprecision(2) << taxAmount << "\n";
-                        cout << "  Amount: RM" << fixed
-                            << setprecision(2) << grandTotal
-                            << "\n";
-                        cout << "  Amount Received: RM" << fixed
-                            << setprecision(2) << amountPaid << "\n";
-                        cout << "  Change Due: RM" << fixed
-                            << setprecision(2) << change << "\n";
-                        cout << "  --------------------------------\n";
-                        cout << "  Status: CONFIRMED\n";
-                        cout << "====================================\n";
-                        saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            "Cash", subtotalBeforeDiscount, vipDiscountAmount, grandTotal,
-                            amountPaid, change, true,
-                            selections, addonSelections, nights, roomTotal, addonTotal);
-                        cout << "\n  *** BOOKING SUCCESSFUL ***\n";
-                        cout << "  Press Enter to back to main menu: ";
-                        string dummy;
-                        getline(cin, dummy);
-                        return;
-                    }
-
-                    else
-                    {
-                        cout << "\n  Payment cancelled.\n";
-                        cout << "  Your booking was NOT "
-                            << "confirmed.\n";
-                        cout << "====================================\n";
-                    }
-                }
 
                 else if (payMethod == 'D')
                 {
@@ -1543,36 +1437,85 @@ void bookingScreen()
                     cout << "     CREDIT/DEBIT CARD PAYMENT\n";
                     cout << "====================================\n";
 
-                    string cardNumber;
-                    string pin;
+                    string cardNumber, expiry, cvv, pin;
                     regex cardPattern = regex("[0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}");
                     regex pinPattern = regex("[0-9]{6}");
+                    bool validCardPayment = false;
 
-                    do {
-                        cout << "Enter 16-digit card number: ";
-                        cin >> cardNumber;
+                    while (!validCardPayment)
+                    {
+                        // Card number
+                        cout << "Enter Card Number (XXXX-XXXX-XXXX-XXXX): ";
+                        getline(cin, cardNumber);
 
-                        if (!regex_match(cardNumber, cardPattern)) {
-                            cout << "Card number format incorrect (16-digits)" << endl;
-                            cout << "Format: XXXX-XXXX-XXXX-XXXX" << endl;
+                        if (!regex_match(cardNumber, cardPattern))
+                        {
+                            cout << "Invalid card number format.\n";
+                            cout << "Please use XXXX-XXXX-XXXX-XXXX.\n";
+                            continue;
                         }
-                    } while (!regex_match(cardNumber, cardPattern) || cardNumber.length() != 19);
 
-                    do {
+                        // Expiry
+                        cout << "Expiry (MM/YY): ";
+                        getline(cin, expiry);
+
+                        if (expiry.length() != 5 || expiry[2] != '/'
+                            || !isdigit((unsigned char)expiry[0])
+                            || !isdigit((unsigned char)expiry[1])
+                            || !isdigit((unsigned char)expiry[3])
+                            || !isdigit((unsigned char)expiry[4]))
+                        {
+                            cout << "Invalid expiry format. Please use MM/YY.\n";
+                            continue;
+                        }
+
+                        int month = stoi(expiry.substr(0, 2));
+                        if (month < 1 || month > 12)
+                        {
+                            cout << "Invalid expiry month.\n";
+                            continue;
+                        }
+
+                        int year = stoi(expiry.substr(3, 2));
+                        if (year <= 25)
+                        {
+                            cout << "Card is expired.\n";
+                            continue;
+                        }
+
+                        // CVV
+                        cout << "CVV: ";
+                        getline(cin, cvv);
+
+                        bool validCVV = (cvv.length() == 3);
+                        for (char c : cvv)
+                        {
+                            if (!isdigit((unsigned char)c)) validCVV = false;
+                        }
+
+                        if (!validCVV)
+                        {
+                            cout << "Invalid CVV. CVV must contain 3 digits.\n";
+                            continue;
+                        }
+
+                        // Card Pin number
                         cout << "Enter card PIN: ";
                         cin >> pin;
 
 
                         if (!regex_match(pin, pinPattern) || pin.length() != 6) {
-                            cout << "Pin number should only 6-digits" << endl;
+                            cout << "Pin number should only 6-digits.\n";
+                            continue;
                         }
                         else {
                             cout << "Processing card payment... \n";
-                            
-                        }
-                    } while (!regex_match(pin, pinPattern) || pin.length() != 6);
 
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                        }
+                        validCardPayment = true;
+                    }
+
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');   // flush leftover '\n'
 
                     double amountPaid = grandTotal;
                     double change = 0.0;
@@ -1657,7 +1600,7 @@ void bookingScreen()
                             "Credit/Debit Card", subtotalBeforeDiscount, vipDiscountAmount,
                             grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
-                        
+
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
                         cout << "  Press Enter to back to main menu: ";
                         string dummy;
@@ -1864,7 +1807,7 @@ void bookingScreen()
                         cout << "  Status: CONFIRMED\n";
                         cout << "====================================\n";
                         saveReceiptToFile(customerId, checkInDate, checkOutDate,
-                            BANKS[bankIdx], subtotalBeforeDiscount, vipDiscountAmount, 
+                            BANKS[bankIdx], subtotalBeforeDiscount, vipDiscountAmount,
                             grandTotal, 0.0, 0.0, false,
                             selections, addonSelections, nights, roomTotal, addonTotal);
                         cout << "\n  *** BOOKING SUCCESSFUL ***\n";
