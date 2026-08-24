@@ -1156,7 +1156,7 @@ void bookingScreen()
             }
 
             cout << "  ================================\n";
-            cout << "  Service Charge (8%): RM" << fixed
+            cout << "  Service Charge (8%) : RM" << fixed
                 << setprecision(2) << serviceAmount << "\n";
             cout << "  Government Tax (6%) : RM" << fixed
                 << setprecision(2) << taxAmount << "\n";
@@ -1352,7 +1352,7 @@ void bookingScreen()
                                 << setprecision(2) << addonTotal << "\n";
                         }
                         cout << "  --------------------------------\n";
-                        cout << "  Service Charge (8%): RM" << fixed
+                        cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
                         cout << "  Government Tax (6%) : RM" << fixed
                             << setprecision(2) << taxAmount << "\n";
@@ -1467,7 +1467,7 @@ void bookingScreen()
                                 << setprecision(2) << addonTotal << "\n";
                         }
                         cout << "  --------------------------------\n";
-                        cout << "  Service Charge (8%): RM" << fixed
+                        cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
                         cout << "  Government Tax (6%) : RM" << fixed
                             << setprecision(2) << taxAmount << "\n";
@@ -1598,7 +1598,7 @@ void bookingScreen()
                                 << setprecision(2) << addonTotal << "\n";
                         }
                         cout << "  --------------------------------\n";
-                        cout << "  Service Charge (8%): RM" << fixed
+                        cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
                         cout << "  Government Tax (6%) : RM" << fixed
                             << setprecision(2) << taxAmount << "\n";
@@ -1798,7 +1798,7 @@ void bookingScreen()
                                 << setprecision(2) << addonTotal << "\n";
                         }
                         cout << "  --------------------------------\n";
-                        cout << "  Service Charge (8%): RM" << fixed
+                        cout << "  Service Charge (8%) : RM" << fixed
                             << setprecision(2) << serviceAmount << "\n";
                         cout << "  Government Tax (6%) : RM" << fixed
                             << setprecision(2) << taxAmount << "\n";
