@@ -100,7 +100,7 @@ void mainMenu(int role, string &username)
             cout << "====================================\n";
 
             int choice = readInteger(
-                "Enter your choice: ", 0, 9);
+                "Enter your choice: ", 0, 6);
 
             if (choice == 0){
                 username.clear();
