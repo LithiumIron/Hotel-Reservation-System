@@ -9,7 +9,7 @@ int readInteger(const std::string& prompt, int minimum, int maximum);
 // Returns true if the user entered 0 (go back). Case-safe.
 bool isGoBackInput(const std::string& input);
 
-bool login(int role, string &loggedInUser);
+bool login(int role, std::string &loggedInUser);
 
 void roleSelection();
 

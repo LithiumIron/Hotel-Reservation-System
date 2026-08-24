@@ -108,9 +108,9 @@ void mainMenu(int role, string &username)
             }
 
             if (choice == 1) viewCustomerProfile(username);
-            else if (choice == 2) bookingScreen();
-            else if (choice == 3) viewPreviousBookings();
-            else if (choice == 4) cancelBooking();
+            else if (choice == 2) bookingScreen(username);
+            else if (choice == 3) viewPreviousBookings(username);
+            else if (choice == 4) cancelBooking(username);
             else if (choice == 5)
             {
                 vector<Room> rooms;
