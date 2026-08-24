@@ -1449,7 +1449,7 @@ void bookingScreen(const string& customerId)
                 }
                 else
                 {
-                    cout << "Select (A-C, Enter N to skip add-ons, Enter 0 to remove the last add-on): ";
+                    cout << "Select (A-C, Enter N to skip add-ons, Enter 0 to cancel the previous add-on): ";
                 }
                 string input;
                 getline(cin, input);
@@ -1560,7 +1560,7 @@ void bookingScreen(const string& customerId)
                 }
 
                 string more = readYesNoOrBack(
-                    "\nAdd more services? (Y/N) (Enter 0 to remove the last add-on): ");
+                    "\nAdd more services? (Y/N) (Enter 0 to cancel the previous add-on): ");
                 if (more == "0")
                 {
                     if (!addonSelections.empty())
@@ -1686,7 +1686,7 @@ void bookingScreen(const string& customerId)
             }
             else
             {
-                cout << "\n  Enter 0 to remove the last add-on, or press Enter to continue: ";
+                cout << "\n  Enter 0 to cancel the previous add-on, or press Enter to continue: ";
             }
             string zInput;
             getline(cin, zInput);
