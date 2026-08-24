@@ -60,7 +60,7 @@ void mainMenu(int role, string &username)
             // Manager menu (numbered)
             cout << "[1] View Profile\n";
             cout << "[2] View Schedule\n";
-            cout << "[3] Customer Details\n";
+            cout << "[3] View All Customer Details\n";
             cout << "[4] Report Management\n";
             cout << "[0] Return\n";
             cout << "====================================\n";
