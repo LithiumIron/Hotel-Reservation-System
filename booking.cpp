@@ -256,11 +256,10 @@ namespace
 
     const AddOnOption ADDONS[] = {
         { "Buffet Breakfast", "person", 35.0 },
-        { "Extra Bed", "bed", 10.0 },
         { "Gym & Pool VIP Pass", "person", 20.0 },
         { "High-Speed WiFi", "room", 40.0 }
     };
-    const int NUM_ADDONS = 4;
+    const int NUM_ADDONS = 3;
 
     struct SelectedAddOn
     {
@@ -972,7 +971,7 @@ void bookingScreen()
                 }
 
                 // Add-on selection with N to skip
-                cout << "Select (A-D, Enter N to skip "
+                cout << "Select (A-C, Enter N to skip "
                     << "add-ons, Enter 0 to reselect "
                     << "the quantity of the room type): ";
                 string input;
@@ -991,15 +990,15 @@ void bookingScreen()
                 if (input.length() != 1)
                 {
                     cout << "Invalid. Please enter "
-                        << "A-D, N, or 0.\n";
+                        << "A-C, N, or 0.\n";
                     continue;
                 }
 
                 char upperInput = toupper(input[0]);
-                if (upperInput < 'A' || upperInput > 'D')
+                if (upperInput < 'A' || upperInput > 'C')
                 {
                     cout << "Invalid. Please enter "
-                        << "A-D, N, or Z.\n";
+                        << "A-C, N, or Z.\n";
                     continue;
                 }
 

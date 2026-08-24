@@ -137,7 +137,7 @@
   <ItemGroup>
     <ClCompile Include="booking.cpp" />
     <ClCompile Include="customer.cpp" />
-    <ClCompile Include="employee.cpp" />
+    <ClCompile Include="manager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="report.cpp" />
     <ClCompile Include="scheduler.cpp" />
