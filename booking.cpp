@@ -1870,11 +1870,8 @@ void bookingScreen(const string& customerId)
                     nights++;
                     temp = addDays(temp, 1);
                 }
-<<<<<<< HEAD
                 bookingScreen(customerId);  // restart booking flow
                 return;
-=======
->>>>>>> e5929c54b47cea532c3fb0671e647de65989a347
             }
 
             double roomPerNight = 0;
