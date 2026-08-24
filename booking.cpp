@@ -61,13 +61,19 @@ namespace
     }
 
     Date readDate(const string& heading,
-        const string& backLabel)
+        const string& backLabel,
+        const Date* defaultValue = nullptr)
     {
         while (true)
         {
             cout << '\n' << heading
                 << "  (Enter 0 to "
                 << backLabel << ")\n";
+            if (defaultValue != nullptr)
+            {
+                cout << "Press Enter to keep "
+                    << formatDate(*defaultValue) << "\n";
+            }
             cout << "Enter date (DD/MM/YYYY): ";
             string input;
             getline(cin, input);
@@ -75,6 +81,12 @@ namespace
             if (isGoBackInput(input))
             {
                 return GO_BACK;
+            }
+
+            // Keep the existing date when the user just presses Enter
+            if (input.empty() && defaultValue != nullptr)
+            {
+                return *defaultValue;
             }
 
             if (input.length() != 10
@@ -116,11 +128,12 @@ namespace
     }
 
     Date readCurrentOrFutureDate(const string& heading,
-        const string& backLabel)
+        const string& backLabel,
+        const Date* defaultValue = nullptr)
     {
         while (true)
         {
-            Date date = readDate(heading, backLabel);
+            Date date = readDate(heading, backLabel, defaultValue);
             if (isGoBack(date))
             {
                 return date;
@@ -679,6 +692,7 @@ void bookingScreen()
     vector<SelectedAddOn> addonSelections;
 
     BookingStage stage = STAGE_CHECKIN;
+    bool checkInSet = false;
 
     // Totals shared by the summary, payment and receipt sections below
     int nights = 0;
@@ -697,13 +711,15 @@ void bookingScreen()
         {
             checkInDate =
                 readCurrentOrFutureDate(
-                    "Check-in Date", "main menu");
+                    "Check-in Date", "main menu",
+                    checkInSet ? &checkInDate : nullptr);
             if (isGoBack(checkInDate))
             {
                 stage = STAGE_EXIT;  // Z → main menu
             }
             else
             {
+                checkInSet = true;
                 stage = STAGE_CHECKOUT;
             }
             break;
@@ -739,6 +755,44 @@ void bookingScreen()
             while (true)
             {
                 clearScreen();
+
+                // Rebuild session holds so availability always
+                // reflects the current selection list. Holds are
+                // never saved - they vanish before payment.
+                bookings.erase(
+                    remove_if(bookings.begin(), bookings.end(),
+                        [](const Booking& b)
+                        { return b.bookingId == "HOLD"; }),
+                    bookings.end());
+                for (const SelectedRoom& sel : selections)
+                {
+                    int held = 0;
+                    for (const Room& room : rooms)
+                    {
+                        if (room.roomType
+                            != ROOM_TYPES[sel.typeIndex].name)
+                            continue;
+                        if (!isRoomAvailable(bookings,
+                            room.roomId,
+                            checkInDate, checkOutDate))
+                            continue;
+
+                        Booking hold;
+                        hold.bookingId = "HOLD";
+                        hold.customerId = customerId;
+                        hold.roomId = room.roomId;
+                        hold.bookingDate = SYSTEM_DATE;
+                        hold.checkInDate = checkInDate;
+                        hold.checkOutDate = checkOutDate;
+                        hold.expiryDate = checkOutDate;
+                        hold.status = "CONFIRMED";
+                        hold.paid = false;
+                        bookings.push_back(hold);
+                        held++;
+                        if (held >= sel.quantity) break;
+                    }
+                }
+
                 cout << "\n====================================\n";
                 cout << "  Stay: " << formatDate(checkInDate)
                     << " to " << formatDate(checkOutDate)
@@ -790,10 +844,11 @@ void bookingScreen()
 
                 char choice = readLetterOrBack(
                     'A', 'E',
-                    "reselect check-out date");
+                    "reselect dates");
                 if (choice == 'Z')
                 {
-                    stage = STAGE_CHECKOUT;
+                    clearScreen();
+                    stage = STAGE_CHECKIN;
                     break;
                 }
 
@@ -821,33 +876,6 @@ void bookingScreen()
                 }
 
                 selections.push_back({ typeIndex, qty });
-
-                // Fake-hold: add temp bookings so the next availability
-                // count reflects this session's picks. These are never
-                // saved - they vanish if the user exits before payment.
-                int held = 0;
-                for (const Room& room : rooms)
-                {
-                    if (room.roomType != ROOM_TYPES[typeIndex].name)
-                        continue;
-                    if (!isRoomAvailable(bookings, room.roomId,
-                        checkInDate, checkOutDate))
-                        continue;
-
-                    Booking hold;
-                    hold.bookingId = "HOLD";
-                    hold.customerId = customerId;
-                    hold.roomId = room.roomId;
-                    hold.bookingDate = SYSTEM_DATE;
-                    hold.checkInDate = checkInDate;
-                    hold.checkOutDate = checkOutDate;
-                    hold.expiryDate = checkOutDate;
-                    hold.status = "CONFIRMED";
-                    hold.paid = false;
-                    bookings.push_back(hold);
-                    held++;
-                    if (held >= qty) break;
-                }
 
                 cout << "\n  >> Selected: " << qty << "x "
                     << ROOM_TYPES[typeIndex].name << "\n";
@@ -1276,6 +1304,44 @@ void bookingScreen()
                 while (true)
                 {
                     clearScreen();
+
+                    // Rebuild session holds so availability always
+                    // reflects the current selection list. Holds are
+                    // never saved - they vanish before payment.
+                    bookings.erase(
+                        remove_if(bookings.begin(), bookings.end(),
+                            [](const Booking& b)
+                            { return b.bookingId == "HOLD"; }),
+                        bookings.end());
+                    for (const SelectedRoom& sel : selections)
+                    {
+                        int held = 0;
+                        for (const Room& room : rooms)
+                        {
+                            if (room.roomType
+                                != ROOM_TYPES[sel.typeIndex].name)
+                                continue;
+                            if (!isRoomAvailable(bookings,
+                                room.roomId,
+                                checkInDate, checkOutDate))
+                                continue;
+
+                            Booking hold;
+                            hold.bookingId = "HOLD";
+                            hold.customerId = customerId;
+                            hold.roomId = room.roomId;
+                            hold.bookingDate = SYSTEM_DATE;
+                            hold.checkInDate = checkInDate;
+                            hold.checkOutDate = checkOutDate;
+                            hold.expiryDate = checkOutDate;
+                            hold.status = "CONFIRMED";
+                            hold.paid = false;
+                            bookings.push_back(hold);
+                            held++;
+                            if (held >= sel.quantity) break;
+                        }
+                    }
+
                     cout << "\n====================================\n";
                     cout << "  Stay: " << formatDate(checkInDate)
                         << " to " << formatDate(checkOutDate)
@@ -1327,10 +1393,11 @@ void bookingScreen()
 
                     char choice = readLetterOrBack(
                         'A', 'E',
-                        "reselect check-out date");
+                        "reselect dates");
                     if (choice == 'Z')
                     {
-                        stage = STAGE_CHECKOUT;
+                        clearScreen();
+                        stage = STAGE_CHECKIN;
                         break;
                     }
 
@@ -1357,32 +1424,6 @@ void bookingScreen()
                     }
 
                     selections.push_back({ typeIndex, qty });
-
-                    // Fake-hold: add temp bookings so the next availability
-                    // count reflects this session's picks.
-                    int held = 0;
-                    for (const Room& room : rooms)
-                    {
-                        if (room.roomType != ROOM_TYPES[typeIndex].name)
-                            continue;
-                        if (!isRoomAvailable(bookings, room.roomId,
-                            checkInDate, checkOutDate))
-                            continue;
-
-                        Booking hold;
-                        hold.bookingId = "HOLD";
-                        hold.customerId = customerId;
-                        hold.roomId = room.roomId;
-                        hold.bookingDate = SYSTEM_DATE;
-                        hold.checkInDate = checkInDate;
-                        hold.checkOutDate = checkOutDate;
-                        hold.expiryDate = checkOutDate;
-                        hold.status = "CONFIRMED";
-                        hold.paid = false;
-                        bookings.push_back(hold);
-                        held++;
-                        if (held >= qty) break;
-                    }
 
                     cout << "\n  >> Selected: " << qty << "x "
                         << ROOM_TYPES[typeIndex].name << "\n";
