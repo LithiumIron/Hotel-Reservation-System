@@ -501,11 +501,11 @@ void editCustomerProfile()
         {
             if (choice == 1 || choice == 3)
             {
-                user.second = newPassword;
+                user.first = newUsername;
             }
             if (choice == 2 || choice == 3)
             {
-                user.first = newUsername;
+                user.second = newPassword;
             }
             break;
         }
@@ -526,14 +526,14 @@ void editCustomerProfile()
     outFile.close();
 
     // Update loggedInUser if username changed
-    if (choice == 2 || choice == 3)
+    if (choice == 1 || choice == 3)
         loggedInUser = newUsername;
 
     cout << "\nProfile updated successfully!\n";
     
-    if (choice == 1 || choice == 3)
-        cout << "Password changed.\n";
     if (choice == 2 || choice == 3)
+        cout << "Password changed.\n";
+    if (choice == 1 || choice == 3)
         cout << "Username changed to: " << newUsername << "\n";
     
     cout << "====================================\n";
