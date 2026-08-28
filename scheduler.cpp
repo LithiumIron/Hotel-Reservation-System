@@ -11,9 +11,9 @@
 
 using namespace std;
 
+// Get today's date from the system
 Date getCurrentSystemDate()
 {
-    // Get current time from system
     time_t now = time(nullptr);
     tm localTime{};
     localtime_s(&localTime, &now);
@@ -25,23 +25,29 @@ Date getCurrentSystemDate()
 
     return today;
 }
+
+// System display and date settings
 const int UI_WIDTH = 82;
 const int CUSTOMER_MIN_YEAR = 2026;
 const int MANAGER_MIN_YEAR = 2020;
 const int MAX_SCHEDULE_YEAR = 2028;
 const Date SYSTEM_DATE= getCurrentSystemDate();
+
+// Booking status values
 const string STATUS_PENDING = "PENDING";
 const string STATUS_CONFIRMED = "CONFIRMED";
 const string STATUS_CHECKED_IN = "CHECKED_IN";
 const string STATUS_CANCELLED = "CANCELLED";
 const string STATUS_COMPLETED = "COMPLETED";
 
+// Room type names
 const string ROOM_SS = "Standard Single";
 const string ROOM_SD = "Standard Double";
 const string ROOM_DQ = "Deluxe Queen";
 const string ROOM_FS = "Family Suite";
 const string ROOM_PS = "Presidential Suite";
 
+// Center text within a given width
 string centeredText(const string& text, int width)
 {
     if (static_cast<int>(text.length()) >= width)
@@ -53,6 +59,7 @@ string centeredText(const string& text, int width)
         + string(width - leftPadding - static_cast<int>(text.length()), ' ');
 }
 
+// Display a formatted banner
 void printBanner(const string& title, const string& subtitle = "")
 {
     cout << '\n' << '+' << string(UI_WIDTH - 2, '=') << "+\n";
@@ -65,6 +72,7 @@ void printBanner(const string& title, const string& subtitle = "")
     cout << '+' << string(UI_WIDTH - 2, '=') << "+\n";
 }
 
+// Display a menu option
 void printMenuOption(int option, const string& title, const string& description)
 {
     ostringstream label;
@@ -73,12 +81,14 @@ void printMenuOption(int option, const string& title, const string& description)
             << setw(UI_WIDTH - 36) << description << "|\n";
 }
 
+// Create a simple occupancy bar
 string occupancyBar(int percentage, int width = 20)
 {
     int filled = percentage * width / 100;
     return "[" + string(filled, '#') + string(width - filled, '.') + "]";
 }
 
+// Display a result message
 void printResultPanel(const string& label, const string& message)
 {
     cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
@@ -87,6 +97,7 @@ void printResultPanel(const string& label, const string& message)
     cout << '+' << string(UI_WIDTH - 2, '-') << "+\n";
 }
 
+// Check if a booking blocks a room
 bool isRoomBlocked(const Booking& booking)
 {
     return booking.status == STATUS_PENDING
@@ -94,6 +105,7 @@ bool isRoomBlocked(const Booking& booking)
         || booking.status == STATUS_CHECKED_IN;
 }
 
+// Check if a booking occupies a date
 bool bookingOccupiesDate(const Booking& booking, const Date& date)
 {
     return booking.status != STATUS_CANCELLED
@@ -101,6 +113,7 @@ bool bookingOccupiesDate(const Booking& booking, const Date& date)
         && compareDates(date, booking.checkOutDate) < 0;
 }
 
+// Check if two booking periods overlap
 bool dateRangesOverlap(const Date& firstCheckIn, const Date& firstCheckOut,
     const Date& secondCheckIn, const Date& secondCheckOut)
 {
@@ -108,6 +121,7 @@ bool dateRangesOverlap(const Date& firstCheckIn, const Date& firstCheckOut,
         && compareDates(secondCheckIn, firstCheckOut) < 0;
 }
 
+// Check if a room is available for a stay
 bool roomAvailableForStay(const vector<Booking>& bookings,
     const string& roomId, const Date& checkInDate, const Date& checkOutDate)
 {
@@ -123,6 +137,7 @@ bool roomAvailableForStay(const vector<Booking>& bookings,
     return true;
 }
 
+// Find the booking for a room on a date
 const Booking* findBookingForRoom(const vector<Booking>& bookings,
     const string& roomId, const Date& date)
 {
@@ -136,6 +151,7 @@ const Booking* findBookingForRoom(const vector<Booking>& bookings,
     return nullptr;
 }
 
+// Count occupied rooms on a date
 int countOccupiedRooms(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& date)
 {
@@ -150,7 +166,7 @@ int countOccupiedRooms(const vector<Booking>& bookings,
     return occupiedRooms;
 }
 
-
+// Read and validate a date
 Date readDate(const string& heading, int minimumYear, int maximumYear)
 {
     while (true)
@@ -171,6 +187,7 @@ Date readDate(const string& heading, int minimumYear, int maximumYear)
     }
 }
 
+// Read a current or future date
 Date readCurrentOrFutureDate(const string& heading)
 {
     while (true)
@@ -185,6 +202,7 @@ Date readCurrentOrFutureDate(const string& heading)
     }
 }
 
+// Read and validate a room ID
 string readRoomId(const vector<Room>& rooms)
 {
     while (true)
@@ -209,6 +227,7 @@ string readRoomId(const vector<Room>& rooms)
     }
 }
 
+// Get the day index for a date
 int dayIndexForDate(const Date& date)
 {
     static const int offsets[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
@@ -221,6 +240,7 @@ int dayIndexForDate(const Date& date)
         + offsets[date.month - 1] + date.day) % 7;
 }
 
+// Get the short name of a day
 string dayName(const Date& date)
 {
     static const string names[] =
@@ -228,12 +248,13 @@ string dayName(const Date& date)
     return names[dayIndexForDate(date)];
 }
 
-
+// Check if a year is a leap year
 bool isLeapYear(int year)
 {
     return year % 400 == 0 || (year % 4 == 0 && year % 100 != 0);
 }
 
+// Get the number of days in a month
 int daysInMonth(int month, int year)
 {
     static const int days[] = { 31, 28, 31, 30, 31, 30,
@@ -249,12 +270,14 @@ int daysInMonth(int month, int year)
     return days[month - 1];
 }
 
+// Check if a date is valid
 bool isValidDate(const Date& date)
 {
     return date.year >= 1 && date.month >= 1 && date.month <= 12
         && date.day >= 1 && date.day <= daysInMonth(date.month, date.year);
 }
 
+// Compare two dates
 int compareDates(const Date& firstDate, const Date& secondDate)
 {
     if (firstDate.year != secondDate.year)
@@ -272,6 +295,7 @@ int compareDates(const Date& firstDate, const Date& secondDate)
     return 0;
 }
 
+// Add days to a date
 Date addDays(const Date& date, int numberOfDays)
 {
     Date result = date;
@@ -292,6 +316,7 @@ Date addDays(const Date& date, int numberOfDays)
     return result;
 }
 
+// Format a date as DD/MM/YYYY
 string formatDate(const Date& date)
 {
     ostringstream output;
@@ -300,6 +325,7 @@ string formatDate(const Date& date)
     return output.str();
 }
 
+// Display weekly room occupancy
 void viewWeeklyHeatmap(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& startDate)
 {
@@ -343,6 +369,7 @@ void viewWeeklyHeatmap(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
+// Display monthly room availability
 void viewMonthlyAvailability(const vector<Booking>& bookings,
     const vector<Room>& rooms, int month, int year)
 {
@@ -392,6 +419,7 @@ void viewMonthlyAvailability(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
+// Display room schedule for a date
 void viewDailyRoomSchedule(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& selectedDate)
 {
@@ -422,6 +450,7 @@ void viewDailyRoomSchedule(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
+// Display a room's monthly booking timeline
 void viewRoomMonthlyTimeline(const vector<Booking>& bookings,
     const vector<Room>& rooms, const string& roomId, int month, int year)
 {
@@ -474,6 +503,7 @@ void viewRoomMonthlyTimeline(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
+// Display future occupancy forecast
 void viewOccupancyForecast(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& startDate, int numberOfDays)
 {
@@ -519,8 +549,7 @@ void viewOccupancyForecast(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
-
-
+// Display available rooms by floor
 void viewFloorAvailabilityMap(const vector<Booking>& bookings,
     const vector<Room>& rooms, const Date& checkInDate,
     const Date& checkOutDate)
@@ -555,7 +584,6 @@ void viewFloorAvailabilityMap(const vector<Booking>& bookings,
 
             string displayValue = available ? room.roomId : "X";
 
-
             if (roomsOnLine > 0 && roomsOnLine % 6 == 0)
             {
                 cout << "\n  ";
@@ -584,17 +612,9 @@ void viewFloorAvailabilityMap(const vector<Booking>& bookings,
     EnterToContinue();
 }
 
-
-
-
-
-
-
 namespace
 {
-    // Floor maps hardcoded verbatim from the user's maplayout.md
-    // to guarantee pixel-perfect output.
-
+    // Create centred text for the room map
     string center(const string& text, int width)
     {
         if (static_cast<int>(text.size()) >= width)
@@ -606,11 +626,7 @@ namespace
             + string(width - left - static_cast<int>(text.size()), ' ');
     }
 
-    // Replace room labels that belong to the given booking with
-    // Booked rooms render tight (|*101*|), normal rooms keep padding.
-
-    // Booked rooms get *roomId* centred in the cell; normal rooms
-    // just centre the roomId.
+    // Display a room cell
     string cell(const string& roomId, int width, const set<string>& booked)
     {
         if (booked.count(roomId))
@@ -620,6 +636,7 @@ namespace
         return center(roomId, width);
     }
 
+    // Display the first floor map
     void printFloor1(const set<string>& booked)
     {
         cout << "\n  FLOOR 1\n";
@@ -666,6 +683,7 @@ namespace
         cout << "  -------------------------------------------------------------\n";
     }
 
+    // Display the second floor map
     void printFloor2(const set<string>& booked)
     {
         cout << "\n  FLOOR 2\n";
@@ -708,6 +726,7 @@ namespace
         cout << "  -------------------------------------------------------------\n";
     }
 
+    // Display the third floor map
     void printFloor3(const set<string>& booked)
     {
         cout << "\n  FLOOR 3\n";
@@ -753,6 +772,7 @@ namespace
     }
 }
 
+// Display the customer's room location
 void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
 {
     clearScreen();
@@ -765,8 +785,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
     cout << "       ROOM LOCATION GUIDE\n";
     cout << "====================================\n";
 
-    // Keep asking until the user enters one of their own booking IDs,
-    // or 0 to go back to the menu. Case-insensitive (b1 == B1).
+    // Ask for a valid booking ID
     set<string> bookedRooms;
     string bookingId;
     while (true)
@@ -780,7 +799,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
             return;
         }
 
-        // Normalise to uppercase for comparison
+        // Convert the booking ID to uppercase
         string upperId = bookingId;
         for (char& c : upperId)
         {
@@ -832,7 +851,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
     if (showFloor2) printFloor2(bookedRooms);
     if (showFloor3) printFloor3(bookedRooms);
 
-    // List the user's rooms after the map
+    // Display the customer's assigned rooms
     cout << "\n  Your room : ";
     bool first = true;
     for (const string& roomId : bookedRooms)
@@ -850,6 +869,7 @@ void viewRoomLocationGuide(const vector<Room>& rooms, const string& customerId)
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
+// Load the hotel's room data
 void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
 {
     (void)bookings;
@@ -918,6 +938,7 @@ void loadSchedulerDemoData(vector<Room>& rooms, vector<Booking>& bookings)
     bookings.clear();
 }
 
+// Display scheduler options for customers
 void customerSchedulerMenu(const vector<Room>& rooms,
     const vector<Booking>& bookings)
 {
@@ -975,6 +996,7 @@ void customerSchedulerMenu(const vector<Room>& rooms,
     }
 }
 
+// Display scheduler options for managers
 void managerSchedulerMenu(const vector<Room>& rooms,
     const vector<Booking>& bookings)
 {

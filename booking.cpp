@@ -26,7 +26,10 @@ void saveAllBookings(const vector<Booking>& allBookings);
 
 namespace
 {
+    // System date used for booking validation
     const Date SYSTEM_DATE{ 19, 8, 2026 };
+
+    // Value used when the user goes back
     const Date GO_BACK{ 0, 0, 0 };
 
     enum BookingStage
@@ -55,11 +58,13 @@ namespace
     };
     const int NUM_ROOM_TYPES = 5;
 
+    // Check if user selected go back
     bool isGoBack(const Date& d)
     {
         return d.day == 0 && d.month == 0 && d.year == 0;
     }
 
+    // Read and validate a date
     Date readDate(const string& heading,
         const string& backLabel,
         const Date* defaultValue = nullptr)
@@ -127,6 +132,7 @@ namespace
         }
     }
 
+    // Prevent booking dates in the past
     Date readCurrentOrFutureDate(const string& heading,
         const string& backLabel,
         const Date* defaultValue = nullptr)
@@ -147,6 +153,7 @@ namespace
         }
     }
 
+    // Read room quantity
     int readQuantityOrBack(int maxVal,
         const string& backLabel)
     {
@@ -175,6 +182,7 @@ namespace
         }
     }
 
+    // Read menu selection
     char readLetterOrBack(char minCh, char maxCh,
         const string& backLabel)
     {
@@ -206,6 +214,7 @@ namespace
         }
     }
 
+    // Check if booking is still active
     bool isBookingActive(const Booking& booking)
     {
         return booking.status == "PENDING"
@@ -238,6 +247,7 @@ namespace
         }
     }
 
+    // Check if two bookings overlap
     bool datesOverlap(const Date& a1, const Date& a2,
         const Date& b1, const Date& b2)
     {
@@ -245,6 +255,7 @@ namespace
             && compareDates(b1, a2) < 0;
     }
 
+    // Check room availability
     bool isRoomAvailable(const vector<Booking>& bookings,
         const string& roomId,
         const Date& checkIn, const Date& checkOut)
@@ -261,6 +272,7 @@ namespace
         return true;
     }
 
+    // Count available rooms by type
     int countAvailableByType(const vector<Room>& rooms,
         const vector<Booking>& bookings,
         const string& roomType,
@@ -305,7 +317,7 @@ namespace
         int quantity;
     };
 
-    // Returns: "valid", "format", or "invalid"
+    // Validate Malaysian phone number
     string validatePhone(const string& input)
     {
         // Regex patterns for Malaysian phone numbers
@@ -414,6 +426,7 @@ namespace
     {
         vector<Booking> saved = loadSavedBookings();
 
+        // Find the next booking ID
         int maxNum = 0;
         auto scanId = [&](const vector<Booking>& src)
             {
@@ -983,7 +996,7 @@ namespace
             validCardPayment = true;
         }
 
-        cin.ignore(numeric_limits<streamsize>::max(), '\n'); // flush leftover '\n'
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
         ostringstream confirmPrompt;
         confirmPrompt << "\n====================================\n";
@@ -1723,7 +1736,7 @@ void bookingScreen(const string& customerId)
             addonsString += to_string(addonSelections[i].quantity) + "x " + ADDONS[addonSelections[i].addonIndex].name;
         }
 
-        // ── Payment Method Section (Dispatched via clean helper calls) ──
+        // ── Payment Method Section ──
         while (true)
         {
             cout << "\n====================================\n";
@@ -1781,7 +1794,6 @@ void bookingScreen(const string& customerId)
     }
 }
 
-// Helper: print a box line "| content              |"
 static void printBoxLine(const string& content)
 {
     const int width = 34;

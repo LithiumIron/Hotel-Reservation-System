@@ -12,12 +12,14 @@
 
 using namespace std;
 
+// Store VIP membership data file
 const string VIP_FILE = "vipData.txt";
 
 // ============================================================
 // VIP TIER DEFINITIONS
 // ============================================================
 
+// Store available VIP tiers and their benefits
 const VIPTier VIP_TIERS[] =
 {
     {
@@ -52,12 +54,14 @@ const VIPTier VIP_TIERS[] =
     }
 };
 
+// Number of available VIP tiers
 const int NUM_TIERS = 3;
 
 // ============================================================
 // DATE FUNCTIONS
 // ============================================================
 
+// Add a number of months to a date
 Date addMonths(const Date& date, int months)
 {
     Date result = date;
@@ -76,6 +80,7 @@ Date addMonths(const Date& date, int months)
 // SAVE VIP MEMBERSHIP
 // ============================================================
 
+// Save a new VIP membership to the file
 void saveVIPMembership(const VIPMembership& membership)
 {
     ofstream outFile(VIP_FILE, ios::app);
@@ -86,6 +91,7 @@ void saveVIPMembership(const VIPMembership& membership)
         return;
     }
 
+    // Write membership details to the file
     outFile << membership.customerId << '\t'
             << membership.tier << '\t'
             << membership.purchaseDate.day << '\t'
@@ -105,6 +111,7 @@ void saveVIPMembership(const VIPMembership& membership)
 // LOAD VIP MEMBERSHIPS
 // ============================================================
 
+// Load all VIP memberships from the file
 vector<VIPMembership> loadVIPMemberships()
 {
     vector<VIPMembership> memberships;
@@ -118,6 +125,7 @@ vector<VIPMembership> loadVIPMemberships()
     VIPMembership m;
     string active;
 
+    // Read each membership record
     while (inFile >> m.customerId
                   >> m.tier
                   >> m.purchaseDate.day
@@ -141,6 +149,7 @@ vector<VIPMembership> loadVIPMemberships()
 // SAVE ALL VIP MEMBERSHIPS
 // ============================================================
 
+// Rewrite the file with updated membership records
 void saveAllVIPMemberships(const vector<VIPMembership>& memberships)
 {
     ofstream outFile(VIP_FILE);
@@ -151,6 +160,7 @@ void saveAllVIPMemberships(const vector<VIPMembership>& memberships)
         return;
     }
 
+    // Write all memberships back to the file
     for (const VIPMembership& membership : memberships)
     {
         outFile << membership.customerId << '\t'
@@ -173,6 +183,7 @@ void saveAllVIPMemberships(const vector<VIPMembership>& memberships)
 // CHECK ACTIVE VIP
 // ============================================================
 
+// Check whether a customer has an active VIP membership
 bool hasActiveVIP(const string& customerId)
 {
     vector<VIPMembership> memberships = loadVIPMemberships();
@@ -182,6 +193,7 @@ bool hasActiveVIP(const string& customerId)
     {
         if (m.customerId == customerId && m.isActive)
         {
+            // Check if the membership has not expired
             if (compareDates(today, m.expiryDate) <= 0)
             {
                 return true;
@@ -196,6 +208,7 @@ bool hasActiveVIP(const string& customerId)
 // GET VIP STATUS
 // ============================================================
 
+// Get the customer's current VIP tier
 string getVIPStatus(const string& customerId)
 {
     vector<VIPMembership> memberships = loadVIPMemberships();
@@ -205,6 +218,7 @@ string getVIPStatus(const string& customerId)
     {
         if (m.customerId == customerId && m.isActive)
         {
+            // Check if the membership is still valid
             if (compareDates(today, m.expiryDate) <= 0)
             {
                 return m.tier;
@@ -219,6 +233,7 @@ string getVIPStatus(const string& customerId)
 // APPLY VIP DISCOUNT
 // ============================================================
 
+// Apply the discount based on the customer's VIP tier
 void applyVIPDiscount(double& total, const string& customerId)
 {
     string tier = getVIPStatus(customerId);
@@ -244,6 +259,7 @@ void applyVIPDiscount(double& total, const string& customerId)
 // PURCHASE / UPGRADE VIP MEMBERSHIP
 // ============================================================
 
+// Allow customers to purchase or upgrade their VIP membership
 void purchaseVIPMembership(const string& customerId)
 {
     clearScreen();
@@ -252,6 +268,7 @@ void purchaseVIPMembership(const string& customerId)
     cout << "         VIP MEMBERSHIP\n";
     cout << "====================================\n";
 
+    // Check if a customer is logged in
     if (customerId.empty())
     {
         cout << "  Please login first.\n";
@@ -269,6 +286,7 @@ void purchaseVIPMembership(const string& customerId)
 
         int currentIndex = -1;
 
+        // Find the customer's current tier
         for (int i = 0; i < NUM_TIERS; i++)
         {
             if (VIP_TIERS[i].name == currentTier)
@@ -298,6 +316,7 @@ void purchaseVIPMembership(const string& customerId)
             string upgrade;
             getline(cin, upgrade);
 
+            // Cancel upgrade if user does not confirm
             if (upgrade.empty() ||
                 toupper(static_cast<unsigned char>(upgrade[0])) != 'Y')
             {
@@ -352,6 +371,7 @@ void purchaseVIPMembership(const string& customerId)
         }
         else
         {
+            // Customer already has the highest tier
             cout << "\nYou already have the highest VIP tier!\n";
             cout << "Thank you for being a Platinum VIP member!\n";
             cout << "====================================\n";
@@ -361,7 +381,7 @@ void purchaseVIPMembership(const string& customerId)
         }
     }
 
-    // Show purchase options
+    // Show available VIP tiers
     cout << "\nAvailable VIP Tiers:\n";
     cout << string(50, '-') << "\n";
 
@@ -385,6 +405,7 @@ void purchaseVIPMembership(const string& customerId)
 
     int choice = readInteger("Select tier: ", 0, NUM_TIERS);
 
+    // Cancel purchase
     if (choice == 0)
     {
         cout << "\nPurchase cancelled.\n";
@@ -413,6 +434,7 @@ void purchaseVIPMembership(const string& customerId)
     string confirm;
     getline(cin, confirm);
 
+    // Cancel if the user does not confirm
     if (confirm.empty() ||
         toupper(static_cast<unsigned char>(confirm[0])) != 'Y')
     {
@@ -422,7 +444,7 @@ void purchaseVIPMembership(const string& customerId)
         return;
     }
 
-    // Payment
+    // Process payment
     cout << "\nProcessing payment...\n";
     cout << "Please enter your payment details:\n";
 
@@ -431,6 +453,7 @@ void purchaseVIPMembership(const string& customerId)
     string cvv;
     bool validPayment = false;
 
+    // Validate payment details
     while (!validPayment)
     {
         // Card number
@@ -449,6 +472,7 @@ void purchaseVIPMembership(const string& customerId)
 
         bool validCard = true;
 
+        // Check card number contains only digits and hyphens
         for (int i = 0; i < 19; i++)
         {
             if (i == 4 || i == 9 || i == 14)
@@ -467,7 +491,7 @@ void purchaseVIPMembership(const string& customerId)
             continue;
         }
 
-        // Expiry
+        // Expiry date
         cout << "Expiry (MM/YY): ";
         getline(cin, expiry);
 
@@ -485,6 +509,7 @@ void purchaseVIPMembership(const string& customerId)
 
         int month = stoi(expiry.substr(0, 2));
 
+        // Validate expiry month
         if (month < 1 || month > 12)
         {
             cout << "Invalid expiry month.\n";
@@ -503,6 +528,7 @@ void purchaseVIPMembership(const string& customerId)
 
         bool validCVV = true;
 
+        // Check CVV contains only digits
         for (char c : cvv)
         {
             if (!isdigit(static_cast<unsigned char>(c)))
@@ -522,6 +548,7 @@ void purchaseVIPMembership(const string& customerId)
     }
 
     cout << "\nPayment successful!\n";
+
     // Create membership
     VIPMembership membership;
 
@@ -536,7 +563,7 @@ void purchaseVIPMembership(const string& customerId)
 
     saveVIPMembership(membership);
 
-    // Success message
+    // Display successful membership purchase
     cout << "\nCONGRATULATIONS!\n";
     cout << "You are now a "
          << selectedTier.name << " VIP member!\n";
@@ -554,6 +581,7 @@ void purchaseVIPMembership(const string& customerId)
 // VIEW VIP BENEFITS
 // ============================================================
 
+// Display the benefits of each VIP tier
 void viewVIPBenefits(const string& customerId)
 {
     clearScreen();
@@ -562,6 +590,7 @@ void viewVIPBenefits(const string& customerId)
     cout << "        VIP TIER BENEFITS\n";
     cout << "====================================\n";
 
+    // Display all VIP tier information
     for (int i = 0; i < NUM_TIERS; i++)
     {
         const VIPTier& tier = VIP_TIERS[i];
@@ -583,7 +612,7 @@ void viewVIPBenefits(const string& customerId)
         cout << string(48, '-') << "\n";
     }
 
-    // Show current user status
+    // Display the current customer's VIP status
     if (!customerId.empty())
     {
         string currentTier = getVIPStatus(customerId);

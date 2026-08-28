@@ -13,6 +13,7 @@
 
 using namespace std;
 
+// Handle manager access
 bool empHomeScreen()
 {
     const string MANAGER_PASSCODE = "1234";
@@ -30,6 +31,7 @@ bool empHomeScreen()
         if (isGoBackInput(enteredPasscode)) 
             return false;
 
+        // Check manager passcode
         if (enteredPasscode == MANAGER_PASSCODE)
         {
             cout << "\nManager passcode accepted.\n";
@@ -41,6 +43,8 @@ bool empHomeScreen()
         EnterToContinue();
     }
 }
+
+// Display manager profile
 void viewManagerProfile()
 {
     clearScreen();
@@ -62,6 +66,7 @@ void viewManagerProfile()
     string username;
     bool found = false;
 
+    // Read manager details
     while (inFile >> username)
     {
         cout << "  Username : " << username << "\n";
@@ -84,6 +89,7 @@ void viewManagerProfile()
     EnterToContinue();
 }
 
+// Display all customer details
 void viewAllCustomers()
 {
     clearScreen();
@@ -132,6 +138,7 @@ void viewAllCustomers()
     vector<VIPMembership> memberships = loadVIPMemberships();
     Date today = getCurrentSystemDate();
     
+    // Process each customer
     for (const auto& customer : customers)
     {
         string username = customer.first;
@@ -139,6 +146,7 @@ void viewAllCustomers()
         int activeBookings = 0;
         int completedBookings = 0;
         
+        // Count customer bookings
         for (const Booking& b : saved)
         {
             if (b.customerId == username)
@@ -155,7 +163,7 @@ void viewAllCustomers()
             }
         }
         
-        // ✅ CORRECT: Check actual VIP membership
+        // Check VIP membership
         string vipStatus = "Standard";
         for (const VIPMembership& m : memberships)
         {

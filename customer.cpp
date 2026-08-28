@@ -14,6 +14,7 @@
 #include <utility>
 using namespace std;
 
+// Handle customer sign up
 bool signup(string& loggedInUser)
 {
     clearScreen();
@@ -38,9 +39,7 @@ bool signup(string& loggedInUser)
         if (isGoBackInput(username)) 
             return false;
 
-        
-
-        // Check if username already exists
+        // Check existing username
         {
             ifstream inFile("customerData.txt");
             if (inFile)
@@ -56,6 +55,7 @@ bool signup(string& loggedInUser)
                     }
                 }
                 inFile.close();
+
                 if (found)
                 {
                     cout << "Error: Username already exists. "
@@ -71,6 +71,7 @@ bool signup(string& loggedInUser)
         cout << "Confirm Password: ";
         getline(cin, password2);
 
+        // Validate password
         if (password != password2)
         {
             cout << "Invalid input. Passwords do not match.\n\n";
@@ -85,6 +86,7 @@ bool signup(string& loggedInUser)
         }
     }
 
+    // Save new account
     ofstream outFile("customerData.txt", ios::app);
 
     if (outFile.fail())
@@ -96,12 +98,13 @@ bool signup(string& loggedInUser)
     outFile << username << '\t' << password << '\n';
     outFile.close();
 
-    // Auto-login after successful signup
+    // Log in automatically
     loggedInUser = username;
 
     return true;
 }
 
+// Display customer login menu
 void custHomeScreen(string& loggedInUser)
 {
     while (true)
@@ -139,7 +142,7 @@ void custHomeScreen(string& loggedInUser)
     }
 }
 
-
+// Display customer profile
 void viewCustomerProfile(string& loggedInUser)
 {
     clearScreen();
@@ -155,12 +158,16 @@ void viewCustomerProfile(string& loggedInUser)
         return;
     }
 
+    // Display profile details
     displayCustomerInfo(loggedInUser);
 
+    // Display VIP details
     displayVIPStatus(loggedInUser);
 
+    // Display booking statistics
     displayBookingStatistics(loggedInUser);
 
+    // Display booking history
     displayBookingHistory(loggedInUser);
 
     cout << "=========================================\n";
@@ -168,6 +175,7 @@ void viewCustomerProfile(string& loggedInUser)
     displayProfileMenu(loggedInUser);
 }
 
+// Edit customer profile
 void editCustomerProfile(string& loggedInUser)
 {
     clearScreen();
@@ -183,7 +191,7 @@ void editCustomerProfile(string& loggedInUser)
         return;
     }
 
-    // Read all users from file
+    // Load users from file
     vector<pair<string, string>> users;
     ifstream inFile("customerData.txt");
     if (inFile.fail())
@@ -214,6 +222,7 @@ void editCustomerProfile(string& loggedInUser)
         return;
     }
 
+    // Select profile changes
     cout << "\nWhat would you like to change?\n";
     cout << "[1] Change Username\n";
     cout << "[2] Change Password\n";
@@ -234,14 +243,14 @@ void editCustomerProfile(string& loggedInUser)
     string newUsername = loggedInUser;
     string newPassword;
 
+    // Change username
     if (choice == 1 || choice == 3)
     {
-        // Change Username
         cout << "\nEnter current password to verify: ";
         string currentPass;
         getline(cin, currentPass);
         
-        // Verify current password
+        // Verify password
         bool passVerified = false;
         for (const auto& user : users)
         {
@@ -272,7 +281,7 @@ void editCustomerProfile(string& loggedInUser)
             return;
         }
 
-        // Check if username already exists
+        // Check new username
         bool usernameExists = false;
         for (const auto& user : users)
         {
@@ -294,14 +303,14 @@ void editCustomerProfile(string& loggedInUser)
         newUsername = newUser;
     }
 
+    // Change password
     if (choice == 2 || choice == 3)
     {
-        // Change Password
         cout << "\nEnter current password: ";
         string currentPass;
         getline(cin, currentPass);
         
-        // Verify current password
+        // Verify password
         bool passVerified = false;
         for (const auto& user : users)
         {
@@ -344,9 +353,7 @@ void editCustomerProfile(string& loggedInUser)
         }
     }
 
-    
-
-    // Update user data
+    // Update user details
     for (auto& user : users)
     {
         if (user.first == loggedInUser)
@@ -363,7 +370,7 @@ void editCustomerProfile(string& loggedInUser)
         }
     }
 
-    // Write back to file
+    // Save updated data
     ofstream outFile("customerData.txt");
     if (outFile.fail())
     {
@@ -377,7 +384,7 @@ void editCustomerProfile(string& loggedInUser)
         outFile << user.first << '\t' << user.second << '\n';
     outFile.close();
 
-    // Update loggedInUser if username changed
+    // Update logged in username
     if (choice == 1 || choice == 3)
         loggedInUser = newUsername;
 
@@ -389,11 +396,11 @@ void editCustomerProfile(string& loggedInUser)
     if (choice == 2 || choice == 3)
         cout << "Password changed.\n";
 
-    
     cout << "====================================\n";
     EnterToContinue();
 }
 
+// Display customer information
 void displayCustomerInfo(const string& loggedInUser)
 {
     ifstream inFile("customerData.txt");
@@ -408,6 +415,7 @@ void displayCustomerInfo(const string& loggedInUser)
     string password;
     bool found = false;
 
+    // Find customer account
     while (inFile >> username >> password)
     {
         if (username == loggedInUser)
@@ -433,6 +441,7 @@ void displayCustomerInfo(const string& loggedInUser)
     }
 }
 
+// Display booking statistics
 void displayBookingStatistics(const string& loggedInUser)
 {
     vector<Booking> saved = loadSavedBookings();
@@ -441,6 +450,7 @@ void displayBookingStatistics(const string& loggedInUser)
     int activeBookings = 0;
     int completedBookings = 0;
 
+    // Count customer bookings
     for (const Booking& b : saved)
     {
         if (b.customerId == loggedInUser)
@@ -471,7 +481,7 @@ void displayBookingStatistics(const string& loggedInUser)
          << "Total Bookings:" << totalBookings << "\n";
 }
 
-
+// Display VIP status
 void displayVIPStatus(const string& loggedInUser)
 {
     string vipTier = getVIPStatus(loggedInUser);
@@ -492,6 +502,7 @@ void displayVIPStatus(const string& loggedInUser)
         return;
     }
 
+    // Load VIP memberships
     vector<VIPMembership> memberships = loadVIPMemberships();
 
     for (const VIPMembership& m : memberships)
@@ -503,6 +514,7 @@ void displayVIPStatus(const string& loggedInUser)
             int daysRemaining = 0;
             Date temp = today;
 
+            // Calculate remaining days
             while (compareDates(temp, m.expiryDate) < 0)
             {
                 daysRemaining++;
@@ -518,6 +530,7 @@ void displayVIPStatus(const string& loggedInUser)
             cout << "  " << left << setw(20)
                  << "Days Remaining:" << daysRemaining << " days" << "\n";
 
+            // Set discount
             string discount = "10%";
 
             if (m.tier == "Silver")
@@ -537,6 +550,7 @@ void displayVIPStatus(const string& loggedInUser)
     cout << string(45, '-') << "\n";
 }
 
+// Display booking history
 void displayBookingHistory(const string& loggedInUser)
 {
     vector<Booking> saved = loadSavedBookings();
@@ -549,12 +563,14 @@ void displayBookingHistory(const string& loggedInUser)
     vector<string> displayedBookingIds;
     int count = 0;
 
+    // Display recent bookings
     for (const Booking& b : saved)
     {
         if (b.customerId == loggedInUser && count < 5)
         {
             bool alreadyDisplayed = false;
 
+            // Check duplicate booking
             for (const string& id : displayedBookingIds)
             {
                 if (id == b.bookingId)
@@ -584,6 +600,7 @@ void displayBookingHistory(const string& loggedInUser)
     }
 }
 
+// Display profile options
 void displayProfileMenu(string& loggedInUser)
 {
     cout << "\n[1] Edit Profile\n";

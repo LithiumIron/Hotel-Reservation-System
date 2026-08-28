@@ -8,6 +8,7 @@
 #include "report.h"
 using namespace std;
 
+// Select user role
 void roleSelection()
 {
     clearScreen();
@@ -29,6 +30,7 @@ void roleSelection()
     
     else if (choice == 1)
     {
+        // Manager login
         string managerUser;    
         if (empHomeScreen() && login(1, managerUser))
             mainMenu(1,managerUser);
@@ -36,9 +38,11 @@ void roleSelection()
     }
     else
     {
+        // Customer login
         string currentUser;
         currentUser.clear();
         custHomeScreen(currentUser);
+
         if (!currentUser.empty())
         {
             mainMenu(2, currentUser);
@@ -46,6 +50,7 @@ void roleSelection()
     }
 }
 
+// Display main menu
 void mainMenu(int role, string &username)
 {
     while (true)
@@ -57,7 +62,7 @@ void mainMenu(int role, string &username)
 
         if (role == 1)
         {
-            // Manager menu (numbered)
+            // Manager menu
             cout << "[1] View Profile\n";
             cout << "[2] View Schedule\n";
             cout << "[3] View All Customer Details\n";
@@ -76,9 +81,11 @@ void mainMenu(int role, string &username)
             {
                 vector<Room> rooms;
                 vector<Booking> unusedDemoBookings;
+
+                // Load room data
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
-                // Scheduler displays only real bookings saved by Booking Module.
+                // Load saved bookings
                 vector<Booking> bookings = loadSavedBookings();
 
                 managerSchedulerMenu(rooms, bookings);
@@ -89,7 +96,7 @@ void mainMenu(int role, string &username)
         }
         else
         {
-            // Customer menu (numbered)
+            // Customer menu
             cout << "[1] View Profile\n";
             cout << "[2] Booking\n";
             cout << "[3] View Previous Booking Record\n";
@@ -115,8 +122,11 @@ void mainMenu(int role, string &username)
             {
                 vector<Room> rooms;
                 vector<Booking> unusedDemoBookings;
+
+                // Load room data
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
+                // Load saved bookings
                 vector<Booking> bookings = loadSavedBookings();
 
                 customerSchedulerMenu(rooms, bookings);
@@ -125,14 +135,18 @@ void mainMenu(int role, string &username)
             {
                 vector<Room> rooms;
                 vector<Booking> unusedDemoBookings;
+
+                // Load room data
                 loadSchedulerDemoData(rooms, unusedDemoBookings);
 
+                // Display room locations
                 viewRoomLocationGuide(rooms, username);
             }
         }
     }
 }
 
+// Program entry point
 int main()
 {
     while (true){

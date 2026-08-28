@@ -14,17 +14,14 @@
 
 using namespace std;
 
-// ============================================================
-// Helper Functions
-// ============================================================
-
+// Check if date has passed
 bool isPastDate(const Date& date)
 {
     Date today = getCurrentSystemDate();
     return compareDates(date, today) < 0;
 }
 
-// Check whether a booking occupies a room on a particular date
+// Check if room is occupied
 bool isRoomOccupied(const Booking& booking, const Date& date)
 {
     return booking.status != "CANCELLED" &&
@@ -33,7 +30,7 @@ bool isRoomOccupied(const Booking& booking, const Date& date)
            compareDates(date, booking.checkOutDate) < 0;
 }
 
-// Count occupied rooms on a date
+// Count occupied rooms
 int countOccupiedOnDate(const vector<Booking>& bookings, const Date& date)
 {
     int count = 0;
@@ -49,7 +46,7 @@ int countOccupiedOnDate(const vector<Booking>& bookings, const Date& date)
     return count;
 }
 
-// Calculate number of nights
+// Calculate booking nights
 int calculateNights(const Booking& booking)
 {
     int nights = 0;
@@ -64,7 +61,7 @@ int calculateNights(const Booking& booking)
     return nights;
 }
 
-// Find actual room nightly rate
+// Get room price
 double getRoomNightlyRate(const Booking& booking, const vector<Room>& rooms)
 {
     for (const Room& room : rooms)
@@ -78,7 +75,7 @@ double getRoomNightlyRate(const Booking& booking, const vector<Room>& rooms)
     return 0.0;
 }
 
-// Get actual add-on price
+// Get add-on price
 double getAddonPrice(const string& addonName)
 {
     if (addonName == "Buffet Breakfast")
@@ -101,7 +98,7 @@ double getAddonPrice(const string& addonName)
     return 0.0;
 }
 
-// Calculate add-on cost per day from saved addon string
+// Calculate add-on cost
 double calculateAddonPerDay(const string& addons)
 {
     if (addons.empty())
@@ -141,13 +138,7 @@ double calculateAddonPerDay(const string& addons)
     return total;
 }
 
-// Calculate revenue for a group of records sharing the same booking ID.
-//
-// createBookingRecords() creates one Booking record per room,
-// but stores the same addonsString in every record.
-//
-// Room cost = calculated for every room
-// Add-on cost = calculated only once
+// Calculate booking revenue
 double calculateBookingGroupRevenue(const vector<Booking>& group, const vector<Room>& rooms)
 {
     if (group.empty())
@@ -165,21 +156,20 @@ double calculateBookingGroupRevenue(const vector<Booking>& group, const vector<R
 
     double roomTotal = 0.0;
 
-    // Calculate every room in this booking
+    // Calculate room cost
     for (const Booking& b : group)
     {
         double nightlyRate = getRoomNightlyRate(b, rooms);
         roomTotal += nightlyRate * nights;
     }
 
-    // Add-ons are stored on every room record,
-    // so only count them once.
+    // Calculate add-on cost
     double addonTotal = calculateAddonPerDay(first.addons) * nights;
 
     return roomTotal + addonTotal;
 }
 
-// Group bookings by booking ID
+// Group bookings by ID
 map<string, vector<Booking>> groupBookingsById(const vector<Booking>& bookings)
 {
     map<string, vector<Booking>> grouped;
@@ -192,10 +182,7 @@ map<string, vector<Booking>> groupBookingsById(const vector<Booking>& bookings)
     return grouped;
 }
 
-// ============================================================
-// Daily Report
-// ============================================================
-
+// Generate daily report
 DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms,
                                 const vector<Booking>& bookings)
 {
@@ -216,10 +203,7 @@ DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms,
     report.pendingBookings = 0;
     report.cancelledBookings = 0;
 
-    // --------------------------------------------------------
-    // Check-ins / check-outs / pending / cancelled
-    // --------------------------------------------------------
-
+    // Count booking statuses
     for (const Booking& b : bookings)
     {
         if (compareDates(b.checkInDate, date) == 0 && b.status != "CANCELLED")
@@ -243,10 +227,7 @@ DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms,
         }
     }
 
-    // --------------------------------------------------------
-    // Revenue
-    // --------------------------------------------------------
-
+    // Calculate revenue
     map<string, vector<Booking>> grouped = groupBookingsById(bookings);
 
     for (const auto& pair : grouped)
@@ -260,19 +241,16 @@ DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms,
 
         const Booking& first = group[0];
 
-        // Only count bookings starting on this date
         if (compareDates(first.checkInDate, date) != 0)
         {
             continue;
         }
 
-        // Cancelled bookings generate no revenue
         if (first.status == "CANCELLED")
         {
             continue;
         }
 
-        // Revenue only for paid bookings
         if (!first.paid)
         {
             continue;
@@ -284,10 +262,7 @@ DailyReport generateDailyReport(const Date& date, const vector<Room>& rooms,
     return report;
 }
 
-// ============================================================
-// Monthly Report
-// ============================================================
-
+// Generate monthly report
 MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& rooms,
                                     const vector<Booking>& bookings)
 {
@@ -306,10 +281,7 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
     int totalOccupancy = 0;
     int daysInMonthCount = daysInMonth(month, year);
 
-    // --------------------------------------------------------
-    // Calculate daily occupancy
-    // --------------------------------------------------------
-
+    // Calculate occupancy
     for (int day = 1; day <= daysInMonthCount; day++)
     {
         Date date{day, month, year};
@@ -326,10 +298,7 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
         report.avgOccupancyRate = 0.0;
     }
 
-    // --------------------------------------------------------
-    // Booking statistics
-    // --------------------------------------------------------
-
+    // Calculate booking statistics
     map<string, vector<Booking>> grouped = groupBookingsById(bookings);
 
     for (const auto& pair : grouped)
@@ -343,7 +312,6 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
 
         const Booking& first = group[0];
 
-        // Booking belongs to month based on check-in date
         if (first.checkInDate.month == month && first.checkInDate.year == year)
         {
             report.totalBookings++;
@@ -364,7 +332,7 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
             }
         }
 
-        // Check-out statistics
+        // Count check-outs
         if (first.checkOutDate.month == month &&
             first.checkOutDate.year == year &&
             first.status != "CANCELLED")
@@ -373,10 +341,7 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
         }
     }
 
-    // --------------------------------------------------------
-    // Cancellation rate
-    // --------------------------------------------------------
-
+    // Calculate cancellation rate
     report.cancellationRate = report.totalBookings > 0
                                   ? (report.cancellations * 100.0 /
                                      report.totalBookings)
@@ -385,26 +350,21 @@ MonthlyReport generateMonthlyReport(int month, int year, const vector<Room>& roo
     return report;
 }
 
-// ============================================================
-// Customer Report
-// ============================================================
-
+// Generate customer report
 vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
 {
     map<string, CustomerReport> customerMap;
 
-    // Load actual room information
     vector<Room> rooms;
     vector<Booking> demoBookings;
 
     loadSchedulerDemoData(rooms, demoBookings);
 
-    // Load VIP memberships
     vector<VIPMembership> memberships = loadVIPMemberships();
 
     Date today = getCurrentSystemDate();
 
-    // Group bookings by booking ID first
+    // Group bookings
     map<string, vector<Booking>> bookingsById = groupBookingsById(bookings);
 
     for (const auto& pair : bookingsById)
@@ -419,7 +379,7 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
         const Booking& first = group[0];
         CustomerReport& report = customerMap[first.customerId];
 
-        // Initialise only when first created
+        // Initialise customer data
         if (report.customerId.empty())
         {
             report.customerId = first.customerId;
@@ -430,7 +390,6 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
             report.vipStatus = "Standard";
         }
 
-        // One booking ID = one customer booking
         report.totalBookings++;
 
         if (first.status == "COMPLETED")
@@ -443,7 +402,7 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
             report.cancelledBookings++;
         }
 
-        // Only paid bookings contribute to spending
+        // Calculate customer spending
         if (first.paid && first.status != "CANCELLED")
         {
             report.totalSpent +=
@@ -451,10 +410,7 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
         }
     }
 
-    // --------------------------------------------------------
-    // Determine VIP status
-    // --------------------------------------------------------
-
+    // Check VIP status
     vector<CustomerReport> result;
 
     for (auto& pair : customerMap)
@@ -474,7 +430,6 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
                 continue;
             }
 
-            // Membership is still valid
             if (compareDates(today, membership.expiryDate) <= 0)
             {
                 report.vipStatus = membership.tier;
@@ -488,10 +443,7 @@ vector<CustomerReport> generateCustomerReport(const vector<Booking>& bookings)
     return result;
 }
 
-// ============================================================
-// View Daily Report
-// ============================================================
-
+// View daily report
 void viewDailyReport()
 {
     clearScreen();
@@ -506,6 +458,7 @@ void viewDailyReport()
     vector<Booking> bookings;
     loadSchedulerDemoData(rooms, bookings);
     vector<Booking> saved = loadSavedBookings();
+
     for (const Booking& b : saved)
         bookings.push_back(b);
     
@@ -531,6 +484,7 @@ void viewDailyReport()
     EnterToContinue();
 }
 
+// Read report date
 Date readDateForReport(const string& prompt, int minYear, int maxYear)
 {
     while (true)
@@ -545,6 +499,7 @@ Date readDateForReport(const string& prompt, int minYear, int maxYear)
 
         date.month = readInteger("Month (1-12): ", 1, 12);
         if (date.month == 0) return {0,0,0};
+
         date.day = readInteger("Day: ", 1, 31);
         if (date.day == 0) return {0,0,0};
 
@@ -557,12 +512,7 @@ Date readDateForReport(const string& prompt, int minYear, int maxYear)
     }
 }
 
-
-
-// ============================================================
-// View Monthly Report
-// ============================================================
-
+// View monthly report
 void viewMonthlyReport()
 {
     clearScreen();
@@ -571,12 +521,13 @@ void viewMonthlyReport()
     cout << "====================================\n";
 
     cout<<"Enter 0 at any prompt to go back.\n";
+
     int year = readInteger("Enter year (2026-2028): ", 2026, 2028);
     if (year == 0) return;
+
     int month = readInteger("Enter month (1-12): ", 1, 12);
     if (month == 0) return;
     
-
     vector<Room> rooms;
     vector<Booking> bookings;
 
@@ -620,10 +571,7 @@ void viewMonthlyReport()
     EnterToContinue();
 }
 
-// ============================================================
-// View Customer Report
-// ============================================================
-
+// View customer report
 void viewCustomerReport()
 {
     clearScreen();
@@ -666,10 +614,7 @@ void viewCustomerReport()
     EnterToContinue();
 }
 
-// ============================================================
-// View Revenue Report
-// ============================================================
-
+// View revenue report
 void viewRevenueReport()
 {
     clearScreen();
@@ -688,16 +633,14 @@ void viewRevenueReport()
         return;
     }
 
-    // Load actual room data
     vector<Room> rooms;
     vector<Booking> demoBookings;
 
     loadSchedulerDemoData(rooms, demoBookings);
 
-    // Group booking records
+    // Group bookings
     map<string, vector<Booking>> grouped = groupBookingsById(saved);
 
-    // Revenue by check-in month
     map<string, double> monthlyRevenue;
     map<string, int> monthlyBookings;
 
@@ -777,10 +720,7 @@ void viewRevenueReport()
     EnterToContinue();
 }
 
-// ============================================================
-// Report Menu
-// ============================================================
-
+// Display report menu
 void reportMenu()
 {
     while (true)
@@ -799,12 +739,10 @@ void reportMenu()
         int choice = readInteger("Enter your choice: ", 0, 4);
 
         if (choice == 0) return;
-            
 
         if (choice == 1) viewDailyReport();
         else if (choice == 2) viewMonthlyReport();
         else if (choice == 3) viewCustomerReport();
         else if (choice == 4) viewRevenueReport();
-            
     }
 }
