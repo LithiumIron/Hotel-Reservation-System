@@ -14,7 +14,7 @@
 using namespace std;
 
 // Handle manager access
-bool empHomeScreen()
+bool managerHomeScreen()
 {
     const string MANAGER_PASSCODE = "1234";
     string enteredPasscode;

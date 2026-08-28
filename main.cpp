@@ -32,7 +32,7 @@ void roleSelection()
     {
         // Manager login
         string managerUser;    
-        if (empHomeScreen() && login(1, managerUser))
+        if (managerHomeScreen() && login(1, managerUser))
             mainMenu(1,managerUser);
         
     }

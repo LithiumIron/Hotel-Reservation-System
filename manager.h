@@ -1,6 +1,6 @@
 #pragma once
 
-bool empHomeScreen();
+bool managerHomeScreen();
 void viewManagerProfile();
 void viewAllCustomers();
 
