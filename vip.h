@@ -21,4 +21,5 @@ bool hasActiveVIP(const std::string& customerId);
 std::string getVIPStatus(const std::string& customerId);
 void saveVIPMembership(const VIPMembership& membership);
 std::vector<VIPMembership> loadVIPMemberships();
+void saveAllVIPMemberships(const std::vector<VIPMembership>& memberships);
 void applyVIPDiscount(double& total, const std::string& customerId);

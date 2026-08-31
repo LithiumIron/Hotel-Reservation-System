@@ -384,6 +384,29 @@ void editCustomerProfile(string& loggedInUser)
         outFile << user.first << '\t' << user.second << '\n';
     outFile.close();
 
+    if ((choice == 1 || choice == 3) && newUsername != loggedInUser)
+    {
+        vector<Booking> allBookings = loadSavedBookings();
+        for (Booking& b : allBookings)
+        {
+            if (b.customerId == loggedInUser)
+            {
+                b.customerId = newUsername;
+            }
+        }
+        saveAllBookings(allBookings);
+
+        vector<VIPMembership> allMemberships = loadVIPMemberships();
+        for (VIPMembership& m : allMemberships)
+        {
+            if (m.customerId == loggedInUser)
+            {
+                m.customerId = newUsername;
+            }
+        }
+        saveAllVIPMemberships(allMemberships);
+    }
+    
     // Update logged in username
     if (choice == 1 || choice == 3)
         loggedInUser = newUsername;
